@@ -1,0 +1,18 @@
+import { checkDatabaseConnection } from "../src/lib/db/health";
+
+async function main() {
+  console.log("Checking database connection to PostgreSQL (Supabase)...");
+  const result = await checkDatabaseConnection();
+
+  if (result.connected) {
+    console.log("✅ Successfully connected to PostgreSQL database!");
+    process.exit(0);
+  } else {
+    console.error("❌ Database connection check failed:");
+    console.error(`Reason: ${result.error}`);
+    console.error("\nPlease configure valid DATABASE_URL in .env.local to connect to Supabase.");
+    process.exit(1);
+  }
+}
+
+main();
