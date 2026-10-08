@@ -8,13 +8,153 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// User model for single-owner authentication (expanded on Day 4)
+// Media type classification for movies, TV series, and anime
+enum MediaType {
+  MOVIE
+  TV
+  ANIME
+}
+
+// Watch status states for tracked titles
+enum WatchStatus {
+  WATCHED
+  WATCHING
+  PLAN_TO_WATCH
+  ON_HOLD
+  DROPPED
+}
+
+// User identity for owner account
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   name      String?
   image     String?
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  userTitles   UserTitle[]
+  userEpisodes UserEpisode[]
+  watchHistory WatchHistory[]
 
   @@map("users")
+}
+
+// Normalized movie, TV, and anime metadata
+model Title {
+  id             String    @id @default(cuid())
+  externalSource String    @map("external_source")
+  externalId     String    @map("external_id")
+  title          String
+  type           MediaType
+  year           Int?
+  overview       String?   @db.Text
+  posterUrl      String?   @map("poster_url")
+  backdropUrl    String?   @map("backdrop_url")
+  genres         String[]  @default([])
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  seasons      Season[]
+  userTitles   UserTitle[]
+  watchHistory WatchHistory[]
+
+  @@unique([externalSource, externalId])
+  @@index([externalSource, externalId])
+  @@index([type])
+  @@map("titles")
+}
+
+// TV and anime season metadata
+model Season {
+  id           String   @id @default(cuid())
+  titleId      String   @map("title_id")
+  seasonNumber Int      @map("season_number")
+  name         String?
+  episodeCount Int      @default(0) @map("episode_count")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  title    Title     @relation(fields: [titleId], references: [id], onDelete: Cascade)
+  episodes Episode[]
+
+  @@unique([titleId, seasonNumber])
+  @@index([titleId])
+  @@map("seasons")
+}
+
+// Episode metadata for TV and anime
+model Episode {
+  id            String   @id @default(cuid())
+  seasonId      String   @map("season_id")
+  externalId    String?  @map("external_id")
+  episodeNumber Int      @map("episode_number")
+  name          String?
+  airDate       String?  @map("air_date")
+  runtime       Int?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  season       Season         @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  userEpisodes UserEpisode[]
+  watchHistory WatchHistory[]
+
+  @@unique([seasonId, episodeNumber])
+  @@index([seasonId])
+  @@map("episodes")
+}
+
+// Personal relationship and tracking state for a title
+model UserTitle {
+  id        String      @id @default(cuid())
+  userId    String      @map("user_id")
+  titleId   String      @map("title_id")
+  status    WatchStatus
+  rating    Float?
+  watchedAt DateTime?   @map("watched_at")
+  startedAt DateTime?   @map("started_at")
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title Title @relation(fields: [titleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, titleId])
+  @@index([userId, status])
+  @@index([userId])
+  @@index([titleId])
+  @@map("user_titles")
+}
+
+// Episode-level progress tracking
+model UserEpisode {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  episodeId String   @map("episode_id")
+  watchedAt DateTime @default(now()) @map("watched_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, episodeId])
+  @@index([userId])
+  @@index([episodeId])
+  @@map("user_episodes")
+}
+
+// Chronological action and audit log
+model WatchHistory {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  titleId    String   @map("title_id")
+  episodeId  String?  @map("episode_id")
+  action     String
+  occurredAt DateTime @default(now()) @map("occurred_at")
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title   Title    @relation(fields: [titleId], references: [id], onDelete: Cascade)
+  episode Episode? @relation(fields: [episodeId], references: [id], onDelete: SetNull)
+
+  @@index([userId, occurredAt])
+  @@index([userId])
+  @@index([titleId])
+  @@map("watch_history")
 }
