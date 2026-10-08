@@ -5,7 +5,7 @@
 
 [![CI](https://github.com/abdu2030/AkShelf/actions/workflows/ci.yml/badge.svg)](https://github.com/abdu2030/AkShelf/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Week%201-Day%203%20Complete-success)](#roadmap-status)
+[![Status](https://img.shields.io/badge/Week%201-Day%204%20Complete-success)](#roadmap-status)
 
 ---
 
@@ -155,7 +155,7 @@ AkShelf enforces a strict separation between external entertainment metadata and
   - [x] **Day 1**: Define scope, acceptance criteria, 6 core user actions, git repo setup.
   - [x] **Day 2**: Next.js + TypeScript + Tailwind stack installation, linting, Prettier, Husky, commitlint & CI.
   - [x] **Day 3**: Supabase/PostgreSQL connection & Prisma setup.
-  - [ ] **Day 4**: Relational schema design (`User`, `Title`, `Season`, `Episode`, `UserTitle`, `UserEpisode`, `WatchHistory`).
+  - [x] **Day 4**: Relational schema design (`User`, `Title`, `Season`, `Episode`, `UserTitle`, `UserEpisode`, `WatchHistory`).
   - [ ] **Day 5**: Single-owner Auth.js integration & route protection.
   - [ ] **Day 6**: Base layout shell (navigation, responsive containers, core UI components).
   - [ ] **Day 7**: Week 1 review, checkpoint release `v0.1.0`.
