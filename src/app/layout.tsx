@@ -1,28 +1,25 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Inter, Noto_Sans_JP } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { Aurora } from "@/components/layout/aurora";
 
+// Plus Jakarta Sans for headings and numbers (spec 6.1, 16.4)
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["600", "700"],
   variable: "--font-jakarta",
   display: "swap",
+  fallback: ["system-ui", "-apple-system", "sans-serif"],
 });
 
+// Inter for body, labels, inputs (spec 6.1, 16.4)
 const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   variable: "--font-inter",
   display: "swap",
-});
-
-const notoJP = Noto_Sans_JP({
-  subsets: ["latin"],
-  weight: ["400", "600"],
-  variable: "--font-noto-jp",
-  display: "swap",
+  fallback: ["system-ui", "-apple-system", "sans-serif"],
 });
 
 export const metadata: Metadata = {
@@ -36,11 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={`${jakarta.variable} ${inter.variable} ${notoJP.variable}`}
-    >
+    <html lang="en" suppressHydrationWarning className={`${jakarta.variable} ${inter.variable}`}>
       <head>
         <script
           dangerouslySetInnerHTML={{
