@@ -84,7 +84,7 @@ function LoginForm() {
         {state?.error && (
           <div
             role="alert"
-            className="flex items-center gap-2 p-3 rounded-[12px] bg-red-500/10 border border-red-500/25 text-red-300 text-xs font-medium"
+            className="flex items-center gap-2.5 p-3.5 rounded-[12px] bg-red-500/15 border border-red-500/30 text-red-200 text-xs sm:text-sm font-medium"
           >
             <AlertTriangle className="h-4 w-4 shrink-0 text-red-400" aria-hidden="true" />
             <span>{state.error}</span>
