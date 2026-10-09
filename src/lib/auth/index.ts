@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/db";
 import { loginSchema } from "@/lib/validation/auth";
+import { verifyOwnerCredentials } from "@/lib/auth/password";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -19,13 +20,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const { email, password } = parsed.data;
 
-        const ownerEmail = process.env.OWNER_EMAIL || "owner@akshelf.local";
-        const ownerPassword = process.env.OWNER_PASSWORD || "password123";
-
-        // Strict single-owner credential verification
-        if (email.toLowerCase() !== ownerEmail.toLowerCase() || password !== ownerPassword) {
+        // Verify single-owner credentials via bcrypt hash (fails fast if hash not configured)
+        const isValid = await verifyOwnerCredentials(email, password);
+        if (!isValid) {
           return null;
         }
+
+        const ownerEmail = process.env.OWNER_EMAIL || "owner@akshelf.local";
 
         // Get or create the owner in PostgreSQL database
         const user = await prisma.user.upsert({

@@ -2,7 +2,7 @@
 
 import { signIn, signOut } from "@/lib/auth";
 import { AuthError } from "next-auth";
-import { loginSchema } from "@/lib/validation/auth";
+import { loginSchema, validateCallbackUrl } from "@/lib/validation/auth";
 
 export type LoginState = {
   error?: string;
@@ -14,6 +14,7 @@ export async function loginAction(
 ): Promise<LoginState> {
   const rawEmail = formData.get("email");
   const rawPassword = formData.get("password");
+  const rawCallbackUrl = formData.get("callbackUrl");
 
   const parsed = loginSchema.safeParse({
     email: rawEmail,
@@ -22,27 +23,26 @@ export async function loginAction(
 
   if (!parsed.success) {
     return {
-      error: parsed.error.issues[0]?.message || "Invalid input.",
+      error: "That email or password is not right.",
     };
   }
+
+  const targetUrl = validateCallbackUrl(
+    typeof rawCallbackUrl === "string" ? rawCallbackUrl : undefined,
+  );
 
   try {
     await signIn("credentials", {
       email: parsed.data.email,
       password: parsed.data.password,
-      redirectTo: "/protected",
+      redirectTo: targetUrl,
     });
     return {};
   } catch (error) {
     if (error instanceof AuthError) {
-      switch (error.type) {
-        case "CredentialsSignin":
-          return { error: "Invalid owner credentials." };
-        default:
-          return { error: "Authentication failed. Please try again." };
-      }
+      return { error: "That email or password is not right." };
     }
-    // Next.js redirect throws an internal error that must be re-thrown
+    // Next.js redirect throws an internal NEXT_REDIRECT error which must be re-thrown
     throw error;
   }
 }
