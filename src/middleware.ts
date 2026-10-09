@@ -3,22 +3,28 @@ import { NextResponse } from "next/server";
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
-  const isLoginPage = req.nextUrl.pathname.startsWith("/login");
+  const { pathname, search } = req.nextUrl;
+  const isLoginPage = pathname === "/login" || pathname.startsWith("/login/");
+
   const isProtected =
-    req.nextUrl.pathname.startsWith("/protected") ||
-    req.nextUrl.pathname.startsWith("/library") ||
-    req.nextUrl.pathname.startsWith("/watchlist") ||
-    req.nextUrl.pathname.startsWith("/history") ||
-    req.nextUrl.pathname.startsWith("/settings");
+    pathname === "/" ||
+    pathname.startsWith("/search") ||
+    pathname.startsWith("/title") ||
+    pathname.startsWith("/library") ||
+    pathname.startsWith("/watchlist") ||
+    pathname.startsWith("/history") ||
+    pathname.startsWith("/settings") ||
+    pathname.startsWith("/dev");
 
   if (isProtected && !isLoggedIn) {
     const loginUrl = new URL("/login", req.nextUrl.origin);
-    loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
+    const callback = `${pathname}${search}`;
+    loginUrl.searchParams.set("callbackUrl", callback);
     return NextResponse.redirect(loginUrl);
   }
 
   if (isLoginPage && isLoggedIn) {
-    return NextResponse.redirect(new URL("/protected", req.nextUrl.origin));
+    return NextResponse.redirect(new URL("/", req.nextUrl.origin));
   }
 
   return NextResponse.next();
@@ -26,11 +32,14 @@ export default auth((req) => {
 
 export const config = {
   matcher: [
-    "/protected/:path*",
+    "/",
+    "/search/:path*",
+    "/title/:path*",
     "/library/:path*",
     "/watchlist/:path*",
     "/history/:path*",
     "/settings/:path*",
+    "/dev/:path*",
     "/login",
   ],
 };

@@ -5,7 +5,7 @@
 
 [![CI](https://github.com/abdu2030/AkShelf/actions/workflows/ci.yml/badge.svg)](https://github.com/abdu2030/AkShelf/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Week%201-Day%205%20Complete-success)](#roadmap-status)
+[![Status](https://img.shields.io/badge/Week%201-Day%206%20Complete-success)](#roadmap-status)
 
 ---
 
@@ -120,12 +120,14 @@ AkShelf enforces a strict separation between external entertainment metadata and
 
 ## 🔐 Environment Variables
 
-| Variable       | Description                                               | Where to get it                                                   |
-| :------------- | :-------------------------------------------------------- | :---------------------------------------------------------------- |
-| `DATABASE_URL` | PostgreSQL connection string (pooled)                     | Supabase Project Settings &gt; Database                           |
-| `DIRECT_URL`   | PostgreSQL direct connection string for Prisma migrations | Supabase Project Settings &gt; Database                           |
-| `AUTH_SECRET`  | Secret key for session encryption in Auth.js              | Generate via `npx auth secret`                                    |
-| `TMDB_API_KEY` | TMDB API Read Access Token or API Key                     | [The Movie Database API](https://www.themoviedb.org/settings/api) |
+| Variable              | Description                                               | Where to get it                                                               |
+| :-------------------- | :-------------------------------------------------------- | :---------------------------------------------------------------------------- |
+| `DATABASE_URL`        | PostgreSQL connection string (pooled)                     | Supabase Project Settings &gt; Database                                       |
+| `DIRECT_URL`          | PostgreSQL direct connection string for Prisma migrations | Supabase Project Settings &gt; Database                                       |
+| `AUTH_SECRET`         | Secret key for session encryption in Auth.js              | Generate via `npx auth secret`                                                |
+| `OWNER_EMAIL`         | Single-owner login email address                          | Set your private login email                                                  |
+| `OWNER_PASSWORD_HASH` | Bcrypt hash of owner password                             | Generate via `node -e "console.log(require('bcryptjs').hashSync('pwd', 10))"` |
+| `TMDB_API_KEY`        | TMDB API Read Access Token or API Key                     | [The Movie Database API](https://www.themoviedb.org/settings/api)             |
 
 > ⚠️ **Never commit `.env.local` or real API keys to version control.** Commit only `.env.example`.
 
@@ -157,7 +159,7 @@ AkShelf enforces a strict separation between external entertainment metadata and
   - [x] **Day 3**: Supabase/PostgreSQL connection & Prisma setup.
   - [x] **Day 4**: Relational schema design (`User`, `Title`, `Season`, `Episode`, `UserTitle`, `UserEpisode`, `WatchHistory`).
   - [x] **Day 5**: Single-owner Auth.js integration & route protection.
-  - [ ] **Day 6**: Base layout shell (navigation, responsive containers, core UI components).
+  - [x] **Day 6**: Base layout shell (navigation, responsive containers, core UI components).
   - [ ] **Day 7**: Week 1 review, checkpoint release `v0.1.0`.
 - [ ] **Week 2: UI Foundation & Personal Library (`v0.2.0`)**
 - [ ] **Week 3: TMDB / AniList Integration & Search (`v0.3.0`)**

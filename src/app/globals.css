@@ -1,26 +1,366 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --breakpoint-*: initial;
+  --breakpoint-sm: 480px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  --color-base: var(--bg-base);
+  --color-ink: var(--text-primary);
+  --color-ink-soft: var(--text-secondary);
+  --color-ink-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-fill: var(--accent-fill);
+  --color-accent-fill-hover: var(--accent-fill-hover);
+  --color-danger-fill: var(--danger-fill);
+  --color-on-fill: var(--on-fill);
+
+  --color-status-watched-dot: var(--status-watched-dot);
+  --color-status-watched-bg: var(--status-watched-bg);
+  --color-status-watched-text: var(--status-watched-text);
+
+  --color-status-watching-dot: var(--status-watching-dot);
+  --color-status-watching-bg: var(--status-watching-bg);
+  --color-status-watching-text: var(--status-watching-text);
+
+  --color-status-plan-dot: var(--status-plan-dot);
+  --color-status-plan-bg: var(--status-plan-bg);
+  --color-status-plan-text: var(--status-plan-text);
+
+  --color-status-hold-dot: var(--status-hold-dot);
+  --color-status-hold-bg: var(--status-hold-bg);
+  --color-status-hold-text: var(--status-hold-text);
+
+  --color-status-dropped-dot: var(--status-dropped-dot);
+  --color-status-dropped-bg: var(--status-dropped-bg);
+  --color-status-dropped-text: var(--status-dropped-text);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+  --radius-full: 9999px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --font-sans: var(--font-inter), var(--font-noto-jp), system-ui, sans-serif;
+  --font-display: var(--font-jakarta), system-ui, sans-serif;
+
+  --z-sticky: 20;
+  --z-dropdown: 30;
+  --z-scrim: 40;
+  --z-dialog: 50;
+  --z-toast: 60;
+
+  --duration-instant: 100ms;
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+  --duration-count: 400ms;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-base: #0b0d1a;
+  --text-primary: #f4f6ff;
+  --text-secondary: #c3c9e2;
+  --text-muted: #bcc3dd;
+  --accent: #c7d2fe;
+  --accent-fill: #4f46e5;
+  --accent-fill-hover: #4338ca;
+  --danger-fill: #b91c1c;
+  --on-fill: #ffffff;
+  --hover-overlay: rgba(255, 255, 255, 0.06);
+  --press-overlay: rgba(255, 255, 255, 0.1);
+  --input-border: rgba(255, 255, 255, 0.45);
+
+  --glass-1-bg: rgba(255, 255, 255, 0.06);
+  --glass-2-bg: rgba(255, 255, 255, 0.1);
+  --glass-3-bg: rgba(30, 33, 58, 0.72);
+  --glass-1-border: rgba(255, 255, 255, 0.12);
+  --glass-2-border: rgba(255, 255, 255, 0.16);
+  --glass-3-border: rgba(255, 255, 255, 0.22);
+  --glass-1-blur: 16px;
+  --glass-2-blur: 24px;
+  --glass-3-blur: 32px;
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  --shadow-1: 0 4px 16px rgba(0, 0, 0, 0.25);
+  --shadow-2: 0 8px 28px rgba(0, 0, 0, 0.32);
+  --shadow-3: 0 16px 48px rgba(0, 0, 0, 0.45);
+
+  --solid-1: #171a31;
+  --solid-2: #1e2240;
+  --solid-3: #262b4d;
+
+  --aurora-1: 99, 102, 241;
+  --aurora-1-a: 0.28;
+  --aurora-2: 168, 85, 247;
+  --aurora-2-a: 0.22;
+  --aurora-3: 20, 184, 166;
+  --aurora-3-a: 0.18;
+
+  --status-watched-dot: #34d399;
+  --status-watched-bg: rgba(52, 211, 153, 0.22);
+  --status-watched-text: #a7f3d0;
+
+  --status-watching-dot: #38bdf8;
+  --status-watching-bg: rgba(56, 189, 248, 0.22);
+  --status-watching-text: #bae6fd;
+
+  --status-plan-dot: #a78bfa;
+  --status-plan-bg: rgba(167, 139, 250, 0.22);
+  --status-plan-text: #ddd6fe;
+
+  --status-hold-dot: #fbbf24;
+  --status-hold-bg: rgba(251, 191, 36, 0.22);
+  --status-hold-text: #fde68a;
+
+  --status-dropped-dot: #94a3b8;
+  --status-dropped-bg: rgba(148, 163, 184, 0.22);
+  --status-dropped-text: #e2e8f0;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --bg-base: #eef1fb;
+  --text-primary: #12142b;
+  --text-secondary: #4a5072;
+  --text-muted: #5f6688;
+  --accent: #4338ca;
+  --hover-overlay: rgba(0, 0, 0, 0.04);
+  --press-overlay: rgba(0, 0, 0, 0.08);
+  --input-border: rgba(74, 80, 114, 0.65);
+
+  --glass-1-bg: rgba(255, 255, 255, 0.55);
+  --glass-2-bg: rgba(255, 255, 255, 0.68);
+  --glass-3-bg: rgba(255, 255, 255, 0.86);
+  --glass-1-border: rgba(255, 255, 255, 0.75);
+  --glass-2-border: rgba(255, 255, 255, 0.85);
+  --glass-3-border: rgba(255, 255, 255, 0.95);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --shadow-1: 0 4px 16px rgba(49, 46, 129, 0.1);
+  --shadow-2: 0 8px 28px rgba(49, 46, 129, 0.14);
+  --shadow-3: 0 16px 48px rgba(49, 46, 129, 0.2);
+
+  --solid-1: #f7f8fd;
+  --solid-2: #ffffff;
+  --solid-3: #ffffff;
+
+  --aurora-1: 129, 140, 248;
+  --aurora-1-a: 0.3;
+  --aurora-2: 240, 171, 252;
+  --aurora-2-a: 0.32;
+  --aurora-3: 125, 211, 252;
+  --aurora-3-a: 0.34;
+
+  --status-watched-dot: #065f46;
+  --status-watched-bg: rgba(16, 185, 129, 0.14);
+  --status-watched-text: #065f46;
+
+  --status-watching-dot: #075985;
+  --status-watching-bg: rgba(14, 165, 233, 0.14);
+  --status-watching-text: #075985;
+
+  --status-plan-dot: #5b21b6;
+  --status-plan-bg: rgba(139, 92, 246, 0.14);
+  --status-plan-text: #5b21b6;
+
+  --status-hold-dot: #78350f;
+  --status-hold-bg: rgba(245, 158, 11, 0.14);
+  --status-hold-text: #78350f;
+
+  --status-dropped-dot: #334155;
+  --status-dropped-bg: rgba(100, 116, 139, 0.14);
+  --status-dropped-text: #334155;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-inter), var(--font-noto-jp), system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+@layer components {
+  .aurora {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        640px circle at 12% 8%,
+        rgba(var(--aurora-1), var(--aurora-1-a)),
+        transparent 70%
+      ),
+      radial-gradient(
+        560px circle at 88% 45%,
+        rgba(var(--aurora-2), var(--aurora-2-a)),
+        transparent 70%
+      ),
+      radial-gradient(
+        600px circle at 15% 92%,
+        rgba(var(--aurora-3), var(--aurora-3-a)),
+        transparent 70%
+      ),
+      var(--bg-base);
+  }
+
+  .glass-1,
+  .glass-2,
+  .glass-3 {
+    isolation: isolate;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    box-shadow: var(--glass-shadow), var(--glass-highlight);
+  }
+
+  .glass-1 {
+    --glass-bg: var(--glass-1-bg);
+    --glass-border: var(--glass-1-border);
+    --glass-blur: var(--glass-1-blur);
+    --glass-shadow: var(--shadow-1);
+    border-radius: 20px;
+  }
+
+  .glass-2 {
+    --glass-bg: var(--glass-2-bg);
+    --glass-border: var(--glass-2-border);
+    --glass-blur: var(--glass-2-blur);
+    --glass-shadow: var(--shadow-2);
+    border-radius: 20px;
+  }
+
+  .glass-3 {
+    --glass-bg: var(--glass-3-bg);
+    --glass-border: var(--glass-3-border);
+    --glass-blur: var(--glass-3-blur);
+    --glass-shadow: var(--shadow-3);
+    border-radius: 28px;
+  }
+
+  .glass-inset {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+  }
+
+  [data-theme="light"] .glass-inset {
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(74, 80, 114, 0.12);
+  }
+}
+
+/* Fallback 1: blur unsupported */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-1 {
+    background: var(--solid-1) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .glass-2 {
+    background: var(--solid-2) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .glass-3 {
+    background: var(--solid-3) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* Fallback 2: reduce transparency (system or settings switch) */
+@media (prefers-reduced-transparency: reduce) {
+  .glass-1,
+  .glass-2,
+  .glass-3 {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .glass-1 {
+    background: var(--solid-1) !important;
+  }
+  .glass-2 {
+    background: var(--solid-2) !important;
+  }
+  .glass-3 {
+    background: var(--solid-3) !important;
+  }
+  .aurora {
+    opacity: 0.5 !important;
+  }
+}
+
+[data-transparency="reduced"] .glass-1,
+[data-transparency="reduced"] .glass-2,
+[data-transparency="reduced"] .glass-3 {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+[data-transparency="reduced"] .glass-1 {
+  background: var(--solid-1) !important;
+}
+[data-transparency="reduced"] .glass-2 {
+  background: var(--solid-2) !important;
+}
+[data-transparency="reduced"] .glass-3 {
+  background: var(--solid-3) !important;
+}
+[data-transparency="reduced"] .aurora {
+  opacity: 0.5 !important;
+}
+
+/* Fallback 3: forced colors */
+@media (forced-colors: active) {
+  .glass-1,
+  .glass-2,
+  .glass-3,
+  .glass-inset {
+    background: Canvas !important;
+    color: CanvasText !important;
+    border: 1px solid CanvasText !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Reduced motion (system or settings override) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+[data-motion="reduced"] *,
+[data-motion="reduced"] *::before,
+[data-motion="reduced"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
