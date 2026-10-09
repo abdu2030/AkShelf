@@ -1,85 +1,117 @@
 "use client";
 
-import { useActionState } from "react";
-import Link from "next/link";
+import { useActionState, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { Film, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { loginAction } from "@/actions/auth";
+import { Button } from "@/components/ui/button";
 
-export default function LoginPage() {
+function LoginForm() {
   const [state, formAction, isPending] = useActionState(loginAction, undefined);
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
+
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 p-6 text-zinc-100 selection:bg-indigo-500 selection:text-white">
-      <main className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-900/70 p-8 shadow-2xl backdrop-blur sm:p-10">
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-400">
-          <span>Private Area</span>
-          <span className="text-zinc-600">•</span>
-          <span>Single-Owner Login</span>
+    <main className="w-full max-w-[400px] glass-3 rounded-[28px] p-8 shadow-2xl flex flex-col items-center">
+      {/* AkShelf Mark */}
+      <div className="h-12 w-12 rounded-2xl bg-accent-fill flex items-center justify-center text-white shadow-lg mb-6">
+        <Film className="h-6 w-6" aria-hidden="true" />
+      </div>
+
+      {/* Header */}
+      <div className="text-center mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold font-display text-ink tracking-tight">
+          Welcome back
+        </h1>
+        <p className="text-sm md:text-base text-ink-soft mt-2 leading-relaxed">
+          Your movies, shows and anime, on one shelf.
+        </p>
+      </div>
+
+      {/* Sign In Form */}
+      <form action={formAction} className="w-full space-y-5">
+        <input type="hidden" name="callbackUrl" value={callbackUrl} />
+
+        {/* Email Field */}
+        <div className="flex flex-col">
+          <label htmlFor="email" className="text-sm font-semibold text-ink mb-2 select-none">
+            Email
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            required
+            autoComplete="username"
+            placeholder="owner@akshelf.local"
+            className="w-full h-12 rounded-[12px] px-4 text-base text-ink placeholder:text-ink-soft/60 bg-white/8 dark:bg-white/8 border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+          />
         </div>
 
-        <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
-          Welcome to AkShelf
-        </h1>
-        <p className="mt-2 text-sm text-zinc-400">
-          Sign in to access your private library, watchlist, and tracking history.
-        </p>
-
-        {state?.error && (
-          <div className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-400">
-            {state.error}
-          </div>
-        )}
-
-        <form action={formAction} className="mt-6 space-y-4">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-xs font-medium uppercase tracking-wider text-zinc-400"
-            >
-              Owner Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              defaultValue="owner@akshelf.local"
-              placeholder="owner@akshelf.local"
-              className="mt-1.5 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 outline-none transition focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-xs font-medium uppercase tracking-wider text-zinc-400"
-            >
-              Password
-            </label>
+        {/* Password Field with Show/Hide Toggle */}
+        <div className="flex flex-col">
+          <label htmlFor="password" className="text-sm font-semibold text-ink mb-2 select-none">
+            Password
+          </label>
+          <div className="relative flex items-center">
             <input
               id="password"
               name="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               required
-              placeholder="••••••••••••"
-              className="mt-1.5 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3.5 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 outline-none transition focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              autoComplete="current-password"
+              placeholder="Enter password"
+              className="w-full h-12 rounded-[12px] px-4 pr-12 text-base text-ink placeholder:text-ink-soft/60 bg-white/8 dark:bg-white/8 border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-3.5 text-ink-soft hover:text-ink transition-colors p-1 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              {showPassword ? (
+                <EyeOff className="h-5 w-5" aria-hidden="true" />
+              ) : (
+                <Eye className="h-5 w-5" aria-hidden="true" />
+              )}
+            </button>
           </div>
-
-          <button
-            type="submit"
-            disabled={isPending}
-            className="mt-2 flex w-full items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 disabled:opacity-50"
-          >
-            {isPending ? "Signing in..." : "Sign In to Library"}
-          </button>
-        </form>
-
-        <div className="mt-6 border-t border-zinc-800/80 pt-4 text-center">
-          <Link href="/" className="text-xs text-zinc-500 transition hover:text-zinc-300">
-            &larr; Back to Public Welcome Page
-          </Link>
         </div>
-      </main>
+
+        {/* One generic error message above the button */}
+        {state?.error && (
+          <div
+            role="alert"
+            className="flex items-center gap-2 p-3 rounded-[12px] bg-red-500/10 border border-red-500/25 text-red-300 text-xs font-medium"
+          >
+            <AlertTriangle className="h-4 w-4 shrink-0 text-red-400" aria-hidden="true" />
+            <span>{state.error}</span>
+          </div>
+        )}
+
+        {/* Large primary button */}
+        <div className="pt-2">
+          <Button type="submit" variant="primary" size="large" fullWidth isLoading={isPending}>
+            Sign in
+          </Button>
+        </div>
+      </form>
+    </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <div className="min-h-screen w-full flex items-center justify-center p-4">
+      <Suspense
+        fallback={
+          <div className="w-full max-w-[400px] h-[480px] glass-3 rounded-[28px] animate-pulse" />
+        }
+      >
+        <LoginForm />
+      </Suspense>
     </div>
   );
 }

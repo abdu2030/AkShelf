@@ -1,20 +1,33 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter, Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/layout/theme-provider";
+import { Aurora } from "@/components/layout/aurora";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-jakarta",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const notoJP = Noto_Sans_JP({
+  subsets: ["latin"],
+  weight: ["400", "600"],
+  variable: "--font-noto-jp",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "AkShelf | Personal Watch Tracker",
-  description: "Personal movie, TV show, and anime tracking website",
+  description: "Private, personal movie, TV show, and anime tracker. Did I watch this?",
 };
 
 export default function RootLayout({
@@ -23,8 +36,51 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${jakarta.variable} ${inter.variable} ${notoJP.variable}`}
+    >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var storedTheme = localStorage.getItem('akshelf-theme') || 'system';
+                  var resolvedTheme = storedTheme;
+                  if (storedTheme === 'system') {
+                    resolvedTheme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+                  }
+                  document.documentElement.setAttribute('data-theme', resolvedTheme);
+
+                  var storedTransparency = localStorage.getItem('akshelf-transparency');
+                  if (storedTransparency === 'reduced') {
+                    document.documentElement.setAttribute('data-transparency', 'reduced');
+                  }
+
+                  var storedMotion = localStorage.getItem('akshelf-motion');
+                  if (storedMotion === 'reduced') {
+                    document.documentElement.setAttribute('data-motion', 'reduced');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className="min-h-screen flex flex-col font-sans antialiased text-ink">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-accent-fill focus:text-white focus:rounded-md focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-accent"
+        >
+          Skip to content
+        </a>
+        <ThemeProvider>
+          <Aurora />
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

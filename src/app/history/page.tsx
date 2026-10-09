@@ -1,19 +1,19 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
-import { LayoutDashboard } from "lucide-react";
+import { History } from "lucide-react";
 
-export default function HomePage() {
+export default function HistoryPage() {
   return (
     <AppShell>
       <PageHeader
-        title="Your shelf"
-        subtitle="Track what you watch, what is next, and your ratings."
+        title="History"
+        subtitle="Chronological activity log of what you watched and rated."
       />
       <EmptyState
-        icon={<LayoutDashboard />}
-        headline="Your shelf is empty"
-        body="Search for a movie, show or anime to start."
+        icon={<History />}
+        headline="Nothing here yet"
+        body="Your activity will appear as you track titles."
         actionLabel="Search titles"
         actionHref="/search"
       />
