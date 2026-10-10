@@ -11,8 +11,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { MediaCard, MediaCardSkeleton } from "@/components/title/media-card";
+import { MediaGrid, MediaGridSkeleton, GridDensity } from "@/components/title/media-grid";
 import { useTheme } from "@/components/layout/theme-provider";
-import { Search, Sparkles, Bookmark, Heart, SlidersHorizontal, Flame } from "lucide-react";
+import { Search, Sparkles, Bookmark, Heart, SlidersHorizontal, Flame, Library } from "lucide-react";
 import { useState } from "react";
 
 export default function DevComponentsGalleryPage() {
@@ -29,6 +30,92 @@ export default function DevComponentsGalleryPage() {
   const [switchState, setSwitchState] = useState(true);
   const [chipSelected, setChipSelected] = useState(false);
   const [quickActionMessage, setQuickActionMessage] = useState<string | null>(null);
+  const [gridLoading, setGridLoading] = useState(false);
+  const [gridDensity, setGridDensity] = useState<GridDensity>("default");
+  const [gridShowEmpty, setGridShowEmpty] = useState(false);
+
+  const sampleShelfItems = [
+    {
+      id: "g1",
+      title: "Inception",
+      mediaType: "MOVIE" as const,
+      year: 2010,
+      posterUrl: "https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg",
+      status: "WATCHED" as const,
+      rating: 9.0,
+    },
+    {
+      id: "g2",
+      title: "Severance",
+      mediaType: "TV" as const,
+      year: 2022,
+      posterUrl: "https://image.tmdb.org/t/p/w500/u3bZgnGQ9T01sWNhyveQz0wGeW.jpg",
+      status: "WATCHING" as const,
+      season: 1,
+      episode: 7,
+      currentEpisode: 7,
+      totalEpisodes: 9,
+    },
+    {
+      id: "g3",
+      title: "Frieren: Beyond Journey's End",
+      mediaType: "ANIME" as const,
+      year: 2023,
+      posterUrl:
+        "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-n2b4b4b4.jpg",
+      status: "PLAN_TO_WATCH" as const,
+    },
+    {
+      id: "g4",
+      title: "Arcane",
+      mediaType: "TV" as const,
+      year: 2021,
+      posterUrl: "https://image.tmdb.org/t/p/w500/fqldf2t8ztc9aiwn396mlCu7434.jpg",
+      status: "WATCHED" as const,
+      rating: 9.5,
+    },
+    {
+      id: "g5",
+      title: "Cyberpunk: Edgerunners",
+      mediaType: "ANIME" as const,
+      year: 2022,
+      posterUrl:
+        "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx120377-ou54QfAonYgC.jpg",
+      status: "WATCHED" as const,
+      rating: 9.1,
+    },
+    {
+      id: "g6",
+      title: "Dune: Part Two",
+      mediaType: "MOVIE" as const,
+      year: 2024,
+      posterUrl: "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
+      status: "WATCHED" as const,
+      rating: 8.9,
+    },
+    {
+      id: "g7",
+      title: "Attack on Titan",
+      mediaType: "ANIME" as const,
+      year: 2013,
+      posterUrl:
+        "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx16498-C6FPmWm59CyP.jpg",
+      status: "WATCHING" as const,
+      season: 1,
+      episode: 6,
+      currentEpisode: 6,
+      totalEpisodes: 25,
+    },
+    {
+      id: "g8",
+      title: "Princess Mononoke (Missing Poster Demo)",
+      mediaType: "ANIME" as const,
+      year: 1997,
+      posterUrl: null,
+      status: "ON_HOLD" as const,
+      rating: 8.8,
+    },
+  ];
 
   return (
     <AppShell>
@@ -351,6 +438,82 @@ export default function DevComponentsGalleryPage() {
               <MediaCardSkeleton />
               <span className="text-[11px] text-ink-muted text-center mt-2">Loading Skeleton</span>
             </div>
+          </div>
+        </section>
+
+        {/* 9. Media Grid & Responsive Breakpoints */}
+        <section className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold font-display text-ink">
+                9. Media Grid & Responsive Breakpoints (Spec 9.10, 8.2 & Breakpoints)
+              </h2>
+              <p className="text-xs text-ink-muted">
+                Breakpoint-aware column layout: 2 cols on mobile (&lt;480px), 3 on sm, 4 on md/lg, 5
+                on xl, 6 on 2xl. Direct placement on aurora (zero blur budget).
+              </p>
+            </div>
+
+            {/* Interactive Grid Controls */}
+            <div className="flex flex-wrap items-center gap-3 glass-1 p-2 rounded-[14px]">
+              <Switch
+                checked={gridLoading}
+                onCheckedChange={setGridLoading}
+                label="Simulate Loading"
+              />
+              <Switch
+                checked={gridShowEmpty}
+                onCheckedChange={setGridShowEmpty}
+                label="Simulate Empty"
+              />
+              <div className="flex items-center gap-1 border-l border-white/10 pl-2">
+                <span className="text-xs text-ink-muted mr-1">Density:</span>
+                <Chip
+                  selected={gridDensity === "compact"}
+                  onClick={() => setGridDensity("compact")}
+                  className="h-7 px-2.5 text-xs"
+                >
+                  Compact
+                </Chip>
+                <Chip
+                  selected={gridDensity === "default"}
+                  onClick={() => setGridDensity("default")}
+                  className="h-7 px-2.5 text-xs"
+                >
+                  Default
+                </Chip>
+                <Chip
+                  selected={gridDensity === "spacious"}
+                  onClick={() => setGridDensity("spacious")}
+                  className="h-7 px-2.5 text-xs"
+                >
+                  Spacious
+                </Chip>
+              </div>
+            </div>
+          </div>
+
+          <MediaGrid
+            items={gridShowEmpty ? [] : sampleShelfItems}
+            isLoading={gridLoading}
+            skeletonCount={8}
+            density={gridDensity}
+            emptyState={
+              <EmptyState
+                icon={<Library />}
+                headline="No shelf titles"
+                body="There are no items matching this filter in your library."
+                actionLabel="Reset Filter"
+                onAction={() => setGridShowEmpty(false)}
+              />
+            }
+          />
+
+          <div className="pt-6 border-t border-white/10 space-y-3">
+            <h3 className="text-sm font-semibold text-ink-muted">
+              Standalone MediaGridSkeleton (Spec 9.19)
+            </h3>
+            <MediaGridSkeleton count={6} density={gridDensity} />
           </div>
         </section>
       </div>
