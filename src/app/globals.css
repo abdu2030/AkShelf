@@ -51,8 +51,9 @@
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
 
-  --font-sans: var(--font-inter), var(--font-noto-jp), system-ui, sans-serif;
-  --font-display: var(--font-jakarta), system-ui, sans-serif;
+  --font-sans:
+    var(--font-inter, Inter), "Hiragino Sans", "Yu Gothic", "Meiryo", system-ui, sans-serif;
+  --font-display: var(--font-jakarta, "Plus Jakarta Sans"), system-ui, sans-serif;
 
   --z-sticky: 20;
   --z-dropdown: 30;
@@ -71,9 +72,9 @@
 [data-theme="dark"] {
   color-scheme: dark;
   --bg-base: #0b0d1a;
-  --text-primary: #f4f6ff;
-  --text-secondary: #c3c9e2;
-  --text-muted: #bcc3dd;
+  --text-primary: #ffffff;
+  --text-secondary: #dbe2fd;
+  --text-muted: #b4bedd;
   --accent: #c7d2fe;
   --accent-fill: #4f46e5;
   --accent-fill-hover: #4338ca;
@@ -132,13 +133,13 @@
 [data-theme="light"] {
   color-scheme: light;
   --bg-base: #eef1fb;
-  --text-primary: #12142b;
-  --text-secondary: #4a5072;
-  --text-muted: #5f6688;
+  --text-primary: #0e1124;
+  --text-secondary: #2a3054;
+  --text-muted: #4a527c;
   --accent: #4338ca;
   --hover-overlay: rgba(0, 0, 0, 0.04);
   --press-overlay: rgba(0, 0, 0, 0.08);
-  --input-border: rgba(74, 80, 114, 0.65);
+  --input-border: rgba(42, 48, 84, 0.65);
 
   --glass-1-bg: rgba(255, 255, 255, 0.55);
   --glass-2-bg: rgba(255, 255, 255, 0.68);
@@ -186,10 +187,14 @@
 body {
   background-color: var(--bg-base);
   color: var(--text-primary);
-  font-family: var(--font-inter), var(--font-noto-jp), system-ui, sans-serif;
+  font-family:
+    var(--font-inter, Inter), "Hiragino Sans", "Yu Gothic", "Meiryo", system-ui, sans-serif;
   margin: 0;
   padding: 0;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 @layer components {

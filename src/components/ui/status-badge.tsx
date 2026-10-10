@@ -24,42 +24,38 @@ export const statusConfig: Record<
   WATCHED: {
     label: "Watched",
     icon: CheckCircle,
-    badgeClass:
-      "bg-[rgba(52,211,153,0.22)] text-[#a7f3d0] dark:bg-[rgba(52,211,153,0.22)] dark:text-[#a7f3d0] light:bg-[rgba(16,185,129,0.14)] light:text-[#065f46]",
-    textClass: "text-[#a7f3d0] dark:text-[#a7f3d0] light:text-[#065f46]",
-    dotClass: "text-[#34d399] dark:text-[#34d399] light:text-[#065f46]",
+    badgeClass: "bg-status-watched-bg text-status-watched-text border border-status-watched-dot/25",
+    textClass: "text-status-watched-text",
+    dotClass: "text-status-watched-dot",
   },
   WATCHING: {
     label: "Watching",
     icon: PlayCircle,
     badgeClass:
-      "bg-[rgba(56,189,248,0.22)] text-[#bae6fd] dark:bg-[rgba(56,189,248,0.22)] dark:text-[#bae6fd] light:bg-[rgba(14,165,233,0.14)] light:text-[#075985]",
-    textClass: "text-[#bae6fd] dark:text-[#bae6fd] light:text-[#075985]",
-    dotClass: "text-[#38bdf8] dark:text-[#38bdf8] light:text-[#075985]",
+      "bg-status-watching-bg text-status-watching-text border border-status-watching-dot/25",
+    textClass: "text-status-watching-text",
+    dotClass: "text-status-watching-dot",
   },
   PLAN_TO_WATCH: {
     label: "Plan to Watch",
     icon: Bookmark,
-    badgeClass:
-      "bg-[rgba(167,139,250,0.22)] text-[#ddd6fe] dark:bg-[rgba(167,139,250,0.22)] dark:text-[#ddd6fe] light:bg-[rgba(139,92,246,0.14)] light:text-[#5b21b6]",
-    textClass: "text-[#ddd6fe] dark:text-[#ddd6fe] light:text-[#5b21b6]",
-    dotClass: "text-[#a78bfa] dark:text-[#a78bfa] light:text-[#5b21b6]",
+    badgeClass: "bg-status-plan-bg text-status-plan-text border border-status-plan-dot/25",
+    textClass: "text-status-plan-text",
+    dotClass: "text-status-plan-dot",
   },
   ON_HOLD: {
     label: "On Hold",
     icon: PauseCircle,
-    badgeClass:
-      "bg-[rgba(251,191,36,0.22)] text-[#fde68a] dark:bg-[rgba(251,191,36,0.22)] dark:text-[#fde68a] light:bg-[rgba(245,158,11,0.14)] light:text-[#78350f]",
-    textClass: "text-[#fde68a] dark:text-[#fde68a] light:text-[#78350f]",
-    dotClass: "text-[#fbbf24] dark:text-[#fbbf24] light:text-[#78350f]",
+    badgeClass: "bg-status-hold-bg text-status-hold-text border border-status-hold-dot/25",
+    textClass: "text-status-hold-text",
+    dotClass: "text-status-hold-dot",
   },
   DROPPED: {
     label: "Dropped",
     icon: MinusCircle,
-    badgeClass:
-      "bg-[rgba(148,163,184,0.22)] text-[#e2e8f0] dark:bg-[rgba(148,163,184,0.22)] dark:text-[#e2e8f0] light:bg-[rgba(100,116,139,0.14)] light:text-[#334155]",
-    textClass: "text-[#e2e8f0] dark:text-[#e2e8f0] light:text-[#334155]",
-    dotClass: "text-[#94a3b8] dark:text-[#94a3b8] light:text-[#334155]",
+    badgeClass: "bg-status-dropped-bg text-status-dropped-text border border-status-dropped-dot/25",
+    textClass: "text-status-dropped-text",
+    dotClass: "text-status-dropped-dot",
   },
 };
 

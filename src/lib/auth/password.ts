@@ -2,7 +2,8 @@ import bcrypt from "bcryptjs";
 
 /**
  * Verifies a plaintext password against a bcrypt hash.
- * Fails fast by throwing an Error if the hash is missing or empty.
+ * Unescapes any \$ backslashes if loaded from .env without expansion,
+ * and fails fast by throwing an Error if the hash is missing or empty.
  */
 export async function verifyPasswordHash(
   password: string,
@@ -12,7 +13,10 @@ export async function verifyPasswordHash(
     throw new Error("Missing required environment variable: OWNER_PASSWORD_HASH");
   }
 
-  return bcrypt.compare(password, hash);
+  // Normalize hash in case literal backslashes were preserved
+  const normalizedHash = hash.replace(/\\([$])/g, "$1").trim();
+
+  return bcrypt.compare(password, normalizedHash);
 }
 
 /**

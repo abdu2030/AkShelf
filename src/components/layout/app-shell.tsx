@@ -55,7 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
           <div>
             <span className="font-display font-bold text-lg text-ink tracking-tight">AkShelf</span>
-            <span className="block text-[11px] text-ink-muted -mt-1 font-medium">
+            <span className="block text-[11px] text-ink-muted -mt-0.5 font-semibold tracking-wide">
               Watch Tracker
             </span>
           </div>
@@ -72,15 +72,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-3.5 h-11 px-3.5 rounded-[12px] text-sm font-semibold transition-colors",
+                  "flex items-center gap-3.5 h-11 px-3.5 rounded-[12px] text-sm transition-all",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
                   active
-                    ? "bg-white/10 dark:bg-white/10 text-accent border border-white/10"
-                    : "text-ink-soft hover:text-ink hover:bg-white/6 dark:hover:bg-white/6",
+                    ? "bg-white/12 dark:bg-white/12 text-accent font-semibold border border-white/12 shadow-sm"
+                    : "text-ink-soft font-medium hover:text-ink hover:bg-white/8 dark:hover:bg-white/8",
                 )}
               >
                 <Icon
-                  className={cn("h-5 w-5 shrink-0", active ? "text-accent" : "text-ink-soft")}
+                  className={cn(
+                    "h-5 w-5 shrink-0 transition-colors",
+                    active ? "text-accent" : "text-ink-soft",
+                  )}
                   aria-hidden="true"
                 />
                 <span>{item.label}</span>
@@ -90,11 +93,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* Bottom Bar: Theme toggle & Logout */}
-        <div className="pt-3 border-t border-white/8 space-y-1">
+        <div className="pt-3 border-t border-white/10 dark:border-white/12 space-y-1">
           <button
             type="button"
             onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-            className="flex items-center gap-3.5 w-full h-10 px-3.5 rounded-[12px] text-xs font-semibold text-ink-soft hover:text-ink hover:bg-white/6 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="flex items-center gap-3.5 w-full h-10 px-3.5 rounded-[12px] text-xs font-semibold text-ink-soft hover:text-ink hover:bg-white/8 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             {resolvedTheme === "dark" ? (
               <Sun className="h-4 w-4 text-amber-400" aria-hidden="true" />
@@ -184,7 +187,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* 3. Mobile Header (below md: < 768px) with Settings Gear icon */}
-      <header className="md:hidden sticky top-0 z-20 w-full glass-2 border-b border-white/8 px-4 h-14 flex items-center justify-between">
+      <header className="md:hidden sticky top-0 z-20 w-full glass-2 border-b border-white/10 dark:border-white/12 px-4 h-14 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5">
           <div className="h-7 w-7 rounded-lg bg-accent-fill flex items-center justify-center text-white">
             <Film className="h-4 w-4" aria-hidden="true" />
@@ -220,7 +223,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* 5. Mobile Bottom Bar (below md: < 768px) - 5 primary items */}
       <nav
         aria-label="Mobile Navigation"
-        className="md:hidden fixed bottom-0 left-0 right-0 z-20 h-16 glass-2 rounded-t-[16px] border-t border-white/12 px-2 flex items-center justify-around select-none pb-[env(safe-area-inset-bottom)]"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-20 h-16 glass-2 rounded-t-[16px] border-t border-white/12 dark:border-white/14 px-2 flex items-center justify-around select-none pb-[env(safe-area-inset-bottom)]"
       >
         {navItems.slice(0, 5).map((item) => {
           const active = isCurrent(item.href);
@@ -232,7 +235,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               aria-current={active ? "page" : undefined}
               className={cn(
                 "flex flex-col items-center justify-center min-w-[56px] py-1 text-center transition-all",
-                active ? "text-accent font-semibold" : "text-ink-soft",
+                active ? "text-accent font-semibold" : "text-ink-soft font-medium",
               )}
             >
               <div
@@ -246,7 +249,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   aria-hidden="true"
                 />
               </div>
-              <span className="text-[11px] leading-tight mt-0.5">{item.shortLabel}</span>
+              <span className="text-[11px] leading-tight mt-0.5 font-medium">
+                {item.shortLabel}
+              </span>
             </Link>
           );
         })}
