@@ -5,7 +5,7 @@
 
 [![CI](https://github.com/abdu2030/AkShelf/actions/workflows/ci.yml/badge.svg)](https://github.com/abdu2030/AkShelf/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Week%201-Day%206%20Complete-success)](#roadmap-status)
+[![Status](https://img.shields.io/badge/Week%201-Complete%20v0.1.0-success)](#roadmap-status)
 
 ---
 
@@ -160,7 +160,7 @@ AkShelf enforces a strict separation between external entertainment metadata and
   - [x] **Day 4**: Relational schema design (`User`, `Title`, `Season`, `Episode`, `UserTitle`, `UserEpisode`, `WatchHistory`).
   - [x] **Day 5**: Single-owner Auth.js integration & route protection.
   - [x] **Day 6**: Base layout shell (navigation, responsive containers, core UI components).
-  - [ ] **Day 7**: Week 1 review, checkpoint release `v0.1.0`.
+  - [x] **Day 7**: Week 1 review, checkpoint release `v0.1.0` ([Review Document](docs/WEEK_1_REVIEW.md)).
 - [ ] **Week 2: UI Foundation & Personal Library (`v0.2.0`)**
 - [ ] **Week 3: TMDB / AniList Integration & Search (`v0.3.0`)**
 - [ ] **Week 4: Watch Tracking, Ratings & History (`v0.4.0`)**
