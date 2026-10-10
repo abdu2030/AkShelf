@@ -80,7 +80,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="pt-2 border-t border-white/8 space-y-4">
+          <div className="pt-2 border-t border-white/10 dark:border-white/12 space-y-4">
             <Switch
               checked={reduceTransparency}
               onCheckedChange={setReduceTransparency}
@@ -103,7 +103,7 @@ export default function SettingsPage() {
             <Database className="h-5 w-5" aria-hidden="true" />
             <h2 className="text-lg font-bold font-display text-ink">Your Data</h2>
           </div>
-          <p className="text-sm text-ink-soft">
+          <p className="text-sm text-ink-soft font-medium leading-relaxed">
             Your personal watch records, ratings, and episode progress are stored in PostgreSQL.
             Keep a copy outside AkShelf now and then.
           </p>
@@ -120,7 +120,7 @@ export default function SettingsPage() {
             <Info className="h-5 w-5" aria-hidden="true" />
             <h2 className="text-lg font-bold font-display text-ink">About & Data Sources</h2>
           </div>
-          <div className="text-xs text-ink-muted space-y-2 leading-relaxed">
+          <div className="text-xs text-ink-muted font-medium space-y-2 leading-relaxed">
             <p>AkShelf Version 0.1.0 (Week 1)</p>
             <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
             <p>Anime data provided by the AniList GraphQL API.</p>

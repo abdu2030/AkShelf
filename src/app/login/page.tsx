@@ -22,10 +22,10 @@ function LoginForm() {
 
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold font-display text-ink tracking-tight">
+        <h1 className="text-3xl md:text-4xl font-bold font-display text-ink tracking-tight drop-shadow-sm">
           Welcome back
         </h1>
-        <p className="text-sm md:text-base text-ink-soft mt-2 leading-relaxed">
+        <p className="text-sm md:text-base text-ink-soft font-medium mt-2 leading-relaxed">
           Your movies, shows and anime, on one shelf.
         </p>
       </div>
@@ -46,7 +46,7 @@ function LoginForm() {
             required
             autoComplete="username"
             placeholder="owner@akshelf.local"
-            className="w-full h-12 rounded-[12px] px-4 text-base text-ink placeholder:text-ink-soft/60 bg-white/8 dark:bg-white/8 border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+            className="w-full h-12 rounded-[12px] px-4 text-base text-ink placeholder:text-ink-muted placeholder:font-normal bg-white/8 dark:bg-white/8 border border-white/20 dark:border-white/25 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
           />
         </div>
 
@@ -63,7 +63,7 @@ function LoginForm() {
               required
               autoComplete="current-password"
               placeholder="Enter password"
-              className="w-full h-12 rounded-[12px] px-4 pr-12 text-base text-ink placeholder:text-ink-soft/60 bg-white/8 dark:bg-white/8 border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+              className="w-full h-12 rounded-[12px] px-4 pr-12 text-base text-ink placeholder:text-ink-muted placeholder:font-normal bg-white/8 dark:bg-white/8 border border-white/20 dark:border-white/25 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
             />
             <button
               type="button"

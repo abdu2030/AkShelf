@@ -77,11 +77,11 @@ export default function DevComponentsGalleryPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-accent">
                 Level 1: Base (.glass-1)
               </span>
-              <p className="text-sm text-ink-soft">
+              <p className="text-sm text-ink-soft font-medium">
                 Cards, stat tiles, list rows, filter bar. Blur 16px.
               </p>
               <div className="glass-inset p-3 rounded-[14px] mt-4">
-                <span className="text-xs text-ink-muted">
+                <span className="text-xs text-ink-muted font-medium">
                   .glass-inset nested panel (zero extra blur)
                 </span>
               </div>
@@ -91,7 +91,7 @@ export default function DevComponentsGalleryPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-accent">
                 Level 2: Raised (.glass-2)
               </span>
-              <p className="text-sm text-ink-soft">
+              <p className="text-sm text-ink-soft font-medium">
                 Navigation bar, sidebar, sticky headers. Blur 24px.
               </p>
             </div>
@@ -100,7 +100,7 @@ export default function DevComponentsGalleryPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-accent">
                 Level 3: Overlay (.glass-3)
               </span>
-              <p className="text-sm text-ink-soft">
+              <p className="text-sm text-ink-soft font-medium">
                 Dialogs, bottom sheets, toasts, login card. Blur 32px.
               </p>
             </div>
