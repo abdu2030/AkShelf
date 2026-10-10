@@ -1,11 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useRef, useSyncExternalStore } from "react";
+import { useServerInsertedHTML } from "next/navigation";
 
 export type ThemeChoice = "dark" | "light" | "system";
 export type ResolvedTheme = "dark" | "light";
 
-interface ThemeContextType {
+export interface ThemeContextType {
   theme: ThemeChoice;
   resolvedTheme: ResolvedTheme;
   setTheme: (theme: ThemeChoice) => void;
@@ -13,33 +14,115 @@ interface ThemeContextType {
   setReduceTransparency: (value: boolean) => void;
   reduceMotion: boolean;
   setReduceMotion: (value: boolean) => void;
+  mounted: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-function getInitialTheme(): ThemeChoice {
-  if (typeof window === "undefined") return "system";
+const THEME_INIT_SCRIPT = `(function() {
   try {
-    return (localStorage.getItem("akshelf-theme") as ThemeChoice) || "system";
+    var storedTheme = localStorage.getItem('akshelf-theme') || 'system';
+    var resolvedTheme = storedTheme;
+    if (storedTheme === 'system') {
+      resolvedTheme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    }
+    document.documentElement.setAttribute('data-theme', resolvedTheme);
+
+    var storedTransparency = localStorage.getItem('akshelf-transparency');
+    if (storedTransparency === 'reduced') {
+      document.documentElement.setAttribute('data-transparency', 'reduced');
+    } else {
+      document.documentElement.removeAttribute('data-transparency');
+    }
+
+    var storedMotion = localStorage.getItem('akshelf-motion');
+    if (storedMotion === 'reduced') {
+      document.documentElement.setAttribute('data-motion', 'reduced');
+    } else {
+      document.documentElement.removeAttribute('data-motion');
+    }
+  } catch (e) {}
+})();`;
+
+export function ThemeScript() {
+  const isInserted = useRef(false);
+
+  useServerInsertedHTML(() => {
+    if (isInserted.current) return null;
+    isInserted.current = true;
+    return (
+      <script
+        key="akshelf-theme-init"
+        dangerouslySetInnerHTML={{
+          __html: THEME_INIT_SCRIPT,
+        }}
+      />
+    );
+  });
+
+  return null;
+}
+
+// Store listeners for syncing external browser events (storage, matchMedia, custom mutations)
+const listeners = new Set<() => void>();
+
+function notify() {
+  for (const listener of listeners) {
+    listener();
+  }
+}
+
+function subscribe(callback: () => void) {
+  listeners.add(callback);
+  if (typeof window === "undefined") {
+    return () => {
+      listeners.delete(callback);
+    };
+  }
+
+  window.addEventListener("storage", callback);
+  const mql = window.matchMedia("(prefers-color-scheme: light)");
+  mql.addEventListener("change", callback);
+
+  return () => {
+    listeners.delete(callback);
+    window.removeEventListener("storage", callback);
+    mql.removeEventListener("change", callback);
+  };
+}
+
+function getThemeSnapshot(): ThemeChoice {
+  try {
+    const val = localStorage.getItem("akshelf-theme");
+    if (val === "dark" || val === "light" || val === "system") {
+      return val;
+    }
+    return "system";
   } catch {
     return "system";
   }
 }
 
-function getInitialResolved(choice: ThemeChoice): ResolvedTheme {
-  if (typeof window === "undefined") return "dark";
+function getThemeServerSnapshot(): ThemeChoice {
+  return "system";
+}
+
+function getResolvedThemeSnapshot(): ResolvedTheme {
   try {
-    if (choice === "system") {
-      return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-    }
-    return choice;
+    const val = localStorage.getItem("akshelf-theme");
+    if (val === "light") return "light";
+    if (val === "dark") return "dark";
+    return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
   } catch {
     return "dark";
   }
 }
 
-function getInitialTransparency(): boolean {
-  if (typeof window === "undefined") return false;
+function getResolvedThemeServerSnapshot(): ResolvedTheme {
+  return "dark";
+}
+
+function getTransparencySnapshot(): boolean {
   try {
     return localStorage.getItem("akshelf-transparency") === "reduced";
   } catch {
@@ -47,8 +130,11 @@ function getInitialTransparency(): boolean {
   }
 }
 
-function getInitialMotion(): boolean {
-  if (typeof window === "undefined") return false;
+function getTransparencyServerSnapshot(): boolean {
+  return false;
+}
+
+function getMotionSnapshot(): boolean {
   try {
     return localStorage.getItem("akshelf-motion") === "reduced";
   } catch {
@@ -56,45 +142,46 @@ function getInitialMotion(): boolean {
   }
 }
 
+function getMotionServerSnapshot(): boolean {
+  return false;
+}
+
+function getMountedSnapshot(): boolean {
+  return true;
+}
+
+function getMountedServerSnapshot(): boolean {
+  return false;
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeChoice>(getInitialTheme);
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() =>
-    getInitialResolved(getInitialTheme()),
+  const theme = useSyncExternalStore(subscribe, getThemeSnapshot, getThemeServerSnapshot);
+  const resolvedTheme = useSyncExternalStore(
+    subscribe,
+    getResolvedThemeSnapshot,
+    getResolvedThemeServerSnapshot,
   );
-  const [reduceTransparency, setReduceTransparencyState] =
-    useState<boolean>(getInitialTransparency);
-  const [reduceMotion, setReduceMotionState] = useState<boolean>(getInitialMotion);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
-
-    const handleSystemChange = (e: MediaQueryListEvent) => {
-      if (theme === "system") {
-        const nextResolved: ResolvedTheme = e.matches ? "light" : "dark";
-        setResolvedTheme(nextResolved);
-        document.documentElement.setAttribute("data-theme", nextResolved);
-      }
-    };
-
-    mediaQuery.addEventListener("change", handleSystemChange);
-    return () => mediaQuery.removeEventListener("change", handleSystemChange);
-  }, [theme]);
+  const reduceTransparency = useSyncExternalStore(
+    subscribe,
+    getTransparencySnapshot,
+    getTransparencyServerSnapshot,
+  );
+  const reduceMotion = useSyncExternalStore(subscribe, getMotionSnapshot, getMotionServerSnapshot);
+  const mounted = useSyncExternalStore(subscribe, getMountedSnapshot, getMountedServerSnapshot);
 
   const setTheme = (choice: ThemeChoice) => {
-    setThemeState(choice);
     try {
       localStorage.setItem("akshelf-theme", choice);
       const isLight =
         choice === "light" ||
         (choice === "system" && window.matchMedia("(prefers-color-scheme: light)").matches);
       const resolved: ResolvedTheme = isLight ? "light" : "dark";
-      setResolvedTheme(resolved);
       document.documentElement.setAttribute("data-theme", resolved);
+      notify();
     } catch {}
   };
 
   const setReduceTransparency = (enabled: boolean) => {
-    setReduceTransparencyState(enabled);
     try {
       if (enabled) {
         localStorage.setItem("akshelf-transparency", "reduced");
@@ -103,11 +190,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem("akshelf-transparency");
         document.documentElement.removeAttribute("data-transparency");
       }
+      notify();
     } catch {}
   };
 
   const setReduceMotion = (enabled: boolean) => {
-    setReduceMotionState(enabled);
     try {
       if (enabled) {
         localStorage.setItem("akshelf-motion", "reduced");
@@ -116,6 +203,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem("akshelf-motion");
         document.documentElement.removeAttribute("data-motion");
       }
+      notify();
     } catch {}
   };
 
@@ -129,8 +217,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         setReduceTransparency,
         reduceMotion,
         setReduceMotion,
+        mounted,
       }}
     >
+      <ThemeScript />
       {children}
     </ThemeContext.Provider>
   );

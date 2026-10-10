@@ -28,7 +28,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         disabled={disabled}
         className={cn(
           "relative inline-flex items-center justify-center rounded-full transition-all select-none cursor-pointer",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-base",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
           "disabled:opacity-50 disabled:pointer-events-none active:scale-95",
           size === "default"
             ? "h-11 w-11 min-w-[44px] min-h-[44px]"

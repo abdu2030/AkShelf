@@ -10,7 +10,8 @@
   --breakpoint-xl: 1280px;
   --breakpoint-2xl: 1536px;
 
-  --color-base: var(--bg-base);
+  /* Do not use Tailwind size keys (base, xs, sm, md, lg, xl, etc.) as color names to prevent collisions with utilities like text-base */
+  --color-canvas: var(--bg-base);
   --color-ink: var(--text-primary);
   --color-ink-soft: var(--text-secondary);
   --color-ink-muted: var(--text-muted);

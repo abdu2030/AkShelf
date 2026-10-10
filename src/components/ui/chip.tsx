@@ -16,7 +16,7 @@ export const Chip = forwardRef<HTMLButtonElement, ChipProps>(
         aria-pressed={selected}
         className={cn(
           "inline-flex items-center gap-2 h-10 px-4 rounded-full text-sm font-medium transition-all select-none cursor-pointer",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-base",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
           "disabled:opacity-50 disabled:pointer-events-none active:scale-95",
           selected
             ? "bg-accent-fill text-white shadow-sm border border-white/20"

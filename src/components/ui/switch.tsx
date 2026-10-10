@@ -48,7 +48,7 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(
           onClick={toggle}
           className={cn(
             "relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-base",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
             "disabled:opacity-50 disabled:pointer-events-none",
             checked ? "bg-accent-fill" : "bg-white/20 dark:bg-white/20 border border-white/10",
             className,

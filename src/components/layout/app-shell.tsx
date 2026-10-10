@@ -37,7 +37,7 @@ const navItems: NavItem[] = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { theme, resolvedTheme, setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme, mounted } = useTheme();
 
   const isCurrent = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -99,13 +99,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
             className="flex items-center gap-3.5 w-full h-10 px-3.5 rounded-[12px] text-xs font-semibold text-ink-soft hover:text-ink hover:bg-white/8 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
-            {resolvedTheme === "dark" ? (
-              <Sun className="h-4 w-4 text-amber-400" aria-hidden="true" />
-            ) : (
+            {mounted && resolvedTheme === "light" ? (
               <Moon className="h-4 w-4 text-indigo-400" aria-hidden="true" />
+            ) : (
+              <Sun className="h-4 w-4 text-amber-400" aria-hidden="true" />
             )}
-            <span>
-              Theme: {theme === "system" ? "System" : resolvedTheme === "dark" ? "Dark" : "Light"}
+            <span suppressHydrationWarning>
+              Theme:{" "}
+              {mounted
+                ? theme === "system"
+                  ? "System"
+                  : resolvedTheme === "dark"
+                    ? "Dark"
+                    : "Light"
+                : "System"}
             </span>
           </button>
 
@@ -165,10 +172,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
             className="h-10 w-10 rounded-[12px] flex items-center justify-center text-ink-soft hover:text-ink hover:bg-white/6 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
-            {resolvedTheme === "dark" ? (
-              <Sun className="h-4 w-4 text-amber-400" aria-hidden="true" />
-            ) : (
+            {mounted && resolvedTheme === "light" ? (
               <Moon className="h-4 w-4 text-indigo-400" aria-hidden="true" />
+            ) : (
+              <Sun className="h-4 w-4 text-amber-400" aria-hidden="true" />
             )}
             <span className="sr-only">Toggle theme</span>
           </button>
