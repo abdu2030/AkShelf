@@ -16,6 +16,7 @@ export default function SettingsPage() {
     setReduceTransparency,
     reduceMotion,
     setReduceMotion,
+    mounted,
   } = useTheme();
 
   return (
@@ -57,21 +58,21 @@ export default function SettingsPage() {
             <label className="text-sm font-semibold text-ink block">Theme</label>
             <div className="flex items-center gap-2">
               <Button
-                variant={theme === "system" ? "primary" : "secondary"}
+                variant={mounted ? (theme === "system" ? "primary" : "secondary") : "primary"}
                 size="medium"
                 onClick={() => setTheme("system")}
               >
                 System
               </Button>
               <Button
-                variant={theme === "dark" ? "primary" : "secondary"}
+                variant={mounted && theme === "dark" ? "primary" : "secondary"}
                 size="medium"
                 onClick={() => setTheme("dark")}
               >
                 Dark
               </Button>
               <Button
-                variant={theme === "light" ? "primary" : "secondary"}
+                variant={mounted && theme === "light" ? "primary" : "secondary"}
                 size="medium"
                 onClick={() => setTheme("light")}
               >
@@ -82,14 +83,14 @@ export default function SettingsPage() {
 
           <div className="pt-2 border-t border-white/10 dark:border-white/12 space-y-4">
             <Switch
-              checked={reduceTransparency}
+              checked={mounted ? reduceTransparency : false}
               onCheckedChange={setReduceTransparency}
               label="Reduce transparency"
               description="Replace frosted glass with solid opaque surfaces"
             />
 
             <Switch
-              checked={reduceMotion}
+              checked={mounted ? reduceMotion : false}
               onCheckedChange={setReduceMotion}
               label="Reduce motion"
               description="Disable animated transforms, shimmers, and slide transitions"

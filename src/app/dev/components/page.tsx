@@ -22,6 +22,7 @@ export default function DevComponentsGalleryPage() {
     setReduceTransparency,
     reduceMotion,
     setReduceMotion,
+    mounted,
   } = useTheme();
 
   const [switchState, setSwitchState] = useState(true);
@@ -40,14 +41,14 @@ export default function DevComponentsGalleryPage() {
           <span className="text-xs font-semibold text-ink">Theme:</span>
           <Button
             size="small"
-            variant={resolvedTheme === "dark" ? "primary" : "secondary"}
+            variant={mounted && resolvedTheme === "light" ? "secondary" : "primary"}
             onClick={() => setTheme("dark")}
           >
             Dark
           </Button>
           <Button
             size="small"
-            variant={resolvedTheme === "light" ? "primary" : "secondary"}
+            variant={mounted && resolvedTheme === "light" ? "primary" : "secondary"}
             onClick={() => setTheme("light")}
           >
             Light
@@ -58,11 +59,15 @@ export default function DevComponentsGalleryPage() {
 
         <div className="flex items-center gap-4">
           <Switch
-            checked={reduceTransparency}
+            checked={mounted ? reduceTransparency : false}
             onCheckedChange={setReduceTransparency}
             label="Reduced Transparency"
           />
-          <Switch checked={reduceMotion} onCheckedChange={setReduceMotion} label="Reduced Motion" />
+          <Switch
+            checked={mounted ? reduceMotion : false}
+            onCheckedChange={setReduceMotion}
+            label="Reduced Motion"
+          />
         </div>
       </section>
 
