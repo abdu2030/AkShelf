@@ -10,11 +10,10 @@ import {
   SortField,
   SortDirection,
   sortMediaItems,
+  LibraryEmptyState,
 } from "@/components/library";
 import { MediaGrid } from "@/components/title/media-grid";
 import { MediaCardProps } from "@/components/title/media-card";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Library, FilterX } from "lucide-react";
 
 // Demo library titles matching initial seeded database records
 const initialLibraryItems: MediaCardProps[] = [
@@ -112,21 +111,14 @@ export default function LibraryPage() {
 
       {sortedItems.length > 0 ? (
         <MediaGrid items={sortedItems} />
-      ) : initialLibraryItems.length === 0 ? (
-        <EmptyState
-          icon={<Library />}
-          headline="Nothing on your shelf yet"
-          body="Titles you track will show up here."
-          actionLabel="Search titles"
-          actionHref="/search"
-        />
       ) : (
-        <EmptyState
-          icon={<FilterX />}
-          headline="No matching titles"
-          body="There are no titles on your shelf matching the active filters."
-          actionLabel="Reset filters"
-          onAction={handleResetFilters}
+        <LibraryEmptyState
+          hasAnyItems={initialLibraryItems.length > 0}
+          selectedType={selectedType}
+          selectedStatus={selectedStatus}
+          onResetFilters={handleResetFilters}
+          onClearTypeFilter={() => setSelectedType("ALL")}
+          onClearStatusFilter={() => setSelectedStatus("ALL")}
         />
       )}
     </AppShell>

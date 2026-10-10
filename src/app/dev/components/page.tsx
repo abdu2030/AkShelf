@@ -14,6 +14,7 @@ import { MediaCard, MediaCardSkeleton } from "@/components/title/media-card";
 import { MediaGrid, MediaGridSkeleton, GridDensity } from "@/components/title/media-grid";
 import {
   LibraryHeader,
+  LibraryEmptyState,
   MediaTypeFilter,
   StatusFilter,
   SortField,
@@ -44,6 +45,9 @@ export default function DevComponentsGalleryPage() {
   const [devFilterStatus, setDevFilterStatus] = useState<StatusFilter>("ALL");
   const [devSortField, setDevSortField] = useState<SortField>("DATE_ADDED");
   const [devSortDirection, setDevSortDirection] = useState<SortDirection>("desc");
+  const [emptyDemoHasItems, setEmptyDemoHasItems] = useState(true);
+  const [emptyDemoType, setEmptyDemoType] = useState<MediaTypeFilter>("ANIME");
+  const [emptyDemoStatus, setEmptyDemoStatus] = useState<StatusFilter>("WATCHING");
 
   const sampleShelfItems = [
     {
@@ -570,6 +574,80 @@ export default function DevComponentsGalleryPage() {
               setDevFilterType("ALL");
               setDevFilterStatus("ALL");
             }}
+          />
+        </section>
+
+        {/* 11. Empty States & Quick-Action Flows (Spec 8.5 & Day 12) */}
+        <section className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold font-display text-ink">
+                11. Library Empty States & Quick-Action Flows (Spec 8.5 & Day 12)
+              </h2>
+              <p className="text-xs text-ink-muted">
+                Context-aware empty states with dynamic messaging, contextual icons, and
+                quick-action flows (Reset all, granular filter clear, search catalog link).
+              </p>
+            </div>
+
+            {/* Interactive demo controls */}
+            <div className="flex flex-wrap items-center gap-3 glass-1 p-2 rounded-[14px]">
+              <Switch
+                checked={emptyDemoHasItems}
+                onCheckedChange={setEmptyDemoHasItems}
+                label="Has Titles in Shelf"
+                description={
+                  emptyDemoHasItems
+                    ? "Simulating filter mismatch (0 matches)"
+                    : "Simulating brand new shelf (0 titles)"
+                }
+              />
+            </div>
+          </div>
+
+          {emptyDemoHasItems && (
+            <div className="flex flex-wrap items-center gap-2 glass-1 p-3 rounded-[16px]">
+              <span className="text-xs font-semibold text-ink-muted mr-1">Simulate Filters:</span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {(["ALL", "MOVIE", "TV", "ANIME"] as const).map((t) => (
+                  <Chip
+                    key={t}
+                    selected={emptyDemoType === t}
+                    onClick={() => setEmptyDemoType(t)}
+                    className="h-7 px-2.5 text-xs"
+                  >
+                    {t === "ALL" ? "All Types" : t}
+                  </Chip>
+                ))}
+              </div>
+              <span className="text-white/20 mx-1 hidden sm:inline">|</span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {(
+                  ["ALL", "WATCHING", "WATCHED", "PLAN_TO_WATCH", "ON_HOLD", "DROPPED"] as const
+                ).map((s) => (
+                  <Chip
+                    key={s}
+                    selected={emptyDemoStatus === s}
+                    onClick={() => setEmptyDemoStatus(s)}
+                    className="h-7 px-2.5 text-xs"
+                  >
+                    {s === "ALL" ? "All Statuses" : s}
+                  </Chip>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <LibraryEmptyState
+            hasAnyItems={emptyDemoHasItems}
+            selectedType={emptyDemoType}
+            selectedStatus={emptyDemoStatus}
+            onResetFilters={() => {
+              setEmptyDemoType("ALL");
+              setEmptyDemoStatus("ALL");
+            }}
+            onClearTypeFilter={() => setEmptyDemoType("ALL")}
+            onClearStatusFilter={() => setEmptyDemoStatus("ALL")}
           />
         </section>
       </div>
