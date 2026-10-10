@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { calculateProgressPercentage, formatRating } from "./format";
+import {
+  calculateProgressPercentage,
+  formatRating,
+  formatMediaType,
+  formatEpisodePosition,
+} from "./format";
 
 describe("formatRating", () => {
   it("formats integer ratings without unnecessary decimals", () => {
@@ -28,5 +33,29 @@ describe("calculateProgressPercentage", () => {
     expect(calculateProgressPercentage(0, 0)).toBe(0);
     expect(calculateProgressPercentage(5, 0)).toBe(0);
     expect(calculateProgressPercentage(15, 10)).toBe(100);
+  });
+});
+
+describe("formatMediaType", () => {
+  it("formats media types to user-friendly titles", () => {
+    expect(formatMediaType("MOVIE")).toBe("Movie");
+    expect(formatMediaType("TV")).toBe("TV Show");
+    expect(formatMediaType("ANIME")).toBe("Anime");
+  });
+});
+
+describe("formatEpisodePosition", () => {
+  it("formats season and episode combined", () => {
+    expect(formatEpisodePosition(1, 4)).toBe("S1 E4");
+    expect(formatEpisodePosition(2, 12)).toBe("S2 E12");
+  });
+
+  it("formats standalone episode", () => {
+    expect(formatEpisodePosition(null, 4)).toBe("Ep 4");
+    expect(formatEpisodePosition(undefined, 8)).toBe("Ep 8");
+  });
+
+  it("handles empty values gracefully", () => {
+    expect(formatEpisodePosition(null, null)).toBe("");
   });
 });
