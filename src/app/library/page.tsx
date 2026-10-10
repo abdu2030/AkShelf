@@ -14,44 +14,10 @@ import {
 } from "@/components/library";
 import { MediaGrid } from "@/components/title/media-grid";
 import { MediaCardProps } from "@/components/title/media-card";
+import { demoLibraryItems } from "@/lib/data/demo-titles";
 
-// Demo library titles matching initial seeded database records
-const initialLibraryItems: MediaCardProps[] = [
-  {
-    id: "demo-inception",
-    title: "Inception",
-    mediaType: "MOVIE",
-    year: 2010,
-    posterUrl: "https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg",
-    status: "WATCHED",
-    rating: 9.5,
-    addedAt: "2026-03-01T12:00:00Z",
-  },
-  {
-    id: "demo-breaking-bad",
-    title: "Breaking Bad",
-    mediaType: "TV",
-    year: 2008,
-    posterUrl: "https://image.tmdb.org/t/p/w500/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg",
-    status: "WATCHING",
-    season: 1,
-    episode: 1,
-    currentEpisode: 1,
-    totalEpisodes: 7,
-    addedAt: "2026-03-15T10:00:00Z",
-  },
-  {
-    id: "demo-aot",
-    title: "Attack on Titan",
-    mediaType: "ANIME",
-    year: 2013,
-    posterUrl:
-      "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx16498-73peebRJWhFw.jpg",
-    status: "PLAN_TO_WATCH",
-    rating: 8.9,
-    addedAt: "2026-04-01T08:00:00Z",
-  },
-];
+// Expanded demo library titles matching seeded database records (Day 13)
+const initialLibraryItems: MediaCardProps[] = demoLibraryItems;
 
 export default function LibraryPage() {
   const [selectedType, setSelectedType] = useState<MediaTypeFilter>("ALL");
