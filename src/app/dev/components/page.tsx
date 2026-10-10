@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { MediaCard, MediaCardSkeleton } from "@/components/title/media-card";
 import { MediaGrid, MediaGridSkeleton, GridDensity } from "@/components/title/media-grid";
+import { LibraryHeader, MediaTypeFilter, StatusFilter } from "@/components/library";
 import { useTheme } from "@/components/layout/theme-provider";
 import { Search, Sparkles, Bookmark, Heart, SlidersHorizontal, Flame, Library } from "lucide-react";
 import { useState } from "react";
@@ -33,6 +34,8 @@ export default function DevComponentsGalleryPage() {
   const [gridLoading, setGridLoading] = useState(false);
   const [gridDensity, setGridDensity] = useState<GridDensity>("default");
   const [gridShowEmpty, setGridShowEmpty] = useState(false);
+  const [devFilterType, setDevFilterType] = useState<MediaTypeFilter>("ALL");
+  const [devFilterStatus, setDevFilterStatus] = useState<StatusFilter>("ALL");
 
   const sampleShelfItems = [
     {
@@ -515,6 +518,46 @@ export default function DevComponentsGalleryPage() {
             </h3>
             <MediaGridSkeleton count={6} density={gridDensity} />
           </div>
+        </section>
+
+        {/* 10. Library Header & Filter Controls */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold font-display text-ink">
+              10. Library View Header & Filter Controls (Spec 2, 3.1 & 4.2)
+            </h2>
+            <span className="text-xs font-mono text-accent">
+              Active: {devFilterType} • {devFilterStatus}
+            </span>
+          </div>
+          <p className="text-xs text-ink-muted">
+            Combines page header, total title counter, media type chips with icons, and status pills
+            with solid tinted badges.
+          </p>
+
+          <LibraryHeader
+            totalCount={24}
+            selectedType={devFilterType}
+            onTypeChange={setDevFilterType}
+            selectedStatus={devFilterStatus}
+            onStatusChange={setDevFilterStatus}
+            counts={{
+              byType: { ALL: 24, MOVIE: 10, TV: 8, ANIME: 6 },
+              byStatus: {
+                ALL: 24,
+                WATCHING: 4,
+                WATCHED: 15,
+                PLAN_TO_WATCH: 3,
+                ON_HOLD: 1,
+                DROPPED: 1,
+              },
+              total: 24,
+            }}
+            onResetFilters={() => {
+              setDevFilterType("ALL");
+              setDevFilterStatus("ALL");
+            }}
+          />
         </section>
       </div>
     </AppShell>
