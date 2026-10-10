@@ -8,6 +8,7 @@ import {
   StatusFilter,
   LibraryFilterCounts,
 } from "./library-filters";
+import { SortField, SortDirection } from "@/lib/utils/sort";
 
 export interface LibraryHeaderProps {
   title?: string;
@@ -19,13 +20,17 @@ export interface LibraryHeaderProps {
   onStatusChange: (status: StatusFilter) => void;
   counts?: LibraryFilterCounts;
   onResetFilters?: () => void;
+  sortField?: SortField;
+  onSortFieldChange?: (field: SortField) => void;
+  sortDirection?: SortDirection;
+  onSortDirectionChange?: (direction: SortDirection) => void;
   actions?: React.ReactNode;
   className?: string;
 }
 
 /**
- * Combined Library view header and filter controls (Day 10).
- * Integrates title, subtitle, title count indicator, and LibraryFilters.
+ * Combined Library view header and filter controls (Day 10 & Day 11).
+ * Integrates title, subtitle, title count indicator, filters, and sorting controls.
  */
 export function LibraryHeader({
   title = "My Library",
@@ -37,6 +42,10 @@ export function LibraryHeader({
   onStatusChange,
   counts,
   onResetFilters,
+  sortField,
+  onSortFieldChange,
+  sortDirection,
+  onSortDirectionChange,
   actions,
   className,
 }: LibraryHeaderProps) {
@@ -79,7 +88,7 @@ export function LibraryHeader({
         )}
       </header>
 
-      {/* Filter bar */}
+      {/* Filter and Sort bar */}
       <LibraryFilters
         selectedType={selectedType}
         onTypeChange={onTypeChange}
@@ -87,6 +96,10 @@ export function LibraryHeader({
         onStatusChange={onStatusChange}
         counts={counts}
         onResetFilters={onResetFilters}
+        sortField={sortField}
+        onSortFieldChange={onSortFieldChange}
+        sortDirection={sortDirection}
+        onSortDirectionChange={onSortDirectionChange}
       />
     </div>
   );

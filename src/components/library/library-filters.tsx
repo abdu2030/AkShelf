@@ -16,6 +16,8 @@ import {
 import { cn } from "@/lib/utils/cn";
 import { MediaType } from "@/components/title/media-card";
 import { WatchStatusType, statusConfig } from "@/components/ui/status-badge";
+import { SortField, SortDirection } from "@/lib/utils/sort";
+import { LibrarySort } from "./library-sort";
 
 export type MediaTypeFilter = "ALL" | MediaType;
 export type StatusFilter = "ALL" | WatchStatusType;
@@ -33,6 +35,10 @@ export interface LibraryFiltersProps {
   onStatusChange: (status: StatusFilter) => void;
   counts?: LibraryFilterCounts;
   onResetFilters?: () => void;
+  sortField?: SortField;
+  onSortFieldChange?: (field: SortField) => void;
+  sortDirection?: SortDirection;
+  onSortDirectionChange?: (direction: SortDirection) => void;
   className?: string;
 }
 
@@ -106,6 +112,10 @@ export function LibraryFilters({
   onStatusChange,
   counts,
   onResetFilters,
+  sortField,
+  onSortFieldChange,
+  sortDirection,
+  onSortDirectionChange,
   className,
 }: LibraryFiltersProps) {
   const isFiltered = selectedType !== "ALL" || selectedStatus !== "ALL";
@@ -127,7 +137,7 @@ export function LibraryFilters({
         className,
       )}
     >
-      {/* Top Row: Media Type Filter Chips */}
+      {/* Top Row: Media Type Filter Chips & Sorting Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div
           role="group"
@@ -171,19 +181,31 @@ export function LibraryFilters({
           })}
         </div>
 
-        {/* Reset Filter Button */}
-        {isFiltered ? (
-          <button
-            type="button"
-            onClick={handleReset}
-            aria-label="Reset all filters"
-            data-testid="filter-reset-button"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent hover:text-ink transition-colors px-2.5 py-1.5 rounded-md hover:bg-white/6 active:scale-95"
-          >
-            <RotateCcw className="h-3 w-3 shrink-0" aria-hidden="true" />
-            <span>Reset filters</span>
-          </button>
-        ) : null}
+        {/* Right side: Sorting controls and Reset button */}
+        <div className="flex items-center gap-2.5 ml-auto sm:ml-0 flex-wrap">
+          {sortField && onSortFieldChange && sortDirection && onSortDirectionChange ? (
+            <LibrarySort
+              sortField={sortField}
+              onSortFieldChange={onSortFieldChange}
+              sortDirection={sortDirection}
+              onSortDirectionChange={onSortDirectionChange}
+            />
+          ) : null}
+
+          {/* Reset Filter Button */}
+          {isFiltered ? (
+            <button
+              type="button"
+              onClick={handleReset}
+              aria-label="Reset all filters"
+              data-testid="filter-reset-button"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent hover:text-ink transition-colors px-2.5 py-1.5 rounded-md hover:bg-white/6 active:scale-95"
+            >
+              <RotateCcw className="h-3 w-3 shrink-0" aria-hidden="true" />
+              <span>Reset filters</span>
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {/* Bottom Row: Watch Status Pills */}

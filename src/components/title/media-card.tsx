@@ -37,6 +37,7 @@ export interface MediaCardProps {
   watchStatus?: WatchStatusType | null;
   rating?: number | null;
   userRating?: number | null;
+  addedAt?: string | Date | null;
   currentEpisode?: number | null;
   totalEpisodes?: number | null;
   season?: number | null;

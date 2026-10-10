@@ -12,7 +12,13 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { MediaCard, MediaCardSkeleton } from "@/components/title/media-card";
 import { MediaGrid, MediaGridSkeleton, GridDensity } from "@/components/title/media-grid";
-import { LibraryHeader, MediaTypeFilter, StatusFilter } from "@/components/library";
+import {
+  LibraryHeader,
+  MediaTypeFilter,
+  StatusFilter,
+  SortField,
+  SortDirection,
+} from "@/components/library";
 import { useTheme } from "@/components/layout/theme-provider";
 import { Search, Sparkles, Bookmark, Heart, SlidersHorizontal, Flame, Library } from "lucide-react";
 import { useState } from "react";
@@ -36,6 +42,8 @@ export default function DevComponentsGalleryPage() {
   const [gridShowEmpty, setGridShowEmpty] = useState(false);
   const [devFilterType, setDevFilterType] = useState<MediaTypeFilter>("ALL");
   const [devFilterStatus, setDevFilterStatus] = useState<StatusFilter>("ALL");
+  const [devSortField, setDevSortField] = useState<SortField>("DATE_ADDED");
+  const [devSortDirection, setDevSortDirection] = useState<SortDirection>("desc");
 
   const sampleShelfItems = [
     {
@@ -520,19 +528,20 @@ export default function DevComponentsGalleryPage() {
           </div>
         </section>
 
-        {/* 10. Library Header & Filter Controls */}
+        {/* 10. Library Header & Filter / Sort Controls */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold font-display text-ink">
-              10. Library View Header & Filter Controls (Spec 2, 3.1 & 4.2)
+              10. Library View Header, Filter & Sort Controls (Spec 2, 3.1, 4.2 & 18.2)
             </h2>
             <span className="text-xs font-mono text-accent">
-              Active: {devFilterType} • {devFilterStatus}
+              Active: {devFilterType} • {devFilterStatus} • {devSortField} ({devSortDirection})
             </span>
           </div>
           <p className="text-xs text-ink-muted">
-            Combines page header, total title counter, media type chips with icons, and status pills
-            with solid tinted badges.
+            Combines page header, total title counter, media type chips with icons, status pills
+            with solid tinted badges, and sorting controls (Date Added, Title, Rating, Release
+            Year).
           </p>
 
           <LibraryHeader
@@ -541,6 +550,10 @@ export default function DevComponentsGalleryPage() {
             onTypeChange={setDevFilterType}
             selectedStatus={devFilterStatus}
             onStatusChange={setDevFilterStatus}
+            sortField={devSortField}
+            onSortFieldChange={setDevSortField}
+            sortDirection={devSortDirection}
+            onSortDirectionChange={setDevSortDirection}
             counts={{
               byType: { ALL: 24, MOVIE: 10, TV: 8, ANIME: 6 },
               byStatus: {
