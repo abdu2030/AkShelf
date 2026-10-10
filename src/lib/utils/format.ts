@@ -21,3 +21,32 @@ export function calculateProgressPercentage(
   const clamped = Math.max(0, Math.min(watchedEpisodes, totalEpisodes));
   return Math.round((clamped / totalEpisodes) * 100);
 }
+
+/**
+ * Formats MediaType enum into human-friendly label.
+ */
+export function formatMediaType(type: "MOVIE" | "TV" | "ANIME"): string {
+  switch (type) {
+    case "MOVIE":
+      return "Movie";
+    case "TV":
+      return "TV Show";
+    case "ANIME":
+      return "Anime";
+    default:
+      return type;
+  }
+}
+
+/**
+ * Formats season and episode into S1 E4 or Ep 4 display string.
+ */
+export function formatEpisodePosition(season?: number | null, episode?: number | null): string {
+  if (season !== undefined && season !== null && episode !== undefined && episode !== null) {
+    return `S${season} E${episode}`;
+  }
+  if (episode !== undefined && episode !== null) {
+    return `Ep ${episode}`;
+  }
+  return "";
+}

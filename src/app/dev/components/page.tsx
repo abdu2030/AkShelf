@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { MediaCard, MediaCardSkeleton } from "@/components/title/media-card";
 import { useTheme } from "@/components/layout/theme-provider";
 import { Search, Sparkles, Bookmark, Heart, SlidersHorizontal, Flame } from "lucide-react";
 import { useState } from "react";
@@ -27,6 +28,7 @@ export default function DevComponentsGalleryPage() {
 
   const [switchState, setSwitchState] = useState(true);
   const [chipSelected, setChipSelected] = useState(false);
+  const [quickActionMessage, setQuickActionMessage] = useState<string | null>(null);
 
   return (
     <AppShell>
@@ -274,6 +276,81 @@ export default function DevComponentsGalleryPage() {
               actionLabel="Reset Search"
               onAction={() => alert("Action clicked")}
             />
+          </div>
+        </section>
+
+        {/* 8. Media Card Component */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold font-display text-ink">
+              8. Media Card Component (Spec 9.10, 8.2, 8.4)
+            </h2>
+            {quickActionMessage && (
+              <span className="text-xs font-semibold text-accent">{quickActionMessage}</span>
+            )}
+          </div>
+          <p className="text-xs text-ink-muted">
+            2:3 aspect ratio, radius-lg (16px), 1px border. Never glass container. Features status
+            dot badge, 44px hit-target quick action button, rating chip, 4px progress bar, and
+            missing poster fallback.
+          </p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+            {/* Movie: Watched + Rated */}
+            <MediaCard
+              id="m1"
+              title="Inception"
+              mediaType="MOVIE"
+              year={2010}
+              posterUrl="https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg"
+              status="WATCHED"
+              rating={9.0}
+              onQuickAction={() => setQuickActionMessage("Quick action triggered for Inception")}
+            />
+
+            {/* TV Show: Watching + Progress Bar */}
+            <MediaCard
+              id="t1"
+              title="Severance"
+              mediaType="TV"
+              year={2022}
+              posterUrl="https://image.tmdb.org/t/p/w500/u3bZgnGQ9T01sWNhyveQz0wGeW.jpg"
+              status="WATCHING"
+              season={1}
+              episode={7}
+              currentEpisode={7}
+              totalEpisodes={9}
+              onQuickAction={() => setQuickActionMessage("Quick action triggered for Severance")}
+            />
+
+            {/* Anime: Plan to Watch */}
+            <MediaCard
+              id="a1"
+              title="Frieren: Beyond Journey's End"
+              mediaType="ANIME"
+              year={2023}
+              posterUrl="https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-n2b4b4b4.jpg"
+              status="PLAN_TO_WATCH"
+              onQuickAction={() => setQuickActionMessage("Quick action triggered for Frieren")}
+            />
+
+            {/* Missing Poster Fallback (Spec 8.4) */}
+            <MediaCard
+              id="f1"
+              title="Princess Mononoke (Missing Poster Demo)"
+              mediaType="ANIME"
+              year={1997}
+              posterUrl={null}
+              status="ON_HOLD"
+              rating={8.8}
+              onQuickAction={() => setQuickActionMessage("Quick action triggered for Mononoke")}
+            />
+
+            {/* Skeleton state */}
+            <div className="flex flex-col">
+              <MediaCardSkeleton />
+              <span className="text-[11px] text-ink-muted text-center mt-2">Loading Skeleton</span>
+            </div>
           </div>
         </section>
       </div>
