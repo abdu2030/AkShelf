@@ -7,7 +7,10 @@ import {
   MediaTypeFilter,
   StatusFilter,
   LibraryFilterCounts,
-} from "@/components/library/library-filters";
+  SortField,
+  SortDirection,
+  sortMediaItems,
+} from "@/components/library";
 import { MediaGrid } from "@/components/title/media-grid";
 import { MediaCardProps } from "@/components/title/media-card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -23,6 +26,7 @@ const initialLibraryItems: MediaCardProps[] = [
     posterUrl: "https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg",
     status: "WATCHED",
     rating: 9.5,
+    addedAt: "2026-03-01T12:00:00Z",
   },
   {
     id: "demo-breaking-bad",
@@ -35,6 +39,7 @@ const initialLibraryItems: MediaCardProps[] = [
     episode: 1,
     currentEpisode: 1,
     totalEpisodes: 7,
+    addedAt: "2026-03-15T10:00:00Z",
   },
   {
     id: "demo-aot",
@@ -44,12 +49,16 @@ const initialLibraryItems: MediaCardProps[] = [
     posterUrl:
       "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx16498-73peebRJWhFw.jpg",
     status: "PLAN_TO_WATCH",
+    rating: 8.9,
+    addedAt: "2026-04-01T08:00:00Z",
   },
 ];
 
 export default function LibraryPage() {
   const [selectedType, setSelectedType] = useState<MediaTypeFilter>("ALL");
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("ALL");
+  const [sortField, setSortField] = useState<SortField>("DATE_ADDED");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   // Calculate live counts across all tracked titles
   const counts: LibraryFilterCounts = {
@@ -77,6 +86,9 @@ export default function LibraryPage() {
     return matchesType && matchesStatus;
   });
 
+  // Sort filtered items according to selected sort criteria
+  const sortedItems = sortMediaItems(filteredItems, sortField, sortDirection);
+
   const handleResetFilters = () => {
     setSelectedType("ALL");
     setSelectedStatus("ALL");
@@ -92,10 +104,14 @@ export default function LibraryPage() {
         onStatusChange={setSelectedStatus}
         counts={counts}
         onResetFilters={handleResetFilters}
+        sortField={sortField}
+        onSortFieldChange={setSortField}
+        sortDirection={sortDirection}
+        onSortDirectionChange={setSortDirection}
       />
 
-      {filteredItems.length > 0 ? (
-        <MediaGrid items={filteredItems} />
+      {sortedItems.length > 0 ? (
+        <MediaGrid items={sortedItems} />
       ) : initialLibraryItems.length === 0 ? (
         <EmptyState
           icon={<Library />}
