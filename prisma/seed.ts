@@ -1,190 +1,215 @@
 import { PrismaClient, MediaType, WatchStatus } from "@prisma/client";
+import { demoTitles } from "../src/lib/data/demo-titles";
 
 const prisma = new PrismaClient();
 
-async function main() {
-  console.log("🌱 Seeding demo database records...");
-
-  // 1. Create or upsert demo owner user
-  const demoUser = await prisma.user.upsert({
-    where: { email: "owner@akshelf.local" },
-    update: {},
-    create: {
-      email: "owner@akshelf.local",
-      name: "AkShelf Owner",
-    },
-  });
-
-  // 2. Demo Movie: Inception
-  const inception = await prisma.title.upsert({
-    where: {
-      externalSource_externalId: {
-        externalSource: "tmdb",
-        externalId: "27205",
-      },
-    },
-    update: {},
-    create: {
-      externalSource: "tmdb",
-      externalId: "27205",
-      title: "Inception",
-      type: MediaType.MOVIE,
-      year: 2010,
-      overview:
-        "Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets.",
-      posterUrl: "https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg",
-      genres: ["Action", "Science Fiction", "Adventure"],
-    },
-  });
-
-  // 3. Demo TV Show: Breaking Bad
-  const breakingBad = await prisma.title.upsert({
-    where: {
-      externalSource_externalId: {
-        externalSource: "tmdb",
-        externalId: "1396",
-      },
-    },
-    update: {},
-    create: {
-      externalSource: "tmdb",
-      externalId: "1396",
-      title: "Breaking Bad",
-      type: MediaType.TV,
-      year: 2008,
-      overview:
-        "A chemistry teacher diagnosed with inoperable lung cancer turns to manufacturing and selling methamphetamine.",
-      posterUrl: "https://image.tmdb.org/t/p/w500/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg",
-      genres: ["Drama", "Crime"],
-    },
-  });
-
-  // Season 1 for Breaking Bad
-  const bbSeason1 = await prisma.season.upsert({
-    where: {
-      titleId_seasonNumber: {
-        titleId: breakingBad.id,
-        seasonNumber: 1,
-      },
-    },
-    update: {},
-    create: {
-      titleId: breakingBad.id,
-      seasonNumber: 1,
-      name: "Season 1",
-      episodeCount: 7,
-    },
-  });
-
-  // Episode 1 for Breaking Bad
-  const bbEp1 = await prisma.episode.upsert({
-    where: {
-      seasonId_episodeNumber: {
-        seasonId: bbSeason1.id,
-        episodeNumber: 1,
-      },
-    },
-    update: {},
-    create: {
-      seasonId: bbSeason1.id,
-      episodeNumber: 1,
-      name: "Pilot",
-      runtime: 58,
-    },
-  });
-
-  // 4. Demo Anime: Attack on Titan
-  const aot = await prisma.title.upsert({
-    where: {
-      externalSource_externalId: {
-        externalSource: "anilist",
-        externalId: "16498",
-      },
-    },
-    update: {},
-    create: {
-      externalSource: "anilist",
-      externalId: "16498",
-      title: "Attack on Titan",
-      type: MediaType.ANIME,
-      year: 2013,
-      overview: "Humanity was almost wiped out by monstrous humanoid creatures called Titans.",
-      posterUrl:
-        "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx16498-73peebRJWhFw.jpg",
-      genres: ["Action", "Fantasy", "Drama"],
-    },
-  });
-
-  // 5. Tracked relationships for Demo User
-  // Inception -> Watched with 9.5 rating
-  await prisma.userTitle.upsert({
-    where: {
-      userId_titleId: {
-        userId: demoUser.id,
-        titleId: inception.id,
-      },
-    },
-    update: {},
-    create: {
-      userId: demoUser.id,
-      titleId: inception.id,
-      status: WatchStatus.WATCHED,
-      rating: 9.5,
-      watchedAt: new Date(),
-    },
-  });
-
-  // Breaking Bad -> Watching (Episode 1 watched)
-  await prisma.userTitle.upsert({
-    where: {
-      userId_titleId: {
-        userId: demoUser.id,
-        titleId: breakingBad.id,
-      },
-    },
-    update: {},
-    create: {
-      userId: demoUser.id,
-      titleId: breakingBad.id,
-      status: WatchStatus.WATCHING,
-      startedAt: new Date(),
-    },
-  });
-
-  await prisma.userEpisode.upsert({
-    where: {
-      userId_episodeId: {
-        userId: demoUser.id,
-        episodeId: bbEp1.id,
-      },
-    },
-    update: {},
-    create: {
-      userId: demoUser.id,
-      episodeId: bbEp1.id,
-    },
-  });
-
-  // Attack on Titan -> Plan to Watch
-  await prisma.userTitle.upsert({
-    where: {
-      userId_titleId: {
-        userId: demoUser.id,
-        titleId: aot.id,
-      },
-    },
-    update: {},
-    create: {
-      userId: demoUser.id,
-      titleId: aot.id,
-      status: WatchStatus.PLAN_TO_WATCH,
-    },
-  });
-
-  console.log("✅ Database seeding completed successfully!");
+async function withRetry<T>(operation: () => Promise<T>, retries = 5, delayMs = 2500): Promise<T> {
+  let lastError: unknown;
+  for (let i = 1; i <= retries; i++) {
+    try {
+      return await operation();
+    } catch (err) {
+      lastError = err;
+      if (i < retries) {
+        console.warn(
+          `⚠️ Database connection attempt ${i} failed. Retrying in ${delayMs / 1000}s...`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+  }
+  throw lastError;
 }
 
-main()
+async function seed() {
+  console.log("🌱 Seeding expanded demo database records (Day 13)...");
+
+  // 1. Create or upsert demo owner user
+  const demoUser = await withRetry(() =>
+    prisma.user.upsert({
+      where: { email: "owner@akshelf.local" },
+      update: {},
+      create: {
+        email: "owner@akshelf.local",
+        name: "AkShelf Owner",
+      },
+    }),
+  );
+
+  console.log(`👤 Verified owner user: ${demoUser.email} (${demoUser.id})`);
+
+  let titlesCount = 0;
+  let seasonsCount = 0;
+  let episodesCount = 0;
+  let userEpisodesCount = 0;
+
+  // 2. Seed all realistic titles
+  for (const item of demoTitles) {
+    const titleRecord = await prisma.title.upsert({
+      where: {
+        externalSource_externalId: {
+          externalSource: item.externalSource,
+          externalId: item.externalId,
+        },
+      },
+      update: {
+        title: item.title,
+        type: item.type as MediaType,
+        year: item.year,
+        overview: item.overview,
+        posterUrl: item.posterUrl,
+        backdropUrl: item.backdropUrl ?? null,
+        genres: item.genres,
+      },
+      create: {
+        externalSource: item.externalSource,
+        externalId: item.externalId,
+        title: item.title,
+        type: item.type as MediaType,
+        year: item.year,
+        overview: item.overview,
+        posterUrl: item.posterUrl,
+        backdropUrl: item.backdropUrl ?? null,
+        genres: item.genres,
+        createdAt: new Date(item.addedAt),
+      },
+    });
+
+    titlesCount++;
+
+    // Seed seasons and episodes if available
+    if (item.seasons && item.seasons.length > 0) {
+      for (const season of item.seasons) {
+        const seasonRecord = await prisma.season.upsert({
+          where: {
+            titleId_seasonNumber: {
+              titleId: titleRecord.id,
+              seasonNumber: season.seasonNumber,
+            },
+          },
+          update: {
+            name: season.name,
+            episodeCount: season.episodeCount,
+          },
+          create: {
+            titleId: titleRecord.id,
+            seasonNumber: season.seasonNumber,
+            name: season.name,
+            episodeCount: season.episodeCount,
+          },
+        });
+
+        seasonsCount++;
+
+        for (const ep of season.episodes) {
+          const episodeRecord = await prisma.episode.upsert({
+            where: {
+              seasonId_episodeNumber: {
+                seasonId: seasonRecord.id,
+                episodeNumber: ep.episodeNumber,
+              },
+            },
+            update: {
+              name: ep.name,
+              runtime: ep.runtime ?? null,
+            },
+            create: {
+              seasonId: seasonRecord.id,
+              episodeNumber: ep.episodeNumber,
+              name: ep.name,
+              runtime: ep.runtime ?? null,
+            },
+          });
+
+          episodesCount++;
+
+          // Track episode completion if watched
+          const isEpWatched =
+            item.status === "WATCHED" ||
+            (item.currentEpisode !== undefined && ep.episodeNumber <= item.currentEpisode);
+
+          if (isEpWatched) {
+            await prisma.userEpisode.upsert({
+              where: {
+                userId_episodeId: {
+                  userId: demoUser.id,
+                  episodeId: episodeRecord.id,
+                },
+              },
+              update: {},
+              create: {
+                userId: demoUser.id,
+                episodeId: episodeRecord.id,
+                watchedAt: new Date(item.watchedAt ?? item.startedAt ?? item.addedAt),
+              },
+            });
+
+            userEpisodesCount++;
+          }
+        }
+      }
+    }
+
+    // Upsert UserTitle relationship
+    await prisma.userTitle.upsert({
+      where: {
+        userId_titleId: {
+          userId: demoUser.id,
+          titleId: titleRecord.id,
+        },
+      },
+      update: {
+        status: item.status as WatchStatus,
+        rating: item.rating ?? null,
+        startedAt: item.startedAt ? new Date(item.startedAt) : null,
+        watchedAt: item.watchedAt ? new Date(item.watchedAt) : null,
+      },
+      create: {
+        userId: demoUser.id,
+        titleId: titleRecord.id,
+        status: item.status as WatchStatus,
+        rating: item.rating ?? null,
+        startedAt: item.startedAt ? new Date(item.startedAt) : null,
+        watchedAt: item.watchedAt ? new Date(item.watchedAt) : null,
+        createdAt: new Date(item.addedAt),
+      },
+    });
+
+    // Seed initial watch history action if not already recorded
+    const existingHistory = await prisma.watchHistory.findFirst({
+      where: {
+        userId: demoUser.id,
+        titleId: titleRecord.id,
+      },
+    });
+
+    if (!existingHistory) {
+      await prisma.watchHistory.create({
+        data: {
+          userId: demoUser.id,
+          titleId: titleRecord.id,
+          action: `added_as_${item.status.toLowerCase()}`,
+          occurredAt: new Date(item.addedAt),
+        },
+      });
+    }
+  }
+
+  const movieCount = demoTitles.filter((t) => t.type === "MOVIE").length;
+  const tvCount = demoTitles.filter((t) => t.type === "TV").length;
+  const animeCount = demoTitles.filter((t) => t.type === "ANIME").length;
+
+  console.log(`✅ Database seeding completed successfully!`);
+  console.log(`📊 Seed Summary:`);
+  console.log(
+    `   - Total Titles: ${titlesCount} (${movieCount} Movies, ${tvCount} TV Shows, ${animeCount} Anime)`,
+  );
+  console.log(`   - Seasons Created: ${seasonsCount}`);
+  console.log(`   - Episodes Created: ${episodesCount}`);
+  console.log(`   - User Episode Progress Records: ${userEpisodesCount}`);
+}
+
+seed()
   .catch((e) => {
     console.error("❌ Seeding failed:", e);
     process.exit(1);

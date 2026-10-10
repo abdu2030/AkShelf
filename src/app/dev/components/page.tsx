@@ -23,6 +23,7 @@ import {
 import { useTheme } from "@/components/layout/theme-provider";
 import { Search, Sparkles, Bookmark, Heart, SlidersHorizontal, Flame, Library } from "lucide-react";
 import { useState } from "react";
+import { demoLibraryItems } from "@/lib/data/demo-titles";
 
 export default function DevComponentsGalleryPage() {
   const {
@@ -49,88 +50,7 @@ export default function DevComponentsGalleryPage() {
   const [emptyDemoType, setEmptyDemoType] = useState<MediaTypeFilter>("ANIME");
   const [emptyDemoStatus, setEmptyDemoStatus] = useState<StatusFilter>("WATCHING");
 
-  const sampleShelfItems = [
-    {
-      id: "g1",
-      title: "Inception",
-      mediaType: "MOVIE" as const,
-      year: 2010,
-      posterUrl: "https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg",
-      status: "WATCHED" as const,
-      rating: 9.0,
-    },
-    {
-      id: "g2",
-      title: "Severance",
-      mediaType: "TV" as const,
-      year: 2022,
-      posterUrl: "https://image.tmdb.org/t/p/w500/u3bZgnGQ9T01sWNhyveQz0wGeW.jpg",
-      status: "WATCHING" as const,
-      season: 1,
-      episode: 7,
-      currentEpisode: 7,
-      totalEpisodes: 9,
-    },
-    {
-      id: "g3",
-      title: "Frieren: Beyond Journey's End",
-      mediaType: "ANIME" as const,
-      year: 2023,
-      posterUrl:
-        "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-n2b4b4b4.jpg",
-      status: "PLAN_TO_WATCH" as const,
-    },
-    {
-      id: "g4",
-      title: "Arcane",
-      mediaType: "TV" as const,
-      year: 2021,
-      posterUrl: "https://image.tmdb.org/t/p/w500/fqldf2t8ztc9aiwn396mlCu7434.jpg",
-      status: "WATCHED" as const,
-      rating: 9.5,
-    },
-    {
-      id: "g5",
-      title: "Cyberpunk: Edgerunners",
-      mediaType: "ANIME" as const,
-      year: 2022,
-      posterUrl:
-        "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx120377-ou54QfAonYgC.jpg",
-      status: "WATCHED" as const,
-      rating: 9.1,
-    },
-    {
-      id: "g6",
-      title: "Dune: Part Two",
-      mediaType: "MOVIE" as const,
-      year: 2024,
-      posterUrl: "https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
-      status: "WATCHED" as const,
-      rating: 8.9,
-    },
-    {
-      id: "g7",
-      title: "Attack on Titan",
-      mediaType: "ANIME" as const,
-      year: 2013,
-      posterUrl:
-        "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx16498-C6FPmWm59CyP.jpg",
-      status: "WATCHING" as const,
-      season: 1,
-      episode: 6,
-      currentEpisode: 6,
-      totalEpisodes: 25,
-    },
-    {
-      id: "g8",
-      title: "Princess Mononoke (Missing Poster Demo)",
-      mediaType: "ANIME" as const,
-      year: 1997,
-      posterUrl: null,
-      status: "ON_HOLD" as const,
-      rating: 8.8,
-    },
-  ];
+  const sampleShelfItems = demoLibraryItems;
 
   return (
     <AppShell>
@@ -549,7 +469,7 @@ export default function DevComponentsGalleryPage() {
           </p>
 
           <LibraryHeader
-            totalCount={24}
+            totalCount={demoLibraryItems.length}
             selectedType={devFilterType}
             onTypeChange={setDevFilterType}
             selectedStatus={devFilterStatus}
@@ -559,16 +479,21 @@ export default function DevComponentsGalleryPage() {
             sortDirection={devSortDirection}
             onSortDirectionChange={setDevSortDirection}
             counts={{
-              byType: { ALL: 24, MOVIE: 10, TV: 8, ANIME: 6 },
-              byStatus: {
-                ALL: 24,
-                WATCHING: 4,
-                WATCHED: 15,
-                PLAN_TO_WATCH: 3,
-                ON_HOLD: 1,
-                DROPPED: 1,
+              byType: {
+                ALL: demoLibraryItems.length,
+                MOVIE: demoLibraryItems.filter((i) => i.mediaType === "MOVIE").length,
+                TV: demoLibraryItems.filter((i) => i.mediaType === "TV").length,
+                ANIME: demoLibraryItems.filter((i) => i.mediaType === "ANIME").length,
               },
-              total: 24,
+              byStatus: {
+                ALL: demoLibraryItems.length,
+                WATCHING: demoLibraryItems.filter((i) => i.status === "WATCHING").length,
+                WATCHED: demoLibraryItems.filter((i) => i.status === "WATCHED").length,
+                PLAN_TO_WATCH: demoLibraryItems.filter((i) => i.status === "PLAN_TO_WATCH").length,
+                ON_HOLD: demoLibraryItems.filter((i) => i.status === "ON_HOLD").length,
+                DROPPED: demoLibraryItems.filter((i) => i.status === "DROPPED").length,
+              },
+              total: demoLibraryItems.length,
             }}
             onResetFilters={() => {
               setDevFilterType("ALL");
