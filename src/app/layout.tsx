@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
+import Script from "next/script";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { Aurora } from "@/components/layout/aurora";
 
@@ -35,32 +36,30 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${jakarta.variable} ${inter.variable}`}>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var storedTheme = localStorage.getItem('akshelf-theme') || 'system';
-                  var resolvedTheme = storedTheme;
-                  if (storedTheme === 'system') {
-                    resolvedTheme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-                  }
-                  document.documentElement.setAttribute('data-theme', resolvedTheme);
+        <Script id="theme-init" strategy="beforeInteractive">
+          {`
+            (function() {
+              try {
+                var storedTheme = localStorage.getItem('akshelf-theme') || 'system';
+                var resolvedTheme = storedTheme;
+                if (storedTheme === 'system') {
+                  resolvedTheme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+                }
+                document.documentElement.setAttribute('data-theme', resolvedTheme);
 
-                  var storedTransparency = localStorage.getItem('akshelf-transparency');
-                  if (storedTransparency === 'reduced') {
-                    document.documentElement.setAttribute('data-transparency', 'reduced');
-                  }
+                var storedTransparency = localStorage.getItem('akshelf-transparency');
+                if (storedTransparency === 'reduced') {
+                  document.documentElement.setAttribute('data-transparency', 'reduced');
+                }
 
-                  var storedMotion = localStorage.getItem('akshelf-motion');
-                  if (storedMotion === 'reduced') {
-                    document.documentElement.setAttribute('data-motion', 'reduced');
-                  }
-                } catch (e) {}
-              })();
-            `,
-          }}
-        />
+                var storedMotion = localStorage.getItem('akshelf-motion');
+                if (storedMotion === 'reduced') {
+                  document.documentElement.setAttribute('data-motion', 'reduced');
+                }
+              } catch (e) {}
+            })();
+          `}
+        </Script>
       </head>
       <body className="min-h-screen flex flex-col font-sans antialiased text-ink">
         <a
