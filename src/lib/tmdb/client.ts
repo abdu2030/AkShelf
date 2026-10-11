@@ -34,11 +34,11 @@ export class TmdbClient {
 
   constructor(config: TmdbClientConfig = {}) {
     this.baseUrl = config.baseUrl ?? "https://api.themoviedb.org/3";
-    this.apiKey = config.apiKey ?? process.env.TMDB_API_KEY;
+    this.apiKey = "apiKey" in config ? config.apiKey : process.env.TMDB_API_KEY;
     this.readAccessToken =
-      config.readAccessToken ??
-      process.env.TMDB_API_READ_ACCESS_TOKEN ??
-      process.env.TMDB_READ_ACCESS_TOKEN;
+      "readAccessToken" in config
+        ? config.readAccessToken
+        : (process.env.TMDB_API_READ_ACCESS_TOKEN ?? process.env.TMDB_READ_ACCESS_TOKEN);
 
     // TMDB official recommendation: stay under ~40 requests per 10 seconds
     this.rateLimiter =
@@ -55,7 +55,7 @@ export class TmdbClient {
    * Returns true if client has valid authentication configured.
    */
   hasAuth(): boolean {
-    return Boolean(this.readAccessToken || this.apiKey);
+    return Boolean(this.readAccessToken?.trim() || this.apiKey?.trim());
   }
 
   /**

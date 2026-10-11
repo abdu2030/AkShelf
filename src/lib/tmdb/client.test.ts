@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TmdbClient } from "./client";
 import { getTmdbImageUrl } from "./types";
 import { RateLimiter } from "@/lib/utils/rate-limiter";
@@ -29,13 +29,42 @@ describe("TMDB API Client", () => {
   });
 
   describe("TmdbClient authentication guard", () => {
+    const originalEnv = { ...process.env };
+
+    afterEach(() => {
+      process.env = { ...originalEnv };
+    });
+
     it("throws clear error when credentials are not configured", async () => {
+      delete process.env.TMDB_API_KEY;
+      delete process.env.TMDB_API_READ_ACCESS_TOKEN;
+      delete process.env.TMDB_READ_ACCESS_TOKEN;
+
       const client = new TmdbClient({ apiKey: undefined, readAccessToken: undefined });
       expect(client.hasAuth()).toBe(false);
 
       await expect(client.searchMovies("Inception")).rejects.toThrow(
         "TMDB API credentials are not configured",
       );
+    });
+
+    it("throws clear error when instantiated with no config and missing env vars", async () => {
+      delete process.env.TMDB_API_KEY;
+      delete process.env.TMDB_API_READ_ACCESS_TOKEN;
+      delete process.env.TMDB_READ_ACCESS_TOKEN;
+
+      const client = new TmdbClient();
+      expect(client.hasAuth()).toBe(false);
+
+      await expect(client.searchMovies("Inception")).rejects.toThrow(
+        "TMDB API credentials are not configured",
+      );
+    });
+
+    it("overrides ambient process.env when explicit empty credentials are passed", async () => {
+      process.env.TMDB_API_KEY = "ambient-key";
+      const client = new TmdbClient({ apiKey: undefined, readAccessToken: undefined });
+      expect(client.hasAuth()).toBe(false);
     });
   });
 
