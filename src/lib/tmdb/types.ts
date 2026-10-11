@@ -93,11 +93,11 @@ export const TmdbEpisodeSchema = z.object({
   episode_number: z.number(),
   season_number: z.number(),
   name: z.string().default(""),
-  overview: z.string().default(""),
+  overview: z.string().optional().default(""),
   air_date: z.string().nullable().optional(),
   still_path: z.string().nullable().optional(),
   runtime: z.number().nullable().optional(),
-  vote_average: z.number().default(0),
+  vote_average: z.number().optional().default(0),
 });
 export type TmdbEpisode = z.infer<typeof TmdbEpisodeSchema>;
 
@@ -115,6 +115,7 @@ export type TmdbSeasonDetails = z.infer<typeof TmdbSeasonDetailsSchema>;
 export const TmdbMovieDetailsSchema = z.object({
   id: z.number(),
   title: z.string(),
+  original_title: z.string().optional(),
   overview: z.string().default(""),
   poster_path: z.string().nullable().optional(),
   backdrop_path: z.string().nullable().optional(),
@@ -123,6 +124,7 @@ export const TmdbMovieDetailsSchema = z.object({
   genres: z.array(TmdbGenreSchema).default([]),
   vote_average: z.number().default(0),
   vote_count: z.number().default(0),
+  popularity: z.number().optional().default(0),
   status: z.string().default("Released"),
   tagline: z.string().nullable().optional(),
   credits: z
@@ -142,6 +144,7 @@ export type TmdbMovieDetails = z.infer<typeof TmdbMovieDetailsSchema>;
 export const TmdbTvDetailsSchema = z.object({
   id: z.number(),
   name: z.string(),
+  original_name: z.string().optional(),
   overview: z.string().default(""),
   poster_path: z.string().nullable().optional(),
   backdrop_path: z.string().nullable().optional(),
@@ -154,6 +157,7 @@ export const TmdbTvDetailsSchema = z.object({
   seasons: z.array(TmdbSeasonSummarySchema).default([]),
   vote_average: z.number().default(0),
   vote_count: z.number().default(0),
+  popularity: z.number().optional().default(0),
   status: z.string().default("Returning Series"),
   tagline: z.string().nullable().optional(),
   credits: z

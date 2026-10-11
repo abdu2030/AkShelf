@@ -38,6 +38,12 @@ export const AniListStreamingEpisodeSchema = z.object({
 });
 export type AniListStreamingEpisode = z.infer<typeof AniListStreamingEpisodeSchema>;
 
+export const AniListTrailerSchema = z.object({
+  id: z.string().nullable().optional(),
+  site: z.string().nullable().optional(),
+});
+export type AniListTrailer = z.infer<typeof AniListTrailerSchema>;
+
 export const AniListMediaSchema = z.object({
   id: z.number(),
   idMal: z.number().nullable().optional(),
@@ -62,6 +68,7 @@ export const AniListMediaSchema = z.object({
     .nullable()
     .optional(),
   streamingEpisodes: z.array(AniListStreamingEpisodeSchema).nullable().optional(),
+  trailer: AniListTrailerSchema.nullable().optional(),
 });
 export type AniListMedia = z.infer<typeof AniListMediaSchema>;
 
