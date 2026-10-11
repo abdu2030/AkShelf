@@ -1,0 +1,97 @@
+import { describe, expect, it } from "vitest";
+import {
+  mediaResultToPrismaCreateInput,
+  mediaResultToPrismaUpsertArgs,
+  prismaTitleToMediaResult,
+  PrismaTitleWithRelations,
+} from "./prisma-adapter";
+import { MediaResult, MediaResultSchema } from "./types";
+
+describe("Prisma Title Metadata Adapter", () => {
+  const sampleMediaResult: MediaResult = {
+    id: "tmdb:27205",
+    externalSource: "tmdb",
+    externalId: "27205",
+    type: "MOVIE",
+    title: "Inception",
+    overview: "A thief enters the dreams of others.",
+    year: 2010,
+    posterUrl: "https://image.tmdb.org/t/p/w500/poster.jpg",
+    backdropUrl: "https://image.tmdb.org/t/p/w1280/backdrop.jpg",
+    genres: ["Action", "Science Fiction"],
+  };
+
+  it("converts MediaResult to Prisma Title create input", () => {
+    const input = mediaResultToPrismaCreateInput(sampleMediaResult);
+
+    expect(input.externalSource).toBe("tmdb");
+    expect(input.externalId).toBe("27205");
+    expect(input.title).toBe("Inception");
+    expect(input.type).toBe("MOVIE");
+    expect(input.year).toBe(2010);
+    expect(input.genres).toEqual(["Action", "Science Fiction"]);
+  });
+
+  it("generates correct Prisma upsert parameters with composite key", () => {
+    const upsertArgs = mediaResultToPrismaUpsertArgs(sampleMediaResult);
+
+    expect(upsertArgs.where.externalSource_externalId).toEqual({
+      externalSource: "tmdb",
+      externalId: "27205",
+    });
+    expect(upsertArgs.create.title).toBe("Inception");
+    expect(upsertArgs.update.title).toBe("Inception");
+  });
+
+  it("converts Prisma Title record with relations to MediaResult", () => {
+    const record: PrismaTitleWithRelations = {
+      id: "clxyz123",
+      externalSource: "tmdb",
+      externalId: "1396",
+      title: "Breaking Bad",
+      type: "TV",
+      year: 2008,
+      overview: "Chemistry teacher turns kingpin.",
+      posterUrl: "https://image.tmdb.org/t/p/w500/bb.jpg",
+      backdropUrl: null,
+      genres: ["Drama", "Crime"],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      seasons: [
+        {
+          id: "season-1",
+          titleId: "clxyz123",
+          seasonNumber: 1,
+          name: "Season 1",
+          episodeCount: 7,
+          createdAt: new Date(),
+          episodes: [
+            {
+              id: "ep-1",
+              seasonId: "season-1",
+              externalId: null,
+              episodeNumber: 1,
+              name: "Pilot",
+              airDate: "2008-01-20",
+              runtime: 58,
+              createdAt: new Date(),
+            },
+          ],
+        },
+      ],
+    };
+
+    const media = prismaTitleToMediaResult(record);
+
+    expect(media.id).toBe("clxyz123");
+    expect(media.externalSource).toBe("tmdb");
+    expect(media.externalId).toBe("1396");
+    expect(media.type).toBe("TV");
+    expect(media.totalEpisodes).toBe(7);
+    expect(media.totalSeasons).toBe(1);
+    expect(media.seasons).toHaveLength(1);
+    expect(media.seasons?.[0].episodes?.[0].name).toBe("Pilot");
+
+    expect(() => MediaResultSchema.parse(media)).not.toThrow();
+  });
+});
