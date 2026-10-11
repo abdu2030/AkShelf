@@ -122,7 +122,7 @@ export const demoTitles: DemoTitleDefinition[] = [
     year: 2024,
     overview:
       "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
-    posterUrl: "https://image.tmdb.org/t/p/w500/1pdfLvk8ke9mfQmrnvcrAi8qAm5.jpg",
+    posterUrl: "https://image.tmdb.org/t/p/w500/6izwz7rsy95ARzTR3poZ8H6c5pp.jpg",
     genres: ["Science Fiction", "Adventure"],
     status: "WATCHING",
     rating: 9.0,
@@ -165,7 +165,7 @@ export const demoTitles: DemoTitleDefinition[] = [
     year: 2022,
     overview:
       "Dangerously ill with a rare blood disorder, Dr. Morbius attempts a desperate gamble that unleashes a darkness inside him.",
-    posterUrl: "https://image.tmdb.org/t/p/w500/6JjfSchHsiCc0vm4E8tD0iKoo5y.jpg",
+    posterUrl: "https://image.tmdb.org/t/p/w500/6JjfSchsU6daXk2AKX8EEBjO3Fm.jpg",
     genres: ["Action", "Science Fiction", "Fantasy"],
     status: "DROPPED",
     rating: 4.0,
@@ -218,7 +218,7 @@ export const demoTitles: DemoTitleDefinition[] = [
     year: 2022,
     overview:
       "Mark leads a team of office workers whose memories have been surgically divided between their work and personal lives.",
-    posterUrl: "https://image.tmdb.org/t/p/w500/u3bZgnGQ9T01sWNhyveQz0wGeW.jpg",
+    posterUrl: "https://image.tmdb.org/t/p/w500/pPHpeI2X1qEd1CS1SeyrdhZ4qnT.jpg",
     genres: ["Drama", "Mystery", "Science Fiction"],
     status: "WATCHING",
     rating: 9.2,
@@ -255,7 +255,7 @@ export const demoTitles: DemoTitleDefinition[] = [
     year: 2018,
     overview:
       "The Roy family is known for controlling the biggest media and entertainment company in the world.",
-    posterUrl: "https://image.tmdb.org/t/p/w500/7udZX0s4b8K9vGg50vGg4V9vH9.jpg",
+    posterUrl: "https://image.tmdb.org/t/p/w500/z0XiwdrCQ9yVIr4O0pxzaAYRxdW.jpg",
     genres: ["Drama"],
     status: "WATCHED",
     rating: 9.6,
@@ -293,7 +293,7 @@ export const demoTitles: DemoTitleDefinition[] = [
     year: 2023,
     overview:
       "Twenty years after modern civilization has been destroyed, Joel is hired to smuggle Ellie out of an oppressive quarantine zone.",
-    posterUrl: "https://image.tmdb.org/t/p/w500/uKvVjHNqB5VmOrdxqAt2V7J9ZeP.jpg",
+    posterUrl: "https://image.tmdb.org/t/p/w500/dmo6TYuuJgaYinXBPjrgG9mB5od.jpg",
     genres: ["Drama", "Action & Adventure", "Sci-Fi & Fantasy"],
     status: "WATCHED",
     rating: 8.9,
@@ -330,7 +330,7 @@ export const demoTitles: DemoTitleDefinition[] = [
     year: 2021,
     overview:
       "Amid the stark discord of twin cities Piltover and Zaun, two sisters fight on rival sides of a war between magic technologies and convictions.",
-    posterUrl: "https://image.tmdb.org/t/p/w500/fqldf2t8ztc9aiwn396mlXAwNtL.jpg",
+    posterUrl: "https://image.tmdb.org/t/p/w500/fqldf2t8ztc9aiwn3k6mlX3tvRT.jpg",
     genres: ["Animation", "Sci-Fi & Fantasy", "Action & Adventure"],
     status: "WATCHED",
     rating: 9.7,
@@ -367,7 +367,7 @@ export const demoTitles: DemoTitleDefinition[] = [
     year: 2024,
     overview:
       "In Japan in the year 1600, Lord Yoshii Toranaga is fighting for his life as his enemies on the Council of Regents unite against him.",
-    posterUrl: "https://image.tmdb.org/t/p/w500/7O4iVfOMQmdCSPxv12io7pmOTh4.jpg",
+    posterUrl: "https://image.tmdb.org/t/p/w500/7O4iVfOMQmdCSxhOg1WnzG1AgYT.jpg",
     genres: ["Drama", "War & Politics"],
     status: "WATCHING",
     rating: 9.3,
@@ -441,7 +441,7 @@ export const demoTitles: DemoTitleDefinition[] = [
     year: 2024,
     overview:
       "The story of haves and have-nots in a world in which there's almost nothing left to have. 200 years after the apocalypse, gentle denizens of luxury fallout shelters return.",
-    posterUrl: "https://image.tmdb.org/t/p/w500/AnsSKR99F0CcZihAlIl3AH8RQI.jpg",
+    posterUrl: "https://image.tmdb.org/t/p/w500/c15BtJxCXMrISLVmysdsnZUPQft.jpg",
     genres: ["Action & Adventure", "Sci-Fi & Fantasy"],
     status: "PLAN_TO_WATCH",
     rating: null,
@@ -460,7 +460,7 @@ export const demoTitles: DemoTitleDefinition[] = [
     year: 2013,
     overview: "Humanity was almost wiped out by monstrous humanoid creatures called Titans.",
     posterUrl:
-      "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx16498-73peebRJWhFw.jpg",
+      "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx16498-buvcRTBx4NSm.jpg",
     genres: ["Action", "Fantasy", "Drama"],
     status: "WATCHED",
     rating: 9.5,
@@ -494,7 +494,7 @@ export const demoTitles: DemoTitleDefinition[] = [
     overview:
       "The adventure is over, but life goes on for an elf mage just beginning to learn what living is all about.",
     posterUrl:
-      "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-n2b4b4b4.jpg",
+      "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-qQTzQnEJJ3oB.jpg",
     genres: ["Adventure", "Drama", "Fantasy"],
     status: "WATCHED",
     rating: 9.7,
@@ -527,7 +527,7 @@ export const demoTitles: DemoTitleDefinition[] = [
     overview:
       "Two brothers search for a Philosopher's Stone after an attempt to revive their deceased mother goes horribly wrong.",
     posterUrl:
-      "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx5114-1TqkW34zmsXp.jpg",
+      "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx5114-nSWCgQlmOMtj.jpg",
     genres: ["Action", "Adventure", "Drama", "Fantasy"],
     status: "WATCHED",
     rating: 9.6,
@@ -558,7 +558,8 @@ export const demoTitles: DemoTitleDefinition[] = [
     year: 2011,
     overview:
       "A self-proclaimed mad scientist discovers the means of sending text messages to the past, altering the present.",
-    posterUrl: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx9253-12345.jpg",
+    posterUrl:
+      "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx9253-tIUXF2gfU8Sg.jpg",
     genres: ["Drama", "Sci-Fi", "Thriller"],
     status: "WATCHED",
     rating: 9.4,
@@ -578,7 +579,7 @@ export const demoTitles: DemoTitleDefinition[] = [
     overview:
       "A boy swallows a cursed talisman - the finger of a demon - and becomes cursed himself to exorcise cursed spirits.",
     posterUrl:
-      "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx113415-bbBWj4pUbAw8.jpg",
+      "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx113415-LHBAeoZDIsnF.jpg",
     genres: ["Action", "Supernatural", "Fantasy"],
     status: "WATCHING",
     rating: 8.9,
@@ -598,7 +599,7 @@ export const demoTitles: DemoTitleDefinition[] = [
     overview:
       "A family is attacked by demons and only two members survive - Tanjiro and his sister Nezuko, who is turning into a demon.",
     posterUrl:
-      "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101922-PEn1CTDYxZaq.jpg",
+      "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101922-WBsBl0ClmgYL.jpg",
     genres: ["Action", "Fantasy", "Supernatural"],
     status: "WATCHING",
     rating: 8.7,
@@ -618,7 +619,7 @@ export const demoTitles: DemoTitleDefinition[] = [
     overview:
       "Denji is a teenage boy living with a Chainsaw Devil named Pochita who is resurrected as a devil-human hybrid.",
     posterUrl:
-      "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx127230-FloXvT8Z83iM.png",
+      "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx127230-DdP4vAdssLoz.png",
     genres: ["Action", "Supernatural", "Dark Fantasy"],
     status: "WATCHED",
     rating: 8.6,
@@ -638,7 +639,7 @@ export const demoTitles: DemoTitleDefinition[] = [
     overview:
       "Young Thorfinn grew up listening to the stories of old sailors that had traveled the ocean and reached the place of legend, Vinland.",
     posterUrl:
-      "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101348-kxWfC0w0q6gY.jpg",
+      "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101348-2fhDFPCuMNiz.jpg",
     genres: ["Action", "Adventure", "Drama", "Historical"],
     status: "ON_HOLD",
     rating: 8.8,
@@ -657,7 +658,7 @@ export const demoTitles: DemoTitleDefinition[] = [
     overview:
       "Orphans at Grace Field House discover the dark truth behind their idyllic upbringing and plot a daring escape.",
     posterUrl:
-      "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101759-6eO4eC4o4.jpg",
+      "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx101759-8UR7r9MNVpz2.jpg",
     genres: ["Mystery", "Psychological", "Sci-Fi", "Thriller"],
     status: "DROPPED",
     rating: 5.5,
@@ -676,7 +677,7 @@ export const demoTitles: DemoTitleDefinition[] = [
     overview:
       "Known as the 'Weakest Hunter of All Mankind', Sung Jinwoo finds himself in a mysterious double dungeon.",
     posterUrl:
-      "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx151807-m1b4b4b4.jpg",
+      "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx151807-it355ZgzquUd.png",
     genres: ["Action", "Fantasy", "Adventure"],
     status: "PLAN_TO_WATCH",
     rating: null,
