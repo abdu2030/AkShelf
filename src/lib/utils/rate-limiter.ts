@@ -79,6 +79,7 @@ export class RateLimiter {
 
       await this.acquireSlot();
 
+      let timer: NodeJS.Timeout | undefined;
       try {
         if (!options?.timeoutMs) {
           return await operation();
@@ -86,11 +87,11 @@ export class RateLimiter {
 
         // Wrap with timeout if configured
         const timeoutPromise = new Promise<never>((_, reject) => {
-          const timer = setTimeout(() => {
+          timer = setTimeout(() => {
             reject(new Error(`Operation timed out after ${options.timeoutMs}ms`));
           }, options.timeoutMs);
           options?.signal?.addEventListener("abort", () => {
-            clearTimeout(timer);
+            if (timer) clearTimeout(timer);
             reject(new Error("Operation aborted"));
           });
         });
@@ -136,6 +137,10 @@ export class RateLimiter {
         const delay = backoff + jitter;
 
         await new Promise((res) => setTimeout(res, delay));
+      } finally {
+        if (timer) {
+          clearTimeout(timer);
+        }
       }
     }
 

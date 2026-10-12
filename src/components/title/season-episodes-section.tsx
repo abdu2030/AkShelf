@@ -7,6 +7,7 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { SeasonSelector } from "./season-selector";
 import { EpisodeRow } from "./episode-row";
 import { Button } from "@/components/ui/button";
+import { batchSeasonProgressAction, toggleEpisodeProgressAction } from "@/actions/tracking";
 
 export interface EpisodeItem {
   episodeNumber: number;
@@ -29,6 +30,10 @@ export interface SeasonEpisodesSectionProps {
   seasons: SeasonItem[];
   userCurrentSeason?: number | null;
   userCurrentEpisode?: number | null;
+  titleExternalSource?: "tmdb" | "anilist";
+  titleExternalId?: string;
+  titleName?: string;
+  mediaType?: "MOVIE" | "TV" | "ANIME";
   onEpisodeToggle?: (seasonNumber: number, episodeNumber: number, watched: boolean) => void;
   className?: string;
 }
@@ -45,6 +50,10 @@ export function SeasonEpisodesSection({
   seasons,
   userCurrentSeason,
   userCurrentEpisode,
+  titleExternalSource,
+  titleExternalId,
+  titleName,
+  mediaType,
   onEpisodeToggle,
   className,
 }: SeasonEpisodesSectionProps) {
@@ -137,17 +146,51 @@ export function SeasonEpisodesSection({
     const key = `${activeSeason.seasonNumber}:${epNumber}`;
     const nextWatchedState = !watchedMap[key];
 
+    // Optimistic UI state update
     setWatchedMap((prev) => ({
       ...prev,
       [key]: nextWatchedState,
     }));
 
     onEpisodeToggle?.(activeSeason.seasonNumber, epNumber, nextWatchedState);
+
+    // Call server action if external title props are available
+    if (titleExternalSource && titleExternalId) {
+      const epItem = activeSeason.episodes?.find((e) => e.episodeNumber === epNumber);
+      toggleEpisodeProgressAction({
+        titleExternalSource,
+        titleExternalId,
+        seasonNumber: activeSeason.seasonNumber,
+        episodeNumber: epNumber,
+        watched: nextWatchedState,
+        titleName,
+        mediaType,
+        episodeName: epItem?.name,
+      })
+        .then((res) => {
+          if (!res.success) {
+            // Revert optimistic state on failure
+            setWatchedMap((prev) => ({
+              ...prev,
+              [key]: !nextWatchedState,
+            }));
+          }
+        })
+        .catch(() => {
+          // Revert optimistic state on network failure
+          setWatchedMap((prev) => ({
+            ...prev,
+            [key]: !nextWatchedState,
+          }));
+        });
+    }
   };
 
   // Batch mark active season as watched
   const handleMarkSeasonWatched = () => {
     if (!activeSeason?.episodes) return;
+    const previousMap = { ...watchedMap };
+
     setWatchedMap((prev) => {
       const next = { ...prev };
       for (const ep of activeSeason.episodes!) {
@@ -155,11 +198,34 @@ export function SeasonEpisodesSection({
       }
       return next;
     });
+
+    if (titleExternalSource && titleExternalId) {
+      const episodeNumbers = activeSeason.episodes.map((ep) => ep.episodeNumber);
+      batchSeasonProgressAction({
+        titleExternalSource,
+        titleExternalId,
+        seasonNumber: activeSeason.seasonNumber,
+        watched: true,
+        episodeNumbers,
+        titleName,
+        mediaType,
+      })
+        .then((res) => {
+          if (!res.success) {
+            setWatchedMap(previousMap);
+          }
+        })
+        .catch(() => {
+          setWatchedMap(previousMap);
+        });
+    }
   };
 
   // Batch mark active season as unwatched
   const handleMarkSeasonUnwatched = () => {
     if (!activeSeason?.episodes) return;
+    const previousMap = { ...watchedMap };
+
     setWatchedMap((prev) => {
       const next = { ...prev };
       for (const ep of activeSeason.episodes!) {
@@ -167,6 +233,27 @@ export function SeasonEpisodesSection({
       }
       return next;
     });
+
+    if (titleExternalSource && titleExternalId) {
+      const episodeNumbers = activeSeason.episodes.map((ep) => ep.episodeNumber);
+      batchSeasonProgressAction({
+        titleExternalSource,
+        titleExternalId,
+        seasonNumber: activeSeason.seasonNumber,
+        watched: false,
+        episodeNumbers,
+        titleName,
+        mediaType,
+      })
+        .then((res) => {
+          if (!res.success) {
+            setWatchedMap(previousMap);
+          }
+        })
+        .catch(() => {
+          setWatchedMap(previousMap);
+        });
+    }
   };
 
   if (!seasons || seasons.length === 0) {
