@@ -1,6 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+  useSyncExternalStore,
+} from "react";
 import { useRouter } from "next/navigation";
 import { Search, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
@@ -11,8 +18,10 @@ import { RecentSearchesList } from "./recent-searches-list";
 import {
   addRecentSearch,
   clearRecentSearches,
-  getRecentSearches,
   removeRecentSearch,
+  subscribeToRecentSearches,
+  getRecentSearchesSnapshot,
+  getRecentSearchesServerSnapshot,
 } from "@/lib/search/recent-searches";
 import { SearchResultItem } from "@/app/api/search/route";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -34,13 +43,14 @@ export function SearchView({ initialQuery = "", className }: SearchViewProps) {
   const [onShelf, setOnShelf] = useState<SearchResultItem[]>([]);
   const [results, setResults] = useState<SearchResultItem[]>([]);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
-  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
-    if (typeof window !== "undefined") {
-      return getRecentSearches();
-    }
-    return [];
-  });
   const [hasSearched, setHasSearched] = useState(false);
+
+  // useSyncExternalStore guarantees 1:1 SSR hydration match while staying reactive to client localStorage updates
+  const recentSearches = useSyncExternalStore(
+    subscribeToRecentSearches,
+    getRecentSearchesSnapshot,
+    getRecentSearchesServerSnapshot,
+  );
 
   // 300ms debounce on input typing
   useEffect(() => {
@@ -77,7 +87,7 @@ export function SearchView({ initialQuery = "", className }: SearchViewProps) {
 
         // Add to recent searches if search returned results
         if ((data.onShelf?.length > 0 || data.results?.length > 0) && debouncedQuery) {
-          setRecentSearches(addRecentSearch(debouncedQuery));
+          addRecentSearch(debouncedQuery);
         }
       })
       .catch((err) => {
@@ -186,12 +196,11 @@ export function SearchView({ initialQuery = "", className }: SearchViewProps) {
   };
 
   const handleRemoveRecent = (term: string) => {
-    setRecentSearches(removeRecentSearch(term));
+    removeRecentSearch(term);
   };
 
   const handleClearAllRecent = () => {
     clearRecentSearches();
-    setRecentSearches([]);
   };
 
   const handleClear = () => {
