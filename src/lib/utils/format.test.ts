@@ -4,6 +4,8 @@ import {
   formatRating,
   formatMediaType,
   formatEpisodePosition,
+  formatDate,
+  toDateInputValue,
 } from "./format";
 
 describe("formatRating", () => {
@@ -57,5 +59,43 @@ describe("formatEpisodePosition", () => {
 
   it("handles empty values gracefully", () => {
     expect(formatEpisodePosition(null, null)).toBe("");
+  });
+});
+
+describe("formatDate", () => {
+  it("returns Today for current date", () => {
+    const today = new Date();
+    expect(formatDate(today)).toBe("Today");
+    expect(formatDate(today.toISOString())).toBe("Today");
+  });
+
+  it("returns Yesterday for date 1 day ago", () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    expect(formatDate(yesterday)).toBe("Yesterday");
+  });
+
+  it("formats older date with abbreviated month and year", () => {
+    const pastDate = new Date("2024-05-15T12:00:00Z");
+    expect(formatDate(pastDate)).toContain("May 15, 2024");
+  });
+
+  it("handles null, undefined, or invalid strings gracefully", () => {
+    expect(formatDate(null)).toBe("");
+    expect(formatDate(undefined)).toBe("");
+    expect(formatDate("not-a-date")).toBe("");
+  });
+});
+
+describe("toDateInputValue", () => {
+  it("formats date into YYYY-MM-DD string", () => {
+    const date = new Date("2026-10-15T10:00:00Z");
+    expect(toDateInputValue(date)).toBe("2026-10-15");
+  });
+
+  it("returns empty string for null or invalid date", () => {
+    expect(toDateInputValue(null)).toBe("");
+    expect(toDateInputValue(undefined)).toBe("");
+    expect(toDateInputValue("invalid")).toBe("");
   });
 });
