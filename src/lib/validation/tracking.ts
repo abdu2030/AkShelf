@@ -34,6 +34,16 @@ export const updateTitleStatusSchema = z.object({
   titleName: z.string().optional(),
   mediaType: z.enum(["MOVIE", "TV", "ANIME"]).optional(),
   rating: z.number().min(0).max(10).optional().nullable(),
+  startedAt: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}(T.*)?$/, "Must be a valid date string (YYYY-MM-DD or ISO)")
+    .nullable()
+    .optional(),
+  watchedAt: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}(T.*)?$/, "Must be a valid date string (YYYY-MM-DD or ISO)")
+    .nullable()
+    .optional(),
 });
 
 export type UpdateTitleStatusInput = z.infer<typeof updateTitleStatusSchema>;
@@ -51,3 +61,22 @@ export const updateTitleRatingSchema = z.object({
 });
 
 export type UpdateTitleRatingInput = z.infer<typeof updateTitleRatingSchema>;
+
+export const updateTitleDatesSchema = z.object({
+  titleExternalSource: z.enum(["tmdb", "anilist"]),
+  titleExternalId: z.string().min(1, "titleExternalId is required"),
+  startedAt: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}(T.*)?$/, "Must be a valid date string (YYYY-MM-DD or ISO)")
+    .nullable()
+    .optional(),
+  watchedAt: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}(T.*)?$/, "Must be a valid date string (YYYY-MM-DD or ISO)")
+    .nullable()
+    .optional(),
+  titleName: z.string().optional(),
+  mediaType: z.enum(["MOVIE", "TV", "ANIME"]).optional(),
+});
+
+export type UpdateTitleDatesInput = z.infer<typeof updateTitleDatesSchema>;

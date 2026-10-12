@@ -13,6 +13,7 @@ import { TitleHero } from "@/components/title/title-hero";
 import { SeasonEpisodesSection } from "@/components/title/season-episodes-section";
 import { StatusSelector } from "@/components/title/status-selector";
 import { RatingControl } from "@/components/title/rating-control";
+import { DateTracker } from "@/components/title/date-tracker";
 
 interface TitleDetailPageProps {
   params: Promise<{ id: string }>;
@@ -42,6 +43,8 @@ interface ResolvedTitleData {
   totalEpisodes?: number | null;
   userStatus?: WatchStatusType | null;
   userRating?: number | null;
+  startedAt?: string | null;
+  watchedAt?: string | null;
   season?: number | null;
   episode?: number | null;
   currentEpisode?: number | null;
@@ -122,6 +125,8 @@ async function resolveTitleDetails(id: string): Promise<ResolvedTitleData | null
       totalEpisodes: demo.totalEpisodes || (demo.seasons ? demo.seasons[0]?.episodeCount : 1),
       userStatus: demo.status,
       userRating: demo.rating,
+      startedAt: demo.startedAt || null,
+      watchedAt: demo.watchedAt || null,
       season: demo.season,
       episode: demo.episode,
       currentEpisode: demo.currentEpisode,
@@ -173,6 +178,8 @@ async function resolveTitleDetails(id: string): Promise<ResolvedTitleData | null
           totalEpisodes: mediaResult.totalEpisodes || null,
           userStatus: shelfMatch?.status || null,
           userRating: shelfMatch?.rating || null,
+          startedAt: shelfMatch?.startedAt || null,
+          watchedAt: shelfMatch?.watchedAt || null,
           season: shelfMatch?.season || null,
           episode: shelfMatch?.episode || null,
           currentEpisode: shelfMatch?.currentEpisode || null,
@@ -309,6 +316,19 @@ export default async function TitleDetailPage({ params }: TitleDetailPageProps) 
               mediaType={titleData.type}
             />
           </div>
+
+          {/* Interactive Date Tracker (Day 25, Spec P14 & Roadmap) */}
+          <div className="pt-3 border-t border-white/5">
+            <DateTracker
+              startedAt={titleData.startedAt}
+              watchedAt={titleData.watchedAt}
+              titleExternalSource={titleData.externalSource}
+              titleExternalId={titleData.externalId}
+              titleName={titleData.title}
+              mediaType={titleData.type}
+              status={titleData.userStatus}
+            />
+          </div>
         </section>
 
         {/* 3. Cast Preview Section (Section 10.4) */}
@@ -346,9 +366,8 @@ export default async function TitleDetailPage({ params }: TitleDetailPageProps) 
         <div className="rounded-xl border border-accent/20 bg-accent/5 p-4 flex items-center gap-3 text-xs sm:text-sm text-ink-soft">
           <CheckCircle2 className="w-5 h-5 text-accent shrink-0" aria-hidden="true" />
           <span>
-            <strong>Week 4 Milestones:</strong> Instant watch status changes (Watched, Watching,
-            Plan to Watch, On Hold, Dropped) and 1–10 personal rating mutations are active for{" "}
-            <strong>Days 22–24</strong>.
+            <strong>Week 4 Milestones:</strong> Instant watch status changes, 1–10 personal rating,
+            and started/watched date tracking mutations are active for <strong>Days 22–25</strong>.
           </span>
         </div>
       </div>

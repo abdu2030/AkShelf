@@ -6,10 +6,12 @@ import { prisma } from "@/lib/db";
 import {
   batchSeasonSchema,
   toggleEpisodeSchema,
+  updateTitleDatesSchema,
   updateTitleRatingSchema,
   updateTitleStatusSchema,
   BatchSeasonInput,
   ToggleEpisodeInput,
+  UpdateTitleDatesInput,
   UpdateTitleRatingInput,
   UpdateTitleStatusInput,
 } from "@/lib/validation/tracking";
@@ -23,6 +25,8 @@ export type TrackingActionResult = {
   count?: number;
   status?: string | null;
   rating?: number | null;
+  startedAt?: Date | null;
+  watchedAt?: Date | null;
   isDemo?: boolean;
 };
 
@@ -407,8 +411,16 @@ export async function updateTitleStatusAction(
     };
   }
 
-  const { titleExternalSource, titleExternalId, status, titleName, mediaType, rating } =
-    parsed.data;
+  const {
+    titleExternalSource,
+    titleExternalId,
+    status,
+    titleName,
+    mediaType,
+    rating,
+    startedAt,
+    watchedAt,
+  } = parsed.data;
 
   const session = await auth();
   const userId = session?.user?.id;
@@ -469,8 +481,30 @@ export async function updateTitleStatusAction(
         });
 
         const now = new Date();
-        const watchedAt = status === "WATCHED" ? existing?.watchedAt || now : existing?.watchedAt;
-        const startedAt = status === "WATCHING" ? existing?.startedAt || now : existing?.startedAt;
+        const explicitWatchedAt = watchedAt
+          ? new Date(watchedAt)
+          : watchedAt === null
+            ? null
+            : undefined;
+        const explicitStartedAt = startedAt
+          ? new Date(startedAt)
+          : startedAt === null
+            ? null
+            : undefined;
+
+        const finalWatchedAt =
+          explicitWatchedAt !== undefined
+            ? explicitWatchedAt
+            : status === "WATCHED"
+              ? existing?.watchedAt || now
+              : existing?.watchedAt;
+
+        const finalStartedAt =
+          explicitStartedAt !== undefined
+            ? explicitStartedAt
+            : status === "WATCHING"
+              ? existing?.startedAt || now
+              : existing?.startedAt;
 
         await tx.userTitle.upsert({
           where: {
@@ -482,8 +516,8 @@ export async function updateTitleStatusAction(
           update: {
             status,
             ...(rating !== undefined ? { rating } : {}),
-            watchedAt,
-            startedAt,
+            watchedAt: finalWatchedAt,
+            startedAt: finalStartedAt,
             updatedAt: now,
           },
           create: {
@@ -491,8 +525,18 @@ export async function updateTitleStatusAction(
             titleId: title.id,
             status,
             rating: rating ?? null,
-            watchedAt: status === "WATCHED" ? now : null,
-            startedAt: status === "WATCHING" ? now : null,
+            watchedAt:
+              explicitWatchedAt !== undefined
+                ? explicitWatchedAt
+                : status === "WATCHED"
+                  ? now
+                  : null,
+            startedAt:
+              explicitStartedAt !== undefined
+                ? explicitStartedAt
+                : status === "WATCHING"
+                  ? now
+                  : null,
           },
         });
 
@@ -649,6 +693,113 @@ export async function updateTitleRatingAction(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Database rating mutation failed",
+    };
+  }
+}
+
+/**
+ * Server action to update optional watchedAt and startedAt dates for a title on the user's shelf (Day 25)
+ * Atomically ensures Title exists, updates UserTitle dates,
+ * logs action in WatchHistory, and revalidates relevant routes.
+ */
+export async function updateTitleDatesAction(
+  rawInput: UpdateTitleDatesInput,
+): Promise<TrackingActionResult> {
+  const parsed = updateTitleDatesSchema.safeParse(rawInput);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: "Invalid date input: " + parsed.error.issues.map((i) => i.message).join(", "),
+    };
+  }
+
+  const { titleExternalSource, titleExternalId, startedAt, watchedAt, titleName, mediaType } =
+    parsed.data;
+
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  const parsedStartedAt = startedAt ? new Date(startedAt) : startedAt === null ? null : undefined;
+  const parsedWatchedAt = watchedAt ? new Date(watchedAt) : watchedAt === null ? null : undefined;
+
+  if (!userId) {
+    return {
+      success: true,
+      startedAt: parsedStartedAt ?? null,
+      watchedAt: parsedWatchedAt ?? null,
+      isDemo: true,
+    };
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // 1. Ensure Title exists in database
+      const title = await tx.title.upsert({
+        where: {
+          externalSource_externalId: {
+            externalSource: titleExternalSource,
+            externalId: titleExternalId,
+          },
+        },
+        update: {},
+        create: {
+          externalSource: titleExternalSource,
+          externalId: titleExternalId,
+          title: titleName || `${titleExternalSource}:${titleExternalId}`,
+          type: mediaType || "TV",
+        },
+      });
+
+      const now = new Date();
+
+      await tx.userTitle.upsert({
+        where: {
+          userId_titleId: {
+            userId,
+            titleId: title.id,
+          },
+        },
+        update: {
+          ...(parsedStartedAt !== undefined ? { startedAt: parsedStartedAt } : {}),
+          ...(parsedWatchedAt !== undefined ? { watchedAt: parsedWatchedAt } : {}),
+          updatedAt: now,
+        },
+        create: {
+          userId,
+          titleId: title.id,
+          status: parsedWatchedAt ? "WATCHED" : parsedStartedAt ? "WATCHING" : "PLAN_TO_WATCH",
+          startedAt: parsedStartedAt ?? null,
+          watchedAt: parsedWatchedAt ?? null,
+        },
+      });
+
+      await tx.watchHistory.create({
+        data: {
+          userId,
+          titleId: title.id,
+          action: "DATES_UPDATED",
+          occurredAt: now,
+        },
+      });
+    });
+
+    revalidatePath(`/title/${titleExternalSource}:${titleExternalId}`);
+    revalidatePath(`/title/demo-${titleExternalSource}-${titleExternalId}`);
+    revalidatePath("/");
+    revalidatePath("/library");
+    revalidatePath("/watchlist");
+    revalidatePath("/history");
+
+    return {
+      success: true,
+      startedAt: parsedStartedAt ?? null,
+      watchedAt: parsedWatchedAt ?? null,
+    };
+  } catch (error) {
+    console.error("[TrackingAction] Failed to update title dates:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Database date mutation failed",
     };
   }
 }

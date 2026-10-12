@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   batchSeasonSchema,
   toggleEpisodeSchema,
+  updateTitleDatesSchema,
   updateTitleRatingSchema,
   updateTitleStatusSchema,
 } from "./tracking";
@@ -226,6 +227,58 @@ describe("Tracking Validation Schemas", () => {
         titleExternalSource: "tmdb",
         titleExternalId: "",
         rating: 8,
+      });
+      expect(missingId.success).toBe(false);
+    });
+  });
+
+  describe("updateTitleDatesSchema", () => {
+    it("validates valid dates (YYYY-MM-DD format)", () => {
+      const result = updateTitleDatesSchema.safeParse({
+        titleExternalSource: "tmdb",
+        titleExternalId: "27205",
+        startedAt: "2026-10-01",
+        watchedAt: "2026-10-12",
+        titleName: "Inception",
+        mediaType: "MOVIE",
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.startedAt).toBe("2026-10-01");
+        expect(result.data.watchedAt).toBe("2026-10-12");
+      }
+    });
+
+    it("accepts null to clear dates", () => {
+      const result = updateTitleDatesSchema.safeParse({
+        titleExternalSource: "anilist",
+        titleExternalId: "16498",
+        startedAt: null,
+        watchedAt: null,
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.startedAt).toBeNull();
+        expect(result.data.watchedAt).toBeNull();
+      }
+    });
+
+    it("rejects invalid date format", () => {
+      const invalidDate = updateTitleDatesSchema.safeParse({
+        titleExternalSource: "tmdb",
+        titleExternalId: "27205",
+        startedAt: "not-a-date",
+      });
+      expect(invalidDate.success).toBe(false);
+    });
+
+    it("rejects missing titleExternalId", () => {
+      const missingId = updateTitleDatesSchema.safeParse({
+        titleExternalSource: "tmdb",
+        titleExternalId: "",
+        startedAt: "2026-10-01",
       });
       expect(missingId.success).toBe(false);
     });
