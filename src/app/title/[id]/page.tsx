@@ -10,6 +10,7 @@ import { metadataService } from "@/lib/metadata";
 import { CastMemberItem, CastPreview } from "@/components/title/cast-preview";
 import { MetadataPanel } from "@/components/title/metadata-panel";
 import { TitleHero } from "@/components/title/title-hero";
+import { SeasonEpisodesSection } from "@/components/title/season-episodes-section";
 
 interface TitleDetailPageProps {
   params: Promise<{ id: string }>;
@@ -306,43 +307,13 @@ export default async function TitleDetailPage({ params }: TitleDetailPageProps) 
           trailerUrl={titleData.trailerUrl}
         />
 
-        {/* 5. Seasons & Episodes Breakdown (if available) */}
+        {/* 5. Seasons & Episodes Breakdown (for TV and Anime) */}
         {titleData.seasons && titleData.seasons.length > 0 && (
-          <section
-            aria-labelledby="episodes-heading"
-            className="glass-2 rounded-[24px] p-6 space-y-4 border border-white/10"
-          >
-            <div className="flex items-center justify-between">
-              <h2
-                id="episodes-heading"
-                className="text-base sm:text-lg font-display font-bold text-ink"
-              >
-                Seasons &amp; Episodes ({titleData.seasons[0].episodeCount} episodes)
-              </h2>
-              <span className="text-xs text-ink-muted font-medium">
-                Season {titleData.seasons[0].seasonNumber}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {titleData.seasons[0].episodes?.map((ep) => (
-                <div
-                  key={ep.episodeNumber}
-                  className="glass-1 rounded-xl p-3 flex items-center justify-between border border-white/5 text-sm"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="text-xs font-mono font-bold text-accent px-2 py-0.5 rounded bg-accent/10">
-                      EP {ep.episodeNumber}
-                    </span>
-                    <span className="truncate text-ink font-medium">{ep.name}</span>
-                  </div>
-                  {ep.runtime && (
-                    <span className="text-xs text-ink-muted shrink-0 pl-2">{ep.runtime}m</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </section>
+          <SeasonEpisodesSection
+            seasons={titleData.seasons}
+            userCurrentSeason={titleData.season}
+            userCurrentEpisode={titleData.currentEpisode ?? titleData.episode}
+          />
         )}
 
         {/* 6. Roadmap Notice for Day 19/20 */}
