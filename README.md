@@ -161,8 +161,22 @@ AkShelf enforces a strict separation between external entertainment metadata and
   - [x] **Day 5**: Single-owner Auth.js integration & route protection.
   - [x] **Day 6**: Base layout shell (navigation, responsive containers, core UI components).
   - [x] **Day 7**: Week 1 review, checkpoint release `v0.1.0` ([Review Document](docs/WEEK_1_REVIEW.md)).
-- [ ] **Week 2: UI Foundation & Personal Library (`v0.2.0`)**
-- [ ] **Week 3: TMDB / AniList Integration & Search (`v0.3.0`)**
+- [x] **Week 2: UI Foundation & Personal Library (`v0.2.0`)**
+  - [x] **Day 8**: Media card component with 2:3 aspect ratio, status dot & badge.
+  - [x] **Day 9**: Responsive media grid & breakpoints with zero-blur performance.
+  - [x] **Day 10**: Library header & multi-dimensional filter controls.
+  - [x] **Day 11**: Deterministic library sorting engine (Date, Title, Rating, Year).
+  - [x] **Day 12**: Context-aware empty states & quick filter reset flows.
+  - [x] **Day 13**: Seed script expansion with 28 realistic titles and demo dataset.
+  - [x] **Day 14**: Week 2 review, accessibility audit & checkpoint release `v0.2.0` ([Review Document](docs/WEEK_2_REVIEW.md)).
+- [x] **Week 3: External Metadata, Detail Views & Episode Tracking (`v0.3.0`)**
+  - [x] **Day 15**: TMDB & AniList clients with token bucket rate-limiting.
+  - [x] **Day 16**: Normalized metadata translator & resilient cache layer.
+  - [x] **Day 17**: Global debounced search UI with keyboard navigation & instant badges.
+  - [x] **Day 18**: Title detail synopsis, cast preview, and metadata overview panel.
+  - [x] **Day 19**: Season selector and episode list breakdown with next-up indicator.
+  - [x] **Day 20**: Episode progress tracking mutations (one-click checkmark & batch season actions).
+  - [x] **Day 21**: Week 3 review, integration tests, hydration stability & checkpoint release `v0.3.0` ([Review Document](docs/WEEK_3_REVIEW.md)).
 - [ ] **Week 4: Watch Tracking, Ratings & History (`v0.4.0`)**
 - [ ] **Week 5: TV / Anime Seasons & Episode Progress (`v0.5.0`)**
 - [ ] **Week 6: Dashboard, Statistics & UX Polish (`v0.6.0`)**
