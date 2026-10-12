@@ -13,10 +13,18 @@ export interface DemoSeasonDefinition {
   episodes: DemoEpisodeDefinition[];
 }
 
+export interface DemoCastMemberDefinition {
+  id: string | number;
+  name: string;
+  character?: string | null;
+  image?: string | null;
+}
+
 export interface DemoTitleDefinition {
   externalSource: "tmdb" | "anilist";
   externalId: string;
   title: string;
+  originalTitle?: string;
   type: "MOVIE" | "TV" | "ANIME";
   year: number;
   overview: string;
@@ -29,6 +37,15 @@ export interface DemoTitleDefinition {
   episode?: number;
   currentEpisode?: number;
   totalEpisodes?: number;
+  runtime?: number;
+  releaseDate?: string;
+  director?: string;
+  studios?: string[];
+  statusText?: string;
+  voteAverage?: number;
+  voteCount?: number;
+  trailerUrl?: string;
+  cast?: DemoCastMemberDefinition[];
   addedAt: string;
   watchedAt?: string;
   startedAt?: string;
@@ -43,14 +60,62 @@ export const demoTitles: DemoTitleDefinition[] = [
     externalSource: "tmdb",
     externalId: "27205",
     title: "Inception",
+    originalTitle: "Inception",
     type: "MOVIE",
     year: 2010,
     overview:
       "Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets.",
     posterUrl: "https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg",
+    backdropUrl: "https://image.tmdb.org/t/p/original/s3TBrRGB1iav7gFOCNx3H31MoES.jpg",
     genres: ["Action", "Science Fiction", "Adventure"],
     status: "WATCHED",
     rating: 9.5,
+    runtime: 148,
+    releaseDate: "2010-07-16",
+    director: "Christopher Nolan",
+    studios: ["Warner Bros. Pictures", "Syncopy"],
+    statusText: "Released",
+    voteAverage: 8.4,
+    voteCount: 35000,
+    trailerUrl: "https://www.youtube.com/watch?v=YoHD9XEInc0",
+    cast: [
+      {
+        id: 6193,
+        name: "Leonardo DiCaprio",
+        character: "Dom Cobb",
+        image: "https://image.tmdb.org/t/p/w185/wo2pa3ejbfEUbGviLrmZqFLzWue.jpg",
+      },
+      {
+        id: 24045,
+        name: "Joseph Gordon-Levitt",
+        character: "Arthur",
+        image: "https://image.tmdb.org/t/p/w185/dhv9f3A71c8w0B07Z7cO1512h7X.jpg",
+      },
+      {
+        id: 27578,
+        name: "Elliot Page",
+        character: "Ariadne",
+        image: "https://image.tmdb.org/t/p/w185/tp1579OxJuhUOiKj9U5i7x5F44.jpg",
+      },
+      {
+        id: 2524,
+        name: "Tom Hardy",
+        character: "Eames",
+        image: "https://image.tmdb.org/t/p/w185/yVGF93v0eKz941FqgW6bE5B8gJ1.jpg",
+      },
+      {
+        id: 9568,
+        name: "Ken Watanabe",
+        character: "Saito",
+        image: "https://image.tmdb.org/t/p/w185/w2ghO49qM1937Ue3sPz4J5w4A6B.jpg",
+      },
+      {
+        id: 3895,
+        name: "Michael Caine",
+        character: "Miles",
+        image: "https://image.tmdb.org/t/p/w185/klNxO69Bq7fK7iH400w2x3.jpg",
+      },
+    ],
     addedAt: "2026-01-10T14:20:00Z",
     watchedAt: "2026-01-12T22:30:00Z",
   },
@@ -58,14 +123,50 @@ export const demoTitles: DemoTitleDefinition[] = [
     externalSource: "tmdb",
     externalId: "157336",
     title: "Interstellar",
+    originalTitle: "Interstellar",
     type: "MOVIE",
     year: 2014,
     overview:
       "The adventures of a group of explorers who make use of a newly discovered wormhole to surpass the limitations on human space travel.",
     posterUrl: "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
+    backdropUrl: "https://image.tmdb.org/t/p/original/xJHokMbljvjADYdit5fK5VQsXEG.jpg",
     genres: ["Adventure", "Drama", "Science Fiction"],
     status: "WATCHED",
     rating: 10.0,
+    runtime: 169,
+    releaseDate: "2014-11-05",
+    director: "Christopher Nolan",
+    studios: ["Paramount Pictures", "Warner Bros. Pictures", "Syncopy"],
+    statusText: "Released",
+    voteAverage: 8.4,
+    voteCount: 33000,
+    trailerUrl: "https://www.youtube.com/watch?v=zSWdZVtXT7E",
+    cast: [
+      {
+        id: 10297,
+        name: "Matthew McConaughey",
+        character: "Cooper",
+        image: "https://image.tmdb.org/t/p/w185/eD14P5HqHh6uH5o6tSg4N3W4B6H.jpg",
+      },
+      {
+        id: 1813,
+        name: "Anne Hathaway",
+        character: "Brand",
+        image: "https://image.tmdb.org/t/p/w185/tLel4IGDcIsBHg1iT4h8pZzS3h3.jpg",
+      },
+      {
+        id: 83002,
+        name: "Jessica Chastain",
+        character: "Murph",
+        image: "https://image.tmdb.org/t/p/w185/vO1P1Z9N5S3y8q2R4N1k4g8vY4c.jpg",
+      },
+      {
+        id: 3895,
+        name: "Michael Caine",
+        character: "Professor Brand",
+        image: "https://image.tmdb.org/t/p/w185/klNxO69Bq7fK7iH400w2x3.jpg",
+      },
+    ],
     addedAt: "2026-01-15T19:00:00Z",
     watchedAt: "2026-01-16T23:15:00Z",
   },
@@ -456,18 +557,52 @@ export const demoTitles: DemoTitleDefinition[] = [
     externalSource: "anilist",
     externalId: "16498",
     title: "Attack on Titan",
+    originalTitle: "進撃の巨人 (Shingeki no Kyojin)",
     type: "ANIME",
     year: 2013,
     overview: "Humanity was almost wiped out by monstrous humanoid creatures called Titans.",
     posterUrl:
       "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx16498-buvcRTBx4NSm.jpg",
+    backdropUrl: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/16498-8jpFfNsDxEGb.jpg",
     genres: ["Action", "Fantasy", "Drama"],
     status: "WATCHED",
     rating: 9.5,
+    runtime: 24,
+    releaseDate: "2013-04-07",
+    director: "Tetsurō Araki",
+    studios: ["Wit Studio", "MAPPA"],
+    statusText: "Finished Airing",
+    voteAverage: 8.8,
     season: 1,
     episode: 25,
     currentEpisode: 25,
     totalEpisodes: 25,
+    cast: [
+      {
+        id: 1045,
+        name: "Yuki Kaji",
+        character: "Eren Yeager",
+        image: "https://s4.anilist.co/file/anilistcdn/character/large/b40882-9Q01Lw9kZ7nB.png",
+      },
+      {
+        id: 1046,
+        name: "Yui Ishikawa",
+        character: "Mikasa Ackerman",
+        image: "https://s4.anilist.co/file/anilistcdn/character/large/b40881-r0N2tV3d8a7k.png",
+      },
+      {
+        id: 1047,
+        name: "Marina Inoue",
+        character: "Armin Arlert",
+        image: "https://s4.anilist.co/file/anilistcdn/character/large/b40883-rN9hW1lE7b8p.png",
+      },
+      {
+        id: 1048,
+        name: "Hiroshi Kamiya",
+        character: "Levi Ackerman",
+        image: "https://s4.anilist.co/file/anilistcdn/character/large/b45627-wN7vV3lT8z2q.png",
+      },
+    ],
     addedAt: "2026-01-02T10:00:00Z",
     watchedAt: "2026-01-20T21:00:00Z",
     seasons: [
@@ -489,19 +624,47 @@ export const demoTitles: DemoTitleDefinition[] = [
     externalSource: "anilist",
     externalId: "154587",
     title: "Frieren: Beyond Journey's End",
+    originalTitle: "葬送のフリーレン (Sousou no Frieren)",
     type: "ANIME",
     year: 2023,
     overview:
       "The adventure is over, but life goes on for an elf mage just beginning to learn what living is all about.",
     posterUrl:
       "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-qQTzQnEJJ3oB.jpg",
+    backdropUrl: "https://s4.anilist.co/file/anilistcdn/media/anime/banner/154587-ivXNJ235dfpL.jpg",
     genres: ["Adventure", "Drama", "Fantasy"],
     status: "WATCHED",
     rating: 9.7,
+    runtime: 24,
+    releaseDate: "2023-09-29",
+    director: "Keiichirō Saitō",
+    studios: ["Madhouse"],
+    statusText: "Finished Airing",
+    voteAverage: 9.1,
     season: 1,
     episode: 28,
     currentEpisode: 28,
     totalEpisodes: 28,
+    cast: [
+      {
+        id: 2001,
+        name: "Atsumi Tanezaki",
+        character: "Frieren",
+        image: "https://s4.anilist.co/file/anilistcdn/character/large/b176179-8vXNJ45qL.png",
+      },
+      {
+        id: 2002,
+        name: "Kana Ichinose",
+        character: "Fern",
+        image: "https://s4.anilist.co/file/anilistcdn/character/large/b176180-8vXNJ45qL.png",
+      },
+      {
+        id: 2003,
+        name: "Chiaki Kobayashi",
+        character: "Stark",
+        image: "https://s4.anilist.co/file/anilistcdn/character/large/b176181-8vXNJ45qL.png",
+      },
+    ],
     addedAt: "2026-01-28T14:10:00Z",
     watchedAt: "2026-02-15T22:00:00Z",
     seasons: [
