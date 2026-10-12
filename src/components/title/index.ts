@@ -7,3 +7,4 @@ export * from "./season-selector";
 export * from "./episode-row";
 export * from "./season-episodes-section";
 export * from "./status-selector";
+export * from "./rating-control";

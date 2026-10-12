@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { batchSeasonSchema, toggleEpisodeSchema, updateTitleStatusSchema } from "./tracking";
+import {
+  batchSeasonSchema,
+  toggleEpisodeSchema,
+  updateTitleRatingSchema,
+  updateTitleStatusSchema,
+} from "./tracking";
 
 describe("Tracking Validation Schemas", () => {
   describe("toggleEpisodeSchema", () => {
@@ -168,6 +173,61 @@ describe("Tracking Validation Schemas", () => {
         rating: 11,
       });
       expect(invalidRating.success).toBe(false);
+    });
+  });
+
+  describe("updateTitleRatingSchema", () => {
+    it("validates valid rating between 1 and 10", () => {
+      const result = updateTitleRatingSchema.safeParse({
+        titleExternalSource: "tmdb",
+        titleExternalId: "27205",
+        rating: 9,
+        titleName: "Inception",
+        mediaType: "MOVIE",
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.rating).toBe(9);
+      }
+    });
+
+    it("accepts null to clear rating", () => {
+      const result = updateTitleRatingSchema.safeParse({
+        titleExternalSource: "anilist",
+        titleExternalId: "16498",
+        rating: null,
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.rating).toBeNull();
+      }
+    });
+
+    it("rejects ratings below 1 or above 10", () => {
+      const tooLow = updateTitleRatingSchema.safeParse({
+        titleExternalSource: "tmdb",
+        titleExternalId: "27205",
+        rating: 0,
+      });
+      expect(tooLow.success).toBe(false);
+
+      const tooHigh = updateTitleRatingSchema.safeParse({
+        titleExternalSource: "tmdb",
+        titleExternalId: "27205",
+        rating: 11,
+      });
+      expect(tooHigh.success).toBe(false);
+    });
+
+    it("rejects missing titleExternalId", () => {
+      const missingId = updateTitleRatingSchema.safeParse({
+        titleExternalSource: "tmdb",
+        titleExternalId: "",
+        rating: 8,
+      });
+      expect(missingId.success).toBe(false);
     });
   });
 });

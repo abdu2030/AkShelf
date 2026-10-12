@@ -6,9 +6,11 @@ import { prisma } from "@/lib/db";
 import {
   batchSeasonSchema,
   toggleEpisodeSchema,
+  updateTitleRatingSchema,
   updateTitleStatusSchema,
-  ToggleEpisodeInput,
   BatchSeasonInput,
+  ToggleEpisodeInput,
+  UpdateTitleRatingInput,
   UpdateTitleStatusInput,
 } from "@/lib/validation/tracking";
 
@@ -20,6 +22,7 @@ export type TrackingActionResult = {
   episodeNumber?: number;
   count?: number;
   status?: string | null;
+  rating?: number | null;
   isDemo?: boolean;
 };
 
@@ -520,6 +523,132 @@ export async function updateTitleStatusAction(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Database status mutation failed",
+    };
+  }
+}
+
+/**
+ * Server action to update personal 1–10 rating for a title on the user's shelf (Day 24)
+ * Supports: rating 1 to 10, or null (clear rating).
+ * Atomically ensures Title exists, updates UserTitle rating (creating UserTitle if not tracked yet),
+ * logs action in WatchHistory, and revalidates relevant routes.
+ */
+export async function updateTitleRatingAction(
+  rawInput: UpdateTitleRatingInput,
+): Promise<TrackingActionResult> {
+  const parsed = updateTitleRatingSchema.safeParse(rawInput);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: "Invalid rating input: " + parsed.error.issues.map((i) => i.message).join(", "),
+    };
+  }
+
+  const { titleExternalSource, titleExternalId, rating, titleName, mediaType } = parsed.data;
+
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    return {
+      success: true,
+      rating,
+      isDemo: true,
+    };
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // 1. Ensure Title exists in database
+      const title = await tx.title.upsert({
+        where: {
+          externalSource_externalId: {
+            externalSource: titleExternalSource,
+            externalId: titleExternalId,
+          },
+        },
+        update: {},
+        create: {
+          externalSource: titleExternalSource,
+          externalId: titleExternalId,
+          title: titleName || `${titleExternalSource}:${titleExternalId}`,
+          type: mediaType || "TV",
+        },
+      });
+
+      const now = new Date();
+
+      if (rating === null) {
+        // Clear rating on existing UserTitle
+        await tx.userTitle.updateMany({
+          where: {
+            userId,
+            titleId: title.id,
+          },
+          data: {
+            rating: null,
+            updatedAt: now,
+          },
+        });
+
+        await tx.watchHistory.create({
+          data: {
+            userId,
+            titleId: title.id,
+            action: "RATING_CLEARED",
+            occurredAt: now,
+          },
+        });
+      } else {
+        // Upsert UserTitle with rating. If not tracked yet, default status to WATCHED
+        await tx.userTitle.upsert({
+          where: {
+            userId_titleId: {
+              userId,
+              titleId: title.id,
+            },
+          },
+          update: {
+            rating,
+            updatedAt: now,
+          },
+          create: {
+            userId,
+            titleId: title.id,
+            status: "WATCHED",
+            rating,
+            watchedAt: now,
+            startedAt: now,
+          },
+        });
+
+        await tx.watchHistory.create({
+          data: {
+            userId,
+            titleId: title.id,
+            action: `RATED_${rating}`,
+            occurredAt: now,
+          },
+        });
+      }
+    });
+
+    revalidatePath(`/title/${titleExternalSource}:${titleExternalId}`);
+    revalidatePath(`/title/demo-${titleExternalSource}-${titleExternalId}`);
+    revalidatePath("/");
+    revalidatePath("/library");
+    revalidatePath("/watchlist");
+    revalidatePath("/history");
+
+    return {
+      success: true,
+      rating,
+    };
+  } catch (error) {
+    console.error("[TrackingAction] Failed to update title rating:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Database rating mutation failed",
     };
   }
 }
