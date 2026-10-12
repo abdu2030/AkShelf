@@ -65,8 +65,8 @@ describe("TitleDetailPage Component", () => {
     expect(html).toContain("View on AniList");
 
     // Episodes breakdown
-    expect(html).toContain("Seasons &amp; Episodes");
-    expect(html).toContain("EP 1");
+    expect(html).toContain("Episodes");
+    expect(html).toContain('role="progressbar"');
     expect(html).toContain("To You, in 2000 Years");
   });
 
