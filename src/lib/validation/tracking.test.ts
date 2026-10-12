@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { batchSeasonSchema, toggleEpisodeSchema } from "./tracking";
+import { batchSeasonSchema, toggleEpisodeSchema, updateTitleStatusSchema } from "./tracking";
 
 describe("Tracking Validation Schemas", () => {
   describe("toggleEpisodeSchema", () => {
@@ -106,6 +106,68 @@ describe("Tracking Validation Schemas", () => {
       });
 
       expect(result.success).toBe(false);
+    });
+  });
+
+  describe("updateTitleStatusSchema", () => {
+    it("validates valid status updates across all status types", () => {
+      const statuses = ["WATCHED", "WATCHING", "PLAN_TO_WATCH", "ON_HOLD", "DROPPED"] as const;
+
+      for (const status of statuses) {
+        const result = updateTitleStatusSchema.safeParse({
+          titleExternalSource: "tmdb",
+          titleExternalId: "27205",
+          status,
+          titleName: "Inception",
+          mediaType: "MOVIE",
+        });
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.status).toBe(status);
+        }
+      }
+    });
+
+    it("accepts null status to untrack/remove a title from shelf", () => {
+      const result = updateTitleStatusSchema.safeParse({
+        titleExternalSource: "anilist",
+        titleExternalId: "16498",
+        status: null,
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.status).toBeNull();
+      }
+    });
+
+    it("rejects invalid status string", () => {
+      const result = updateTitleStatusSchema.safeParse({
+        titleExternalSource: "tmdb",
+        titleExternalId: "27205",
+        status: "COMPLETED",
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("validates optional rating within 0-10 bounds", () => {
+      const valid = updateTitleStatusSchema.safeParse({
+        titleExternalSource: "tmdb",
+        titleExternalId: "27205",
+        status: "WATCHED",
+        rating: 9.5,
+      });
+      expect(valid.success).toBe(true);
+
+      const invalidRating = updateTitleStatusSchema.safeParse({
+        titleExternalSource: "tmdb",
+        titleExternalId: "27205",
+        status: "WATCHED",
+        rating: 11,
+      });
+      expect(invalidRating.success).toBe(false);
     });
   });
 });

@@ -6,8 +6,10 @@ import { prisma } from "@/lib/db";
 import {
   batchSeasonSchema,
   toggleEpisodeSchema,
+  updateTitleStatusSchema,
   ToggleEpisodeInput,
   BatchSeasonInput,
+  UpdateTitleStatusInput,
 } from "@/lib/validation/tracking";
 
 export type TrackingActionResult = {
@@ -17,6 +19,7 @@ export type TrackingActionResult = {
   seasonNumber?: number;
   episodeNumber?: number;
   count?: number;
+  status?: string | null;
   isDemo?: boolean;
 };
 
@@ -380,6 +383,143 @@ export async function batchSeasonProgressAction(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Database batch mutation failed",
+    };
+  }
+}
+
+/**
+ * Server action to update watch status for a title on the user's shelf (Day 22)
+ * Supports: WATCHED, WATCHING, PLAN_TO_WATCH, ON_HOLD, DROPPED, or null (remove from shelf).
+ * Atomic transaction ensures Title exists, updates UserTitle with appropriate timestamps,
+ * logs action in WatchHistory, and revalidates relevant routes.
+ */
+export async function updateTitleStatusAction(
+  rawInput: UpdateTitleStatusInput,
+): Promise<TrackingActionResult> {
+  const parsed = updateTitleStatusSchema.safeParse(rawInput);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: "Invalid status update input: " + parsed.error.issues.map((i) => i.message).join(", "),
+    };
+  }
+
+  const { titleExternalSource, titleExternalId, status, titleName, mediaType, rating } =
+    parsed.data;
+
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    return {
+      success: true,
+      status,
+      isDemo: true,
+    };
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // 1. Ensure Title exists in database
+      const title = await tx.title.upsert({
+        where: {
+          externalSource_externalId: {
+            externalSource: titleExternalSource,
+            externalId: titleExternalId,
+          },
+        },
+        update: {},
+        create: {
+          externalSource: titleExternalSource,
+          externalId: titleExternalId,
+          title: titleName || `${titleExternalSource}:${titleExternalId}`,
+          type: mediaType || "TV",
+        },
+      });
+
+      // 2. If status is null, untrack / remove title from shelf
+      if (status === null) {
+        await tx.userTitle.deleteMany({
+          where: {
+            userId,
+            titleId: title.id,
+          },
+        });
+
+        await tx.watchHistory.create({
+          data: {
+            userId,
+            titleId: title.id,
+            action: "TITLE_REMOVED",
+            occurredAt: new Date(),
+          },
+        });
+      } else {
+        // 3. Status is being set or updated
+        const existing = await tx.userTitle.findUnique({
+          where: {
+            userId_titleId: {
+              userId,
+              titleId: title.id,
+            },
+          },
+        });
+
+        const now = new Date();
+        const watchedAt = status === "WATCHED" ? existing?.watchedAt || now : existing?.watchedAt;
+        const startedAt = status === "WATCHING" ? existing?.startedAt || now : existing?.startedAt;
+
+        await tx.userTitle.upsert({
+          where: {
+            userId_titleId: {
+              userId,
+              titleId: title.id,
+            },
+          },
+          update: {
+            status,
+            ...(rating !== undefined ? { rating } : {}),
+            watchedAt,
+            startedAt,
+            updatedAt: now,
+          },
+          create: {
+            userId,
+            titleId: title.id,
+            status,
+            rating: rating ?? null,
+            watchedAt: status === "WATCHED" ? now : null,
+            startedAt: status === "WATCHING" ? now : null,
+          },
+        });
+
+        await tx.watchHistory.create({
+          data: {
+            userId,
+            titleId: title.id,
+            action: `STATUS_${status}`,
+            occurredAt: now,
+          },
+        });
+      }
+    });
+
+    revalidatePath(`/title/${titleExternalSource}:${titleExternalId}`);
+    revalidatePath(`/title/demo-${titleExternalSource}-${titleExternalId}`);
+    revalidatePath("/");
+    revalidatePath("/library");
+    revalidatePath("/watchlist");
+    revalidatePath("/history");
+
+    return {
+      success: true,
+      status,
+    };
+  } catch (error) {
+    console.error("[TrackingAction] Failed to update title status:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Database status mutation failed",
     };
   }
 }
