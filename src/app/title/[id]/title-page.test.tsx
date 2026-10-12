@@ -41,9 +41,11 @@ describe("TitleDetailPage Component", () => {
     expect(html).toContain("148m (2h 28m)");
     expect(html).toContain("View on TMDB");
 
-    // Status Selector Shelf Panel (Day 22)
+    // Status Selector Shelf Panel (Day 22) & Rating Control (Day 24)
     expect(html).toContain("Your Shelf");
     expect(html).toContain("Click status to change or untrack");
+    expect(html).toContain('role="radiogroup"');
+    expect(html).toContain('aria-label="Your rating"');
   });
 
   it("renders anime detail view with cast, metadata, and episodes breakdown", async () => {

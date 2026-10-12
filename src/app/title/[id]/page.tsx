@@ -12,6 +12,7 @@ import { MetadataPanel } from "@/components/title/metadata-panel";
 import { TitleHero } from "@/components/title/title-hero";
 import { SeasonEpisodesSection } from "@/components/title/season-episodes-section";
 import { StatusSelector } from "@/components/title/status-selector";
+import { RatingControl } from "@/components/title/rating-control";
 
 interface TitleDetailPageProps {
   params: Promise<{ id: string }>;
@@ -297,6 +298,17 @@ export default async function TitleDetailPage({ params }: TitleDetailPageProps) 
                 : "Save this title to begin tracking"}
             </div>
           </div>
+
+          {/* Interactive Rating Control (Day 24, Spec Section 9.8) */}
+          <div className="pt-3 border-t border-white/5">
+            <RatingControl
+              currentRating={titleData.userRating}
+              titleExternalSource={titleData.externalSource}
+              titleExternalId={titleData.externalId}
+              titleName={titleData.title}
+              mediaType={titleData.type}
+            />
+          </div>
         </section>
 
         {/* 3. Cast Preview Section (Section 10.4) */}
@@ -335,8 +347,8 @@ export default async function TitleDetailPage({ params }: TitleDetailPageProps) 
           <CheckCircle2 className="w-5 h-5 text-accent shrink-0" aria-hidden="true" />
           <span>
             <strong>Week 4 Milestones:</strong> Instant watch status changes (Watched, Watching,
-            Plan to Watch, On Hold, Dropped) and shelf mutations are active for{" "}
-            <strong>Day 22</strong>.
+            Plan to Watch, On Hold, Dropped) and 1–10 personal rating mutations are active for{" "}
+            <strong>Days 22–24</strong>.
           </span>
         </div>
       </div>

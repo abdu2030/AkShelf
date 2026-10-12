@@ -37,3 +37,17 @@ export const updateTitleStatusSchema = z.object({
 });
 
 export type UpdateTitleStatusInput = z.infer<typeof updateTitleStatusSchema>;
+
+export const updateTitleRatingSchema = z.object({
+  titleExternalSource: z.enum(["tmdb", "anilist"]),
+  titleExternalId: z.string().min(1, "titleExternalId is required"),
+  rating: z
+    .number()
+    .min(1, "Rating must be between 1 and 10")
+    .max(10, "Rating must be between 1 and 10")
+    .nullable(),
+  titleName: z.string().optional(),
+  mediaType: z.enum(["MOVIE", "TV", "ANIME"]).optional(),
+});
+
+export type UpdateTitleRatingInput = z.infer<typeof updateTitleRatingSchema>;

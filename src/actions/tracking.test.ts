@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   batchSeasonProgressAction,
   toggleEpisodeProgressAction,
+  updateTitleRatingAction,
   updateTitleStatusAction,
 } from "./tracking";
 import { auth } from "@/lib/auth";
@@ -313,6 +314,135 @@ describe("Tracking Server Actions", () => {
           data: expect.objectContaining({ action: "TITLE_REMOVED" }),
         }),
       );
+    });
+  });
+
+  describe("updateTitleRatingAction", () => {
+    it("returns error on invalid input", async () => {
+      const result = await updateTitleRatingAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "27205",
+        rating: 15,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Invalid rating input");
+    });
+
+    it("returns isDemo true when user is unauthenticated", async () => {
+      vi.mocked(auth).mockResolvedValueOnce(null as unknown as Awaited<ReturnType<typeof auth>>);
+
+      const result = await updateTitleRatingAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "27205",
+        rating: 8,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.rating).toBe(8);
+      expect(result.isDemo).toBe(true);
+    });
+
+    it("upserts UserTitle and records RATED_9 in watchHistory when authenticated", async () => {
+      mockAuth.mockResolvedValueOnce({
+        user: { id: "user-123", email: "owner@akshelf.local" },
+        expires: "2099-01-01",
+      });
+
+      const upsertUserTitleMock = vi.fn().mockResolvedValue({ id: "ut-1" });
+      const watchHistoryMock = vi.fn().mockResolvedValue({ id: "wh-1" });
+
+      vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => {
+        const tx = {
+          title: { upsert: vi.fn().mockResolvedValue({ id: "title-1" }) },
+          userTitle: {
+            upsert: upsertUserTitleMock,
+            updateMany: vi.fn(),
+          },
+          watchHistory: { create: watchHistoryMock },
+        };
+        return callback(tx as unknown as Parameters<Parameters<typeof prisma.$transaction>[0]>[0]);
+      });
+
+      const result = await updateTitleRatingAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "27205",
+        rating: 9,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.rating).toBe(9);
+      expect(upsertUserTitleMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({ rating: 9 }),
+          create: expect.objectContaining({ rating: 9, status: "WATCHED" }),
+        }),
+      );
+      expect(watchHistoryMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ action: "RATED_9" }),
+        }),
+      );
+      expect(revalidatePath).toHaveBeenCalledWith("/title/tmdb:27205");
+    });
+
+    it("clears rating on UserTitle and records RATING_CLEARED when rating is null", async () => {
+      mockAuth.mockResolvedValueOnce({
+        user: { id: "user-123", email: "owner@akshelf.local" },
+        expires: "2099-01-01",
+      });
+
+      const updateManyMock = vi.fn().mockResolvedValue({ count: 1 });
+      const watchHistoryMock = vi.fn().mockResolvedValue({ id: "wh-1" });
+
+      vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => {
+        const tx = {
+          title: { upsert: vi.fn().mockResolvedValue({ id: "title-1" }) },
+          userTitle: {
+            upsert: vi.fn(),
+            updateMany: updateManyMock,
+          },
+          watchHistory: { create: watchHistoryMock },
+        };
+        return callback(tx as unknown as Parameters<Parameters<typeof prisma.$transaction>[0]>[0]);
+      });
+
+      const result = await updateTitleRatingAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "27205",
+        rating: null,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.rating).toBeNull();
+      expect(updateManyMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ rating: null }),
+        }),
+      );
+      expect(watchHistoryMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ action: "RATING_CLEARED" }),
+        }),
+      );
+    });
+
+    it("returns error on database transaction failure", async () => {
+      mockAuth.mockResolvedValueOnce({
+        user: { id: "user-123", email: "owner@akshelf.local" },
+        expires: "2099-01-01",
+      });
+
+      vi.mocked(prisma.$transaction).mockRejectedValueOnce(new Error("Connection reset"));
+
+      const result = await updateTitleRatingAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "27205",
+        rating: 7,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Connection reset");
     });
   });
 });
