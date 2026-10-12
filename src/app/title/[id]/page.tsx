@@ -68,7 +68,16 @@ function findDemoTitleById(decodedId: string): DemoTitleDefinition | null {
     if (found) return found;
   }
 
-  // 2. Match by externalId or title slug
+  // 2. Composite provider:id or provider-id (e.g. tmdb:27205, tmdb-27205, anilist:16498)
+  const compositeMatch = decodedId.match(/^(tmdb|anilist)[:\-](.+)$/i);
+  if (compositeMatch) {
+    const source = compositeMatch[1].toLowerCase();
+    const extId = compositeMatch[2];
+    const found = demoTitles.find((t) => t.externalSource === source && t.externalId === extId);
+    if (found) return found;
+  }
+
+  // 3. Match by externalId or title slug
   const directMatch = demoTitles.find(
     (t) =>
       t.externalId === decodedId ||
@@ -76,7 +85,7 @@ function findDemoTitleById(decodedId: string): DemoTitleDefinition | null {
   );
   if (directMatch) return directMatch;
 
-  // 3. Fallback to first title matching case-insensitive title name
+  // 4. Fallback to first title matching case-insensitive title name
   return demoTitles.find((t) => t.title.toLowerCase() === decodedId.toLowerCase()) || null;
 }
 
@@ -169,7 +178,10 @@ async function resolveTitleDetails(id: string): Promise<ResolvedTitleData | null
         };
       }
     } catch (err) {
-      console.error("[TitleDetailPage] Failed to fetch external metadata:", err);
+      console.warn(
+        "[TitleDetailPage] External metadata fetch unavailable:",
+        err instanceof Error ? err.message : err,
+      );
     }
   }
 
@@ -313,15 +325,19 @@ export default async function TitleDetailPage({ params }: TitleDetailPageProps) 
             seasons={titleData.seasons}
             userCurrentSeason={titleData.season}
             userCurrentEpisode={titleData.currentEpisode ?? titleData.episode}
+            titleExternalSource={titleData.externalSource}
+            titleExternalId={titleData.externalId}
+            titleName={titleData.title}
+            mediaType={titleData.type}
           />
         )}
 
-        {/* 6. Roadmap Notice for Day 19/20 */}
+        {/* 6. Roadmap Status Indicator */}
         <div className="rounded-xl border border-accent/20 bg-accent/5 p-4 flex items-center gap-3 text-xs sm:text-sm text-ink-soft">
           <CheckCircle2 className="w-5 h-5 text-accent shrink-0" aria-hidden="true" />
           <span>
-            <strong>Week 3 Roadmap Notice:</strong> Interactive season selector, progress bars, and
-            one-click episode tracking mutations are scheduled for <strong>Days 19–20</strong>.
+            <strong>Week 3 Milestones:</strong> Interactive season selector, progress bars, and
+            one-click episode tracking mutations are active for <strong>Days 19–20</strong>.
           </span>
         </div>
       </div>

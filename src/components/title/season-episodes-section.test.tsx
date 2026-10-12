@@ -58,4 +58,21 @@ describe("SeasonEpisodesSection Component", () => {
     const html = renderToStaticMarkup(<SeasonEpisodesSection seasons={[]} />);
     expect(html).toBe("");
   });
+
+  it("renders with external title props and batch season controls", () => {
+    const html = renderToStaticMarkup(
+      <SeasonEpisodesSection
+        seasons={mockSeasons}
+        userCurrentSeason={1}
+        userCurrentEpisode={2}
+        titleExternalSource="tmdb"
+        titleExternalId="1399"
+        titleName="Game of Thrones"
+        mediaType="TV"
+      />,
+    );
+
+    expect(html).toContain("Mark Season Watched");
+    expect(html).toContain("Continue S1 E3");
+  });
 });

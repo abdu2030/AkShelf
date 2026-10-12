@@ -99,4 +99,22 @@ describe("RateLimiter utility", () => {
       ),
     ).rejects.toThrow("Operation timed out after 50ms");
   });
+
+  it("clears timeout timer upon successful operation resolution", async () => {
+    const limiter = new RateLimiter({
+      maxRequests: 10,
+      perWindowMs: 1000,
+    });
+
+    const result = await limiter.schedule(
+      async () => {
+        return "immediate-success";
+      },
+      { timeoutMs: 50 },
+    );
+
+    expect(result).toBe("immediate-success");
+    // Wait past the timeout to ensure no orphan timer fires
+    await new Promise((res) => setTimeout(res, 70));
+  });
 });
