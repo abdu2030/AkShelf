@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { batchSeasonProgressAction, toggleEpisodeProgressAction } from "./tracking";
+import {
+  batchSeasonProgressAction,
+  toggleEpisodeProgressAction,
+  updateTitleStatusAction,
+} from "./tracking";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
@@ -198,6 +202,117 @@ describe("Tracking Server Actions", () => {
       expect(result.count).toBe(3);
       expect(result.watched).toBe(true);
       expect(revalidatePath).toHaveBeenCalled();
+    });
+  });
+
+  describe("updateTitleStatusAction", () => {
+    it("returns error for invalid status input", async () => {
+      const result = await updateTitleStatusAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "27205",
+        status: "INVALID_STATUS" as unknown as "WATCHED",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Invalid status update input");
+    });
+
+    it("returns simulated success when unauthenticated (demo mode)", async () => {
+      mockAuth.mockResolvedValueOnce(null);
+
+      const result = await updateTitleStatusAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "27205",
+        status: "PLAN_TO_WATCH",
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.isDemo).toBe(true);
+      expect(result.status).toBe("PLAN_TO_WATCH");
+    });
+
+    it("updates title status to WATCHED in transaction when authenticated", async () => {
+      mockAuth.mockResolvedValueOnce({
+        user: { id: "user-123" },
+        expires: "2099-01-01",
+      });
+
+      const userTitleUpsertMock = vi.fn().mockResolvedValue({ id: "ut-1", status: "WATCHED" });
+      const watchHistoryMock = vi.fn().mockResolvedValue({ id: "wh-1" });
+
+      vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => {
+        const tx = {
+          title: { upsert: vi.fn().mockResolvedValue({ id: "title-1" }) },
+          userTitle: {
+            findUnique: vi.fn().mockResolvedValue(null),
+            upsert: userTitleUpsertMock,
+            deleteMany: vi.fn(),
+          },
+          watchHistory: { create: watchHistoryMock },
+        };
+        return callback(tx as unknown as Parameters<Parameters<typeof prisma.$transaction>[0]>[0]);
+      });
+
+      const result = await updateTitleStatusAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "27205",
+        status: "WATCHED",
+        titleName: "Inception",
+        mediaType: "MOVIE",
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.status).toBe("WATCHED");
+      expect(userTitleUpsertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({ status: "WATCHED" }),
+        }),
+      );
+      expect(watchHistoryMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ action: "STATUS_WATCHED" }),
+        }),
+      );
+      expect(revalidatePath).toHaveBeenCalledWith("/title/tmdb:27205");
+      expect(revalidatePath).toHaveBeenCalledWith("/library");
+    });
+
+    it("untracks title and removes from shelf when status is null", async () => {
+      mockAuth.mockResolvedValueOnce({
+        user: { id: "user-123" },
+        expires: "2099-01-01",
+      });
+
+      const deleteManyMock = vi.fn().mockResolvedValue({ count: 1 });
+      const watchHistoryMock = vi.fn().mockResolvedValue({ id: "wh-1" });
+
+      vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => {
+        const tx = {
+          title: { upsert: vi.fn().mockResolvedValue({ id: "title-1" }) },
+          userTitle: {
+            findUnique: vi.fn(),
+            upsert: vi.fn(),
+            deleteMany: deleteManyMock,
+          },
+          watchHistory: { create: watchHistoryMock },
+        };
+        return callback(tx as unknown as Parameters<Parameters<typeof prisma.$transaction>[0]>[0]);
+      });
+
+      const result = await updateTitleStatusAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "27205",
+        status: null,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.status).toBeNull();
+      expect(deleteManyMock).toHaveBeenCalled();
+      expect(watchHistoryMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ action: "TITLE_REMOVED" }),
+        }),
+      );
     });
   });
 });

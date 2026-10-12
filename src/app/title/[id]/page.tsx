@@ -1,8 +1,8 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowLeft, BookmarkPlus, CheckCircle2, Sparkles, Star } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Sparkles, Star } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
-import { StatusBadge, WatchStatusType } from "@/components/ui/status-badge";
+import { WatchStatusType } from "@/components/ui/status-badge";
 import { MediaType } from "@/components/title/media-card";
 import { formatRating } from "@/lib/utils/format";
 import { demoTitles, DemoTitleDefinition } from "@/lib/data/demo-titles";
@@ -11,6 +11,7 @@ import { CastMemberItem, CastPreview } from "@/components/title/cast-preview";
 import { MetadataPanel } from "@/components/title/metadata-panel";
 import { TitleHero } from "@/components/title/title-hero";
 import { SeasonEpisodesSection } from "@/components/title/season-episodes-section";
+import { StatusSelector } from "@/components/title/status-selector";
 
 interface TitleDetailPageProps {
   params: Promise<{ id: string }>;
@@ -268,34 +269,31 @@ export default async function TitleDetailPage({ params }: TitleDetailPageProps) 
 
           <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
             <div className="flex flex-wrap items-center gap-3">
-              {titleData.userStatus ? (
-                <>
-                  <StatusBadge status={titleData.userStatus} />
-                  {titleData.userRating != null && titleData.userRating > 0 && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-500 dark:text-amber-400 border border-amber-500/20">
-                      <Star className="w-3.5 h-3.5 fill-amber-500" aria-hidden="true" />
-                      {formatRating(titleData.userRating)}
-                    </span>
-                  )}
-                  {titleData.currentEpisode != null && titleData.currentEpisode > 0 && (
-                    <span className="text-xs text-ink-muted font-mono font-medium">
-                      Progress: S{titleData.season || 1} E{titleData.currentEpisode}
-                    </span>
-                  )}
-                </>
-              ) : (
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-accent-fill text-white shadow-sm hover:opacity-95 transition-opacity cursor-pointer"
-                >
-                  <BookmarkPlus className="w-3.5 h-3.5" aria-hidden="true" />+ Plan to Watch
-                </button>
+              <StatusSelector
+                currentStatus={titleData.userStatus}
+                titleExternalSource={titleData.externalSource}
+                titleExternalId={titleData.externalId}
+                titleName={titleData.title}
+                mediaType={titleData.type}
+              />
+
+              {titleData.userRating != null && titleData.userRating > 0 && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-500 dark:text-amber-400 border border-amber-500/20">
+                  <Star className="w-3.5 h-3.5 fill-amber-500" aria-hidden="true" />
+                  {formatRating(titleData.userRating)}
+                </span>
+              )}
+
+              {titleData.currentEpisode != null && titleData.currentEpisode > 0 && (
+                <span className="text-xs text-ink-muted font-mono font-medium">
+                  Progress: S{titleData.season || 1} E{titleData.currentEpisode}
+                </span>
               )}
             </div>
 
             <div className="text-xs text-ink-muted">
               {titleData.userStatus
-                ? "Quick status updates available below"
+                ? "Click status to change or untrack"
                 : "Save this title to begin tracking"}
             </div>
           </div>
@@ -336,8 +334,9 @@ export default async function TitleDetailPage({ params }: TitleDetailPageProps) 
         <div className="rounded-xl border border-accent/20 bg-accent/5 p-4 flex items-center gap-3 text-xs sm:text-sm text-ink-soft">
           <CheckCircle2 className="w-5 h-5 text-accent shrink-0" aria-hidden="true" />
           <span>
-            <strong>Week 3 Milestones:</strong> Interactive season selector, progress bars, and
-            one-click episode tracking mutations are active for <strong>Days 19–20</strong>.
+            <strong>Week 4 Milestones:</strong> Instant watch status changes (Watched, Watching,
+            Plan to Watch, On Hold, Dropped) and shelf mutations are active for{" "}
+            <strong>Day 22</strong>.
           </span>
         </div>
       </div>

@@ -6,3 +6,4 @@ export * from "./title-hero";
 export * from "./season-selector";
 export * from "./episode-row";
 export * from "./season-episodes-section";
+export * from "./status-selector";

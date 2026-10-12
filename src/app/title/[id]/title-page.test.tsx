@@ -40,6 +40,10 @@ describe("TitleDetailPage Component", () => {
     expect(html).toContain("Warner Bros. Pictures");
     expect(html).toContain("148m (2h 28m)");
     expect(html).toContain("View on TMDB");
+
+    // Status Selector Shelf Panel (Day 22)
+    expect(html).toContain("Your Shelf");
+    expect(html).toContain("Click status to change or untrack");
   });
 
   it("renders anime detail view with cast, metadata, and episodes breakdown", async () => {

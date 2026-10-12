@@ -26,3 +26,14 @@ export const batchSeasonSchema = z.object({
 });
 
 export type BatchSeasonInput = z.infer<typeof batchSeasonSchema>;
+
+export const updateTitleStatusSchema = z.object({
+  titleExternalSource: z.enum(["tmdb", "anilist"]),
+  titleExternalId: z.string().min(1, "titleExternalId is required"),
+  status: z.enum(["WATCHED", "WATCHING", "PLAN_TO_WATCH", "ON_HOLD", "DROPPED"]).nullable(),
+  titleName: z.string().optional(),
+  mediaType: z.enum(["MOVIE", "TV", "ANIME"]).optional(),
+  rating: z.number().min(0).max(10).optional().nullable(),
+});
+
+export type UpdateTitleStatusInput = z.infer<typeof updateTitleStatusSchema>;
