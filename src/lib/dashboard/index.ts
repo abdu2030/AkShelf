@@ -1,2 +1,10 @@
-export { computeDashboardStats, getDashboardStats } from "./service";
-export type { DashboardStats } from "./service";
+export {
+  computeDashboardStats,
+  getDashboardStats,
+  getContinueWatching,
+  getRecentlyWatched,
+  getDemoContinueWatchingItems,
+  getDemoRecentlyWatchedItems,
+} from "./service";
+
+export type { DashboardStats, ContinueWatchingItem, RecentlyWatchedItem } from "./service";
