@@ -41,8 +41,12 @@ export type CrewMember = z.infer<typeof CrewMemberSchema>;
 
 /**
  * Normalized episode metadata.
+ * Section 5 / Project Brief Minimal Design Decision:
+ * Retains only essential fields (episodeNumber, seasonNumber, name, externalId, airDate, runtime, overview, stillUrl).
+ * Heavy bloat (guest stars, crew credits, multi-language audio tracks, production codes) is omitted.
  */
 export const NormalizedEpisodeSchema = z.object({
+  externalId: z.string().nullable().optional(),
   episodeNumber: z.number().int().positive(),
   seasonNumber: z.number().int().nonnegative().optional(),
   name: z.string(),

@@ -242,15 +242,15 @@ export function tmdbTvToMediaResult(tv: TmdbTvDetails | TmdbTvSearchResult): Med
  * Maps TMDB single season payload to NormalizedSeason with episode list.
  */
 export function tmdbSeasonToNormalizedSeason(season: TmdbSeasonDetails): NormalizedSeason {
-  const episodes: NormalizedEpisode[] = season.episodes.map((ep) =>
-    tmdbEpisodeToNormalizedEpisode(ep),
-  );
+  const episodes: NormalizedEpisode[] = (season.episodes || [])
+    .map((ep) => tmdbEpisodeToNormalizedEpisode(ep))
+    .sort((a, b) => a.episodeNumber - b.episodeNumber);
 
   return {
     seasonNumber: season.season_number,
-    name: season.name || `Season ${season.season_number}`,
+    name: season.name?.trim() || `Season ${season.season_number}`,
     episodeCount: episodes.length,
-    overview: season.overview || null,
+    overview: season.overview?.trim() || null,
     posterUrl: getTmdbImageUrl(season.poster_path, "w500"),
     airDate: season.air_date || null,
     episodes,
@@ -258,16 +258,17 @@ export function tmdbSeasonToNormalizedSeason(season: TmdbSeasonDetails): Normali
 }
 
 /**
- * Maps single TMDB episode to NormalizedEpisode.
+ * Maps single TMDB episode to NormalizedEpisode with essential fields only.
  */
 export function tmdbEpisodeToNormalizedEpisode(episode: TmdbEpisode): NormalizedEpisode {
   return {
+    externalId: episode.id ? String(episode.id) : null,
     episodeNumber: episode.episode_number,
     seasonNumber: episode.season_number,
-    name: episode.name || `Episode ${episode.episode_number}`,
+    name: episode.name?.trim() || `Episode ${episode.episode_number}`,
     airDate: episode.air_date || null,
     runtime: episode.runtime ?? null,
-    overview: episode.overview || null,
+    overview: episode.overview?.trim() || null,
     stillUrl: getTmdbImageUrl(episode.still_path, "w342"),
   };
 }

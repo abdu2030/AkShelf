@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   aniListMediaToMediaResult,
+  aniListMediaToNormalizedEpisodes,
+  aniListMediaToNormalizedSeasons,
   cleanAniListDescription,
   formatAniListStatus,
   formatFuzzyDate,
@@ -129,6 +131,105 @@ describe("AniList Metadata Translators", () => {
 
       const result = aniListMediaToMediaResult(mediaWithoutEnglish, "english");
       expect(result.title).toBe("Sousou no Frieren");
+    });
+
+    it("includes normalized seasons and episodes for TV anime series", () => {
+      const result = aniListMediaToMediaResult(baseMedia, "english");
+      expect(result.seasons).toBeDefined();
+      expect(result.seasons).toHaveLength(1);
+      expect(result.seasons?.[0].seasonNumber).toBe(1);
+      expect(result.seasons?.[0].episodeCount).toBe(25);
+      expect(result.seasons?.[0].episodes).toHaveLength(25);
+      expect(result.seasons?.[0].episodes?.[0].name).toBe("Episode 1");
+    });
+
+    it("omits season breakdowns for anime movies", () => {
+      const movieMedia: AniListMedia = {
+        ...baseMedia,
+        id: 199,
+        format: "MOVIE",
+        episodes: 1,
+      };
+      const result = aniListMediaToMediaResult(movieMedia, "english");
+      expect(result.seasons).toBeUndefined();
+    });
+  });
+
+  describe("aniListMediaToNormalizedEpisodes", () => {
+    it("generates episodes utilizing streamingEpisodes metadata when available", () => {
+      const mediaWithStreams: AniListMedia = {
+        id: 16498,
+        title: { english: "Attack on Titan" },
+        format: "TV",
+        episodes: 3,
+        duration: 24,
+        genres: ["Action", "Fantasy"],
+        streamingEpisodes: [
+          {
+            title: "Episode 1 - To You, in 2000 Years",
+            thumbnail: "https://thumb1.jpg",
+            url: "https://crunchyroll.com/ep1",
+          },
+          {
+            title: "Episode 2 - That Day",
+            thumbnail: "https://thumb2.jpg",
+            url: "https://crunchyroll.com/ep2",
+          },
+        ],
+      };
+
+      const episodes = aniListMediaToNormalizedEpisodes(mediaWithStreams);
+
+      expect(episodes).toHaveLength(3);
+
+      expect(episodes[0].episodeNumber).toBe(1);
+      expect(episodes[0].name).toBe("Episode 1 - To You, in 2000 Years");
+      expect(episodes[0].stillUrl).toBe("https://thumb1.jpg");
+      expect(episodes[0].externalId).toBe("https://crunchyroll.com/ep1");
+      expect(episodes[0].runtime).toBe(24);
+
+      expect(episodes[1].episodeNumber).toBe(2);
+      expect(episodes[1].name).toBe("Episode 2 - That Day");
+      expect(episodes[1].stillUrl).toBe("https://thumb2.jpg");
+
+      // Episode 3 falls back gracefully
+      expect(episodes[2].episodeNumber).toBe(3);
+      expect(episodes[2].name).toBe("Episode 3");
+      expect(episodes[2].stillUrl).toBeNull();
+      expect(episodes[2].externalId).toBe("16498-ep-3");
+    });
+  });
+
+  describe("aniListMediaToNormalizedSeasons", () => {
+    it("returns empty array for movies", () => {
+      const movieMedia: AniListMedia = {
+        id: 99,
+        title: { english: "Spirited Away" },
+        format: "MOVIE",
+        episodes: 1,
+        genres: ["Animation", "Fantasy"],
+      };
+      expect(aniListMediaToNormalizedSeasons(movieMedia)).toEqual([]);
+    });
+
+    it("returns Season 1 with episodes for TV series", () => {
+      const tvMedia: AniListMedia = {
+        id: 154587,
+        title: { english: "Frieren" },
+        description: "An elf journeys on.",
+        format: "TV",
+        episodes: 28,
+        duration: 24,
+        genres: ["Adventure", "Fantasy"],
+      };
+
+      const seasons = aniListMediaToNormalizedSeasons(tvMedia);
+      expect(seasons).toHaveLength(1);
+      expect(seasons[0].seasonNumber).toBe(1);
+      expect(seasons[0].name).toBe("Season 1");
+      expect(seasons[0].episodeCount).toBe(28);
+      expect(seasons[0].episodes).toHaveLength(28);
+      expect(seasons[0].episodes?.[27].episodeNumber).toBe(28);
     });
   });
 });

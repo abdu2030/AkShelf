@@ -213,7 +213,7 @@ describe("TMDB Metadata Translators", () => {
   });
 
   describe("tmdbSeasonToNormalizedSeason", () => {
-    it("maps season and episodes cleanly", () => {
+    it("maps season and episodes cleanly with externalId and sorted episodes", () => {
       const seasonData: TmdbSeasonDetails = {
         id: 3572,
         season_number: 1,
@@ -222,6 +222,16 @@ describe("TMDB Metadata Translators", () => {
         poster_path: "/s1.jpg",
         air_date: "2008-01-20",
         episodes: [
+          {
+            id: 62086,
+            episode_number: 2,
+            season_number: 1,
+            name: "Cat's in the Bag...",
+            overview: "Walt and Jesse clean up.",
+            air_date: "2008-01-27",
+            runtime: 48,
+            vote_average: 8.3,
+          },
           {
             id: 62085,
             episode_number: 1,
@@ -233,16 +243,6 @@ describe("TMDB Metadata Translators", () => {
             runtime: 58,
             vote_average: 8.5,
           },
-          {
-            id: 62086,
-            episode_number: 2,
-            season_number: 1,
-            name: "Cat's in the Bag...",
-            overview: "Walt and Jesse clean up.",
-            air_date: "2008-01-27",
-            runtime: 48,
-            vote_average: 8.3,
-          },
         ],
       };
 
@@ -251,9 +251,17 @@ describe("TMDB Metadata Translators", () => {
       expect(normalized.seasonNumber).toBe(1);
       expect(normalized.episodeCount).toBe(2);
       expect(normalized.episodes).toHaveLength(2);
+
+      // Verify sorted in ascending order
+      expect(normalized.episodes?.[0].episodeNumber).toBe(1);
+      expect(normalized.episodes?.[0].externalId).toBe("62085");
       expect(normalized.episodes?.[0].name).toBe("Pilot");
       expect(normalized.episodes?.[0].runtime).toBe(58);
       expect(normalized.episodes?.[0].stillUrl).toBe("https://image.tmdb.org/t/p/w342/still1.jpg");
+
+      expect(normalized.episodes?.[1].episodeNumber).toBe(2);
+      expect(normalized.episodes?.[1].externalId).toBe("62086");
+      expect(normalized.episodes?.[1].name).toBe("Cat's in the Bag...");
     });
   });
 });
