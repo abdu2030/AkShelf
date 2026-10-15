@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   mediaResultToPrismaCreateInput,
   mediaResultToPrismaUpsertArgs,
+  normalizedSeasonToPrismaUpsertArgs,
   prismaTitleToMediaResult,
   PrismaTitleWithRelations,
 } from "./prisma-adapter";
@@ -93,5 +94,37 @@ describe("Prisma Title Metadata Adapter", () => {
     expect(media.seasons?.[0].episodes?.[0].name).toBe("Pilot");
 
     expect(() => MediaResultSchema.parse(media)).not.toThrow();
+  });
+
+  it("builds Prisma upsert arguments for normalized season summaries", () => {
+    const args = normalizedSeasonToPrismaUpsertArgs("title-123", {
+      seasonNumber: 2,
+      name: "Season 2: The Return",
+      episodeCount: 12,
+    });
+
+    expect(args.where.titleId_seasonNumber).toEqual({
+      titleId: "title-123",
+      seasonNumber: 2,
+    });
+    expect(args.create).toEqual({
+      titleId: "title-123",
+      seasonNumber: 2,
+      name: "Season 2: The Return",
+      episodeCount: 12,
+    });
+    expect(args.update).toEqual({
+      name: "Season 2: The Return",
+      episodeCount: 12,
+    });
+
+    // Test fallback naming and default episode count
+    const fallbackArgs = normalizedSeasonToPrismaUpsertArgs("title-123", {
+      seasonNumber: 3,
+      name: "",
+      episodeCount: 0,
+    });
+    expect(fallbackArgs.create.name).toBe("Season 3");
+    expect(fallbackArgs.create.episodeCount).toBe(0);
   });
 });

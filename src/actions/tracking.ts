@@ -3,13 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { persistTitleSeasons } from "@/lib/season/storage";
 import {
   batchSeasonSchema,
+  syncTitleSeasonsSchema,
   toggleEpisodeSchema,
   updateTitleDatesSchema,
   updateTitleRatingSchema,
   updateTitleStatusSchema,
   BatchSeasonInput,
+  SyncTitleSeasonsInput,
   ToggleEpisodeInput,
   UpdateTitleDatesInput,
   UpdateTitleRatingInput,
@@ -28,6 +31,11 @@ export type TrackingActionResult = {
   startedAt?: Date | null;
   watchedAt?: Date | null;
   isDemo?: boolean;
+  seasons?: Array<{
+    seasonNumber: number;
+    name: string | null;
+    episodeCount: number;
+  }>;
 };
 
 /**
@@ -420,6 +428,7 @@ export async function updateTitleStatusAction(
     rating,
     startedAt,
     watchedAt,
+    seasons,
   } = parsed.data;
 
   const session = await auth();
@@ -451,6 +460,11 @@ export async function updateTitleStatusAction(
           type: mediaType || "TV",
         },
       });
+
+      // 1.5. Persist season summaries for episodic TV/anime titles (Day 30)
+      if (status !== null && seasons && seasons.length > 0) {
+        await persistTitleSeasons(tx, title.id, seasons);
+      }
 
       // 2. If status is null, untrack / remove title from shelf
       if (status === null) {
@@ -800,6 +814,98 @@ export async function updateTitleDatesAction(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Database date mutation failed",
+    };
+  }
+}
+
+/**
+ * Server action to persist season summaries for a TV or anime title (Day 30).
+ * Supports selective season persistence to avoid importing unnecessary records upfront.
+ */
+export async function syncTitleSeasonsAction(
+  rawInput: SyncTitleSeasonsInput,
+): Promise<TrackingActionResult> {
+  const parsed = syncTitleSeasonsSchema.safeParse(rawInput);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: "Invalid season sync input: " + parsed.error.issues.map((i) => i.message).join(", "),
+    };
+  }
+
+  const {
+    titleExternalSource,
+    titleExternalId,
+    titleName,
+    mediaType,
+    seasons,
+    selectedSeasonNumber,
+  } = parsed.data;
+
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    const targetSeasons =
+      selectedSeasonNumber !== undefined
+        ? seasons.filter((s) => s.seasonNumber === selectedSeasonNumber)
+        : seasons;
+
+    return {
+      success: true,
+      count: targetSeasons.length,
+      seasons: targetSeasons.map((s) => ({
+        seasonNumber: s.seasonNumber,
+        name: s.name ?? null,
+        episodeCount: s.episodeCount,
+      })),
+      isDemo: true,
+    };
+  }
+
+  try {
+    const persisted = await prisma.$transaction(async (tx) => {
+      // 1. Ensure Title exists in database
+      const title = await tx.title.upsert({
+        where: {
+          externalSource_externalId: {
+            externalSource: titleExternalSource,
+            externalId: titleExternalId,
+          },
+        },
+        update: {},
+        create: {
+          externalSource: titleExternalSource,
+          externalId: titleExternalId,
+          title: titleName || `${titleExternalSource}:${titleExternalId}`,
+          type: mediaType || "TV",
+        },
+      });
+
+      // 2. Persist season summaries (selectively if selectedSeasonNumber provided)
+      return persistTitleSeasons(tx, title.id, seasons, {
+        selectiveSeasonNumbers:
+          selectedSeasonNumber !== undefined ? [selectedSeasonNumber] : undefined,
+      });
+    });
+
+    revalidatePath(`/title/${titleExternalSource}:${titleExternalId}`);
+    revalidatePath(`/title/demo-${titleExternalSource}-${titleExternalId}`);
+
+    return {
+      success: true,
+      count: persisted.length,
+      seasons: persisted.map((s) => ({
+        seasonNumber: s.seasonNumber,
+        name: s.name,
+        episodeCount: s.episodeCount,
+      })),
+    };
+  } catch (error) {
+    console.error("[TrackingAction] Failed to sync seasons:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Database season mutation failed",
     };
   }
 }
