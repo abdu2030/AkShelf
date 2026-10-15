@@ -5,7 +5,7 @@
 
 [![CI](https://github.com/abdu2030/AkShelf/actions/workflows/ci.yml/badge.svg)](https://github.com/abdu2030/AkShelf/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Week%204-Complete%20v0.4.0-success)](#roadmap-status)
+[![Status](https://img.shields.io/badge/Week%205-Complete%20v0.5.0-success)](#roadmap-status)
 
 ---
 
@@ -184,7 +184,14 @@ AkShelf enforces a strict separation between external entertainment metadata and
   - [x] **Day 26**: Watch history service, chronological audit logging & sentence formatting.
   - [x] **Day 27**: Watch history feed UI (`HistoryList`, `HistoryRow`) & dedicated `/history` page.
   - [x] **Day 28**: End-to-end core MVP verification, documentation review & checkpoint release `v0.4.0` ([Review Document](docs/WEEK_4_REVIEW.md)).
-- [ ] **Week 5: TV / Anime Seasons & Episode Progress (`v0.5.0`)**
+- [x] **Week 5: TV / Anime Seasons & Episode Progress (`v0.5.0`)**
+  - [x] **Day 29**: Extend provider normalization for season and episode data (`EpisodeItem`, `SeasonItem`).
+  - [x] **Day 30**: On-demand persistence of season summaries (`persistTitleSeasons`).
+  - [x] **Day 31**: On-demand persistence of detailed season episodes (`persistSeasonEpisodes`).
+  - [x] **Day 32**: Season selector pills & episode browser UI (`SeasonSelector`, `EpisodeRow`).
+  - [x] **Day 33**: Episode tracking mutations, batch season actions & 6-second undo toasts.
+  - [x] **Day 34**: Series & season progress calculation ($\frac{\text{watched}}{\text{total}} \times 100\%$) and next-up continuation.
+  - [x] **Day 35**: Interrupted viewing, completed seasons, re-opening stability & checkpoint release `v0.5.0` ([Review Document](docs/WEEK_5_REVIEW.md)).
 - [ ] **Week 6: Dashboard, Statistics & UX Polish (`v0.6.0`)**
 - [ ] **Week 7: Testing, Security, Performance & Data Safety (`v1.0.0-rc.1`)**
 - [ ] **Week 8: Deployment, Documentation & v1.0 Launch (`v1.0.0`)**

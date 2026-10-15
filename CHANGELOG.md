@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-10-15
+
+### Added
+
+- **TV & Anime Progress Stability Test Suite** (`src/actions/tv-anime-progress-flow.test.tsx`): 18 comprehensive automated integration scenarios covering interrupted viewing, non-linear skip-aheads, multi-season rollovers, database persistence across re-openings, 24+ episode anime series, and component integration.
+- **Series Progress & Next-Up Engine** (`src/lib/progress/service.ts`, `src/lib/progress/index.ts`): Pure `computeSeriesProgress` algorithm calculating series and season watched counts, completion percentages, and chronological next-up unwatched episode detection ($\min(\text{season}, \text{episode})$ where unwatched and aired).
+- **Database Progress Hydration** (`getTitleProgressFromDb`): Single-query set-based retrieval of title hierarchy (`Title`, `Season`, `Episode`) and authenticated `UserEpisode` records on the Title Details page.
+- **Continue Watching & All Episodes Watched Controls**: Prominent dynamic primary action button (`Continue S{x} E{y}`) with automatic season tab switching and an `All Episodes Watched` completion badge.
+- **Progress Bar UI**: Formatted season progress indicators (`12 / 24 episodes - 50%`) with accessible ARIA progressbar roles.
+- **Interactive Episode Checklist & Catch-Up Actions**: Optimistic checkmark toggling, "Mark Season Watched / Unwatched", and "Watch up to Episode N" batch controls with 6-second floating `Toast` notifications with instant Undo rollbacks.
+- **Lazy Metadata Persistence** (`src/lib/season/storage.ts`, `src/lib/episode/storage.ts`): On-demand synchronization of season summaries and episode details to prevent premature catalog bloat.
+- **Normalized Season & Episode Data Flow** (`EpisodeItem`, `SeasonItem`): Extended TMDB and AniList translators with uniform structure, runtime, overview, and air date normalization.
+
+### Changed
+
+- Bumped application version to `0.5.0` in `package.json`.
+- Updated `README.md` roadmap status to `Week 5 - Complete v0.5.0` and checked off all Week 5 deliverables.
+- Enhanced Title Details page (`src/app/title/[id]/page.tsx`) to hydrate real user episode progress from database for authenticated sessions.
+- Upgraded `SeasonEpisodesSection` to default to the season containing the next unwatched episode when re-opening a series mid-watch.
+
+---
+
 ## [0.4.0] - 2026-10-15
 
 ### Added
