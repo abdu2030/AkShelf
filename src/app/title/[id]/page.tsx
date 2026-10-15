@@ -14,6 +14,8 @@ import { SeasonEpisodesSection } from "@/components/title/season-episodes-sectio
 import { StatusSelector } from "@/components/title/status-selector";
 import { RatingControl } from "@/components/title/rating-control";
 import { DateTracker } from "@/components/title/date-tracker";
+import { auth } from "@/lib/auth";
+import { getTitleProgressFromDb } from "@/lib/progress";
 
 interface TitleDetailPageProps {
   params: Promise<{ id: string }>;
@@ -244,6 +246,18 @@ export default async function TitleDetailPage({ params }: TitleDetailPageProps) 
     );
   }
 
+  // Derive authenticated user ID and real episode progress from database (Day 34)
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  const dbProgress = userId
+    ? await getTitleProgressFromDb({
+        userId,
+        externalSource: titleData.externalSource,
+        externalId: titleData.externalId,
+      })
+    : null;
+
   return (
     <AppShell>
       <div className="max-w-5xl mx-auto space-y-8 pb-16">
@@ -312,11 +326,16 @@ export default async function TitleDetailPage({ params }: TitleDetailPageProps) 
                 </span>
               )}
 
-              {titleData.currentEpisode != null && titleData.currentEpisode > 0 && (
+              {dbProgress ? (
+                <span className="text-xs text-ink-muted font-mono font-medium">
+                  Progress: {dbProgress.watchedEpisodes} / {dbProgress.totalEpisodes} eps (
+                  {dbProgress.percentage}%)
+                </span>
+              ) : titleData.currentEpisode != null && titleData.currentEpisode > 0 ? (
                 <span className="text-xs text-ink-muted font-mono font-medium">
                   Progress: S{titleData.season || 1} E{titleData.currentEpisode}
                 </span>
-              )}
+              ) : null}
             </div>
 
             <div className="text-xs text-ink-muted">
@@ -369,12 +388,14 @@ export default async function TitleDetailPage({ params }: TitleDetailPageProps) 
           trailerUrl={titleData.trailerUrl}
         />
 
-        {/* 5. Seasons & Episodes Breakdown (for TV and Anime) */}
+        {/* 5. Seasons & Episodes Breakdown (for TV and Anime - Day 34) */}
         {(titleData.type === "TV" || titleData.type === "ANIME") && (
           <SeasonEpisodesSection
             seasons={titleData.seasons || []}
-            userCurrentSeason={titleData.season}
-            userCurrentEpisode={titleData.currentEpisode ?? titleData.episode}
+            userCurrentSeason={dbProgress?.defaultSeasonNumber ?? titleData.season}
+            userCurrentEpisode={
+              dbProgress?.nextUp?.episodeNumber ?? titleData.currentEpisode ?? titleData.episode
+            }
             titleExternalSource={titleData.externalSource}
             titleExternalId={titleData.externalId}
             titleName={titleData.title}
@@ -386,8 +407,8 @@ export default async function TitleDetailPage({ params }: TitleDetailPageProps) 
         <div className="rounded-xl border border-accent/20 bg-accent/5 p-4 flex items-center gap-3 text-xs sm:text-sm text-ink-soft">
           <CheckCircle2 className="w-5 h-5 text-accent shrink-0" aria-hidden="true" />
           <span>
-            <strong>Week 4 Milestones:</strong> Instant watch status changes, 1–10 personal rating,
-            and started/watched date tracking mutations are active for <strong>Days 22–25</strong>.
+            <strong>Week 5 Milestones:</strong> Granular episode progress calculation, 6-second Undo
+            toasts, and automatic next-up continuation active for <strong>Days 31–34</strong>.
           </span>
         </div>
       </div>
