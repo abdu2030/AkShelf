@@ -18,5 +18,19 @@ export type { LibraryEmptyStateProps } from "./library-empty-state";
 export { sortMediaItems, sortOptions } from "@/lib/utils/sort";
 export type { SortField, SortDirection, SortOption, SortableMediaItem } from "@/lib/utils/sort";
 
-export { StatTile, StatsBand } from "@/components/dashboard";
-export type { StatTileProps, StatsBandProps } from "@/components/dashboard";
+export {
+  StatTile,
+  StatsBand,
+  ContinueWatchingCard,
+  ContinueWatchingShelf,
+  RecentlyWatchedCard,
+  RecentlyWatchedSection,
+} from "@/components/dashboard";
+export type {
+  StatTileProps,
+  StatsBandProps,
+  ContinueWatchingCardProps,
+  ContinueWatchingShelfProps,
+  RecentlyWatchedCardProps,
+  RecentlyWatchedSectionProps,
+} from "@/components/dashboard";
