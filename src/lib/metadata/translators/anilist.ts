@@ -1,5 +1,78 @@
 import { AniListMedia } from "@/lib/anilist";
-import { MediaResult } from "../types";
+import { MediaResult, NormalizedEpisode, NormalizedSeason } from "../types";
+
+/**
+ * Normalizes AniList anime episodes into standard NormalizedEpisode models.
+ * Combines available streamingEpisodes metadata with total episode counts and runtimes.
+ */
+export function aniListMediaToNormalizedEpisodes(media: AniListMedia): NormalizedEpisode[] {
+  const count =
+    media.episodes && media.episodes > 0
+      ? media.episodes
+      : media.streamingEpisodes?.length
+        ? media.streamingEpisodes.length
+        : 1;
+
+  const episodes: NormalizedEpisode[] = [];
+  const streaming = media.streamingEpisodes || [];
+
+  for (let i = 1; i <= count; i++) {
+    const stream = streaming[i - 1];
+    let title = `Episode ${i}`;
+    let thumbnail: string | null = null;
+    let externalId: string | null = `${media.id}-ep-${i}`;
+
+    if (stream) {
+      if (stream.title && stream.title.trim()) {
+        title = stream.title.trim();
+      }
+      if (stream.thumbnail) {
+        thumbnail = stream.thumbnail;
+      }
+      if (stream.url) {
+        externalId = stream.url;
+      }
+    }
+
+    episodes.push({
+      externalId,
+      episodeNumber: i,
+      seasonNumber: 1,
+      name: title,
+      airDate: i === 1 ? formatFuzzyDate(media.startDate) : null,
+      runtime: media.duration ?? null,
+      overview: null,
+      stillUrl: thumbnail,
+    });
+  }
+
+  return episodes;
+}
+
+/**
+ * Normalizes AniList anime series into standard NormalizedSeason breakdown.
+ * Movies do not receive episodic season structures; TV/ONA/OVA series receive Season 1.
+ */
+export function aniListMediaToNormalizedSeasons(media: AniListMedia): NormalizedSeason[] {
+  if (media.format === "MOVIE") {
+    return [];
+  }
+
+  const episodes = aniListMediaToNormalizedEpisodes(media);
+
+  return [
+    {
+      seasonNumber: 1,
+      name: "Season 1",
+      episodeCount: episodes.length,
+      overview: cleanAniListDescription(media.description),
+      posterUrl:
+        media.coverImage?.extraLarge || media.coverImage?.large || media.coverImage?.medium || null,
+      airDate: formatFuzzyDate(media.startDate),
+      episodes,
+    },
+  ];
+}
 
 /**
  * Strips HTML formatting tags from AniList descriptions.
@@ -122,6 +195,7 @@ export function aniListMediaToMediaResult(
   const studios = animationStudios.length > 0 ? animationStudios : studioNodes.map((s) => s.name);
 
   const trailerUrl = extractAniListTrailer(media.trailer);
+  const seasons = aniListMediaToNormalizedSeasons(media);
 
   return {
     id: `anilist:${media.id}`,
@@ -141,9 +215,10 @@ export function aniListMediaToMediaResult(
     voteAverage,
     voteCount: null,
     popularity: media.popularity ?? null,
-    totalEpisodes: media.episodes ?? null,
-    totalSeasons: 1, // Anime entries on AniList are indexed as individual seasons/entries
+    totalEpisodes: media.episodes ?? (seasons.length > 0 ? seasons[0].episodeCount : null),
+    totalSeasons: seasons.length > 0 ? seasons.length : 1,
     studios: studios.length > 0 ? studios : undefined,
     trailerUrl,
+    seasons: seasons.length > 0 ? seasons : undefined,
   };
 }

@@ -12,8 +12,10 @@ import {
   MediaResult,
   MediaType,
   MetadataSearchOptions,
+  NormalizedEpisode,
   NormalizedSeason,
 } from "./types";
+import { demoTitles } from "@/lib/data/demo-titles";
 
 export interface MetadataServiceConfig {
   tmdbClient?: TmdbClient;
@@ -248,11 +250,133 @@ export class MetadataService {
     return this.cache.getOrSet(
       cacheKey,
       async () => {
-        const raw = await this.tmdb.getTvSeason(numericId, seasonNumber);
-        return tmdbSeasonToNormalizedSeason(raw);
+        try {
+          const raw = await this.tmdb.getTvSeason(numericId, seasonNumber);
+          return tmdbSeasonToNormalizedSeason(raw);
+        } catch (error) {
+          // Check local demo titles for offline fallback
+          const demo = demoTitles.find(
+            (t) => t.externalSource === "tmdb" && t.externalId === String(numericId),
+          );
+          if (demo && demo.seasons) {
+            const demoSeason = demo.seasons.find((s) => s.seasonNumber === seasonNumber);
+            if (demoSeason) {
+              return {
+                seasonNumber: demoSeason.seasonNumber,
+                name: demoSeason.name,
+                episodeCount: demoSeason.episodeCount,
+                episodes: demoSeason.episodes.map((ep) => ({
+                  externalId: `${demo.externalId}-s${demoSeason.seasonNumber}-e${ep.episodeNumber}`,
+                  episodeNumber: ep.episodeNumber,
+                  seasonNumber: demoSeason.seasonNumber,
+                  name: ep.name,
+                  runtime: ep.runtime ?? null,
+                })),
+              };
+            }
+          }
+          throw error;
+        }
       },
       DETAILS_CACHE_TTL,
     );
+  }
+
+  /**
+   * Fetches episodes for a specific anime series season (Day 29).
+   */
+  async getAnimeSeason(animeId: number | string, seasonNumber = 1): Promise<NormalizedSeason> {
+    const numericId = typeof animeId === "string" ? parseInt(animeId, 10) : animeId;
+    const cacheKey = `season:anilist:${numericId}:${seasonNumber}`;
+
+    return this.cache.getOrSet(
+      cacheKey,
+      async () => {
+        try {
+          const details = await this.getAnimeDetails(numericId);
+          const matchedSeason = details.seasons?.find((s) => s.seasonNumber === seasonNumber);
+          if (matchedSeason) {
+            return matchedSeason;
+          }
+
+          // Fallback if seasons array was empty
+          return {
+            seasonNumber,
+            name: `Season ${seasonNumber}`,
+            episodeCount: details.totalEpisodes ?? 0,
+            episodes: [],
+          };
+        } catch (error) {
+          console.error("[MetadataService] getAnimeSeason failed:", error);
+          // Check local demo titles for offline fallback
+          const demo = demoTitles.find(
+            (t) => t.externalSource === "anilist" && t.externalId === String(numericId),
+          );
+          if (demo && demo.seasons) {
+            const demoSeason = demo.seasons.find((s) => s.seasonNumber === seasonNumber);
+            if (demoSeason) {
+              return {
+                seasonNumber: demoSeason.seasonNumber,
+                name: demoSeason.name,
+                episodeCount: demoSeason.episodeCount,
+                episodes: demoSeason.episodes.map((ep) => ({
+                  externalId: `${demo.externalId}-ep-${ep.episodeNumber}`,
+                  episodeNumber: ep.episodeNumber,
+                  seasonNumber: demoSeason.seasonNumber,
+                  name: ep.name,
+                  runtime: ep.runtime ?? null,
+                })),
+              };
+            }
+          }
+          throw error;
+        }
+      },
+      DETAILS_CACHE_TTL,
+    );
+  }
+
+  /**
+   * Fetches all seasons for a given title (Day 29).
+   */
+  async getTitleSeasons(
+    source: ExternalSource,
+    id: number | string,
+    type?: MediaType,
+  ): Promise<NormalizedSeason[]> {
+    if (source === "tmdb") {
+      if (type === "MOVIE") return [];
+      const details = await this.getTvDetails(id);
+      return details.seasons || [];
+    }
+
+    if (source === "anilist") {
+      const details = await this.getAnimeDetails(id);
+      return details.seasons || [];
+    }
+
+    return [];
+  }
+
+  /**
+   * Fetches normalized episodes for a specific title season across TMDB or AniList (Day 29).
+   */
+  async getSeasonEpisodes(
+    source: ExternalSource,
+    id: number | string,
+    seasonNumber = 1,
+  ): Promise<NormalizedEpisode[]> {
+    if (source === "tmdb") {
+      const season = await this.getTvSeason(id, seasonNumber);
+      return season.episodes || [];
+    }
+
+    if (source === "anilist") {
+      const season = await this.getAnimeSeason(id, seasonNumber);
+      return season.episodes || [];
+    }
+
+    return [];
   }
 
   /**

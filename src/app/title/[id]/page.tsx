@@ -56,6 +56,9 @@ interface ResolvedTitleData {
       episodeNumber: number;
       name: string;
       runtime?: number | null;
+      airDate?: string | null;
+      overview?: string | null;
+      stillUrl?: string | null;
     }>;
   }>;
 }
@@ -183,7 +186,24 @@ async function resolveTitleDetails(id: string): Promise<ResolvedTitleData | null
           season: shelfMatch?.season || null,
           episode: shelfMatch?.episode || null,
           currentEpisode: shelfMatch?.currentEpisode || null,
-          seasons: mediaResult.seasons,
+          seasons: await (async () => {
+            let seasons = mediaResult.seasons;
+            if (source === "tmdb" && mediaResult.type === "TV" && seasons && seasons.length > 0) {
+              const targetSeasonNum = shelfMatch?.season || seasons[0].seasonNumber;
+              try {
+                const seasonDetails = await metadataService.getTvSeason(
+                  externalId,
+                  targetSeasonNum,
+                );
+                seasons = seasons.map((s) =>
+                  s.seasonNumber === targetSeasonNum ? seasonDetails : s,
+                );
+              } catch {
+                // Keep season summaries if season details unavailable
+              }
+            }
+            return seasons;
+          })(),
         };
       }
     } catch (err) {

@@ -242,5 +242,81 @@ describe("MetadataService", () => {
       expect(season.episodes).toHaveLength(1);
       expect(season.episodes?.[0].name).toBe("Pilot");
     });
+
+    it("fetches and caches anime season and episodes via getAnimeSeason", async () => {
+      vi.mocked(mockAniList.getAnimeDetails).mockResolvedValue({
+        id: 16498,
+        title: { english: "Attack on Titan" },
+        format: "TV",
+        episodes: 25,
+        duration: 24,
+        genres: ["Action"],
+      } as unknown as Awaited<ReturnType<typeof mockAniList.getAnimeDetails>>);
+
+      const season = await service.getAnimeSeason(16498, 1);
+      expect(season.seasonNumber).toBe(1);
+      expect(season.episodeCount).toBe(25);
+      expect(season.episodes).toHaveLength(25);
+      expect(season.episodes?.[0].name).toBe("Episode 1");
+
+      // Cached call
+      await service.getAnimeSeason(16498, 1);
+      expect(mockAniList.getAnimeDetails).toHaveBeenCalledTimes(1);
+    });
+
+    it("retrieves seasons for title via getTitleSeasons", async () => {
+      vi.mocked(mockTmdb.getTvDetails).mockResolvedValue({
+        id: 1396,
+        name: "Breaking Bad",
+        number_of_seasons: 1,
+        number_of_episodes: 7,
+        seasons: [
+          {
+            id: 1,
+            season_number: 1,
+            name: "Season 1",
+            episode_count: 7,
+          },
+        ],
+      } as unknown as Awaited<ReturnType<typeof mockTmdb.getTvDetails>>);
+
+      const tvSeasons = await service.getTitleSeasons("tmdb", 1396, "TV");
+      expect(tvSeasons).toHaveLength(1);
+      expect(tvSeasons[0].name).toBe("Season 1");
+
+      const movieSeasons = await service.getTitleSeasons("tmdb", 27205, "MOVIE");
+      expect(movieSeasons).toEqual([]);
+    });
+
+    it("retrieves season episodes via unified getSeasonEpisodes", async () => {
+      vi.mocked(mockTmdb.getTvSeason).mockResolvedValue({
+        id: 3572,
+        season_number: 1,
+        name: "Season 1",
+        episodes: [
+          {
+            id: 101,
+            episode_number: 1,
+            season_number: 1,
+            name: "Pilot",
+            overview: "",
+            vote_average: 8.0,
+          },
+          {
+            id: 102,
+            episode_number: 2,
+            season_number: 1,
+            name: "Episode 2",
+            overview: "",
+            vote_average: 8.0,
+          },
+        ],
+      } as unknown as Awaited<ReturnType<typeof mockTmdb.getTvSeason>>);
+
+      const episodes = await service.getSeasonEpisodes("tmdb", 1396, 1);
+      expect(episodes).toHaveLength(2);
+      expect(episodes[0].name).toBe("Pilot");
+      expect(episodes[1].name).toBe("Episode 2");
+    });
   });
 });
