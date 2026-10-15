@@ -66,6 +66,55 @@ describe("SearchResultRow Component", () => {
     expect(html).toContain("border-accent");
   });
 
+  it("renders poster status indicator and personal rating when title is watched and rated", () => {
+    const html = renderToStaticMarkup(<SearchResultRow item={trackedMovie} />);
+
+    expect(html).toContain('data-testid="poster-status-indicator"');
+    expect(html).toContain('data-testid="search-personal-rating"');
+    expect(html).toContain("9.5");
+    expect(html).toContain("/10");
+  });
+
+  it("renders watching progress detail for in-progress series", () => {
+    const watchingSeries: SearchResultItem = {
+      id: "demo-tmdb-66732",
+      externalSource: "tmdb",
+      externalId: "66732",
+      type: "TV",
+      title: "Stranger Things",
+      year: 2016,
+      overview: "When a young boy vanishes...",
+      posterUrl: "https://image.tmdb.org/t/p/w500/stranger.jpg",
+      genres: ["Sci-Fi", "Drama"],
+      isOnShelf: true,
+      status: "WATCHING",
+      season: 2,
+      episode: 4,
+      currentEpisode: 11,
+    };
+
+    const html = renderToStaticMarkup(<SearchResultRow item={watchingSeries} />);
+
+    expect(html).toContain('data-testid="poster-status-indicator"');
+    expect(html).toContain('data-testid="search-watching-progress"');
+    expect(html).toContain("S2 E4");
+    expect(html).toContain("Watching - S2 E4");
+  });
+
+  it("renders public score fallback when title is unrated by user", () => {
+    const unratedWithPublicScore: SearchResultItem = {
+      ...untrackedAnime,
+      voteAverage: 8.6,
+    };
+
+    const html = renderToStaticMarkup(<SearchResultRow item={unratedWithPublicScore} />);
+
+    expect(html).not.toContain('data-testid="search-personal-rating"');
+    expect(html).toContain('data-testid="search-public-rating"');
+    expect(html).toContain("8.6");
+    expect(html).not.toContain('data-testid="poster-status-indicator"');
+  });
+
   it("renders title even without poster", () => {
     const html = renderToStaticMarkup(<SearchResultRow item={untrackedAnime} />);
 

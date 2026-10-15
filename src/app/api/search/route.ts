@@ -3,6 +3,8 @@ import { metadataService } from "@/lib/metadata";
 import { demoTitles } from "@/lib/data/demo-titles";
 import { MediaType } from "@/lib/metadata/types";
 import { WatchStatusType } from "@/components/ui/status-badge";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 
 export interface SearchResultItem {
   id: string;
@@ -41,40 +43,161 @@ export async function GET(request: NextRequest) {
 
   const queryLower = q.toLowerCase();
 
-  // 1. Search locally on user's shelf (demoTitles + seeded library)
-  const shelfMatches: SearchResultItem[] = demoTitles
-    .filter((title) => {
-      if (type !== "ALL" && title.type !== type) return false;
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    session = null;
+  }
+  const userId = session?.user?.id;
+
+  const shelfMatches: SearchResultItem[] = [];
+  const shelfLookup = new Map<
+    string,
+    {
+      status: WatchStatusType | null;
+      rating: number | null;
+      season: number | null;
+      episode: number | null;
+      currentEpisode: number | null;
+    }
+  >();
+
+  // 1. If user is authenticated, query real library in PostgreSQL
+  if (userId) {
+    try {
+      const [userTitles, userEpisodes] = await Promise.all([
+        prisma.userTitle.findMany({
+          where: { userId },
+          include: {
+            title: {
+              include: {
+                seasons: {
+                  orderBy: { seasonNumber: "asc" },
+                  include: {
+                    episodes: {
+                      orderBy: { episodeNumber: "asc" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }),
+        prisma.userEpisode.findMany({
+          where: { userId },
+          select: { episodeId: true },
+        }),
+      ]);
+
+      const watchedEpisodeSet = new Set(userEpisodes.map((ue) => ue.episodeId));
+
+      for (const ut of userTitles) {
+        const title = ut.title;
+        const key = `${title.externalSource}:${title.externalId}`;
+
+        let watchedCount = 0;
+        let nextUpSeason: number | null = null;
+        let nextUpEpisode: number | null = null;
+
+        for (const season of title.seasons) {
+          for (const ep of season.episodes) {
+            if (watchedEpisodeSet.has(ep.id)) {
+              watchedCount++;
+            } else if (nextUpSeason === null) {
+              nextUpSeason = season.seasonNumber;
+              nextUpEpisode = ep.episodeNumber;
+            }
+          }
+        }
+
+        shelfLookup.set(key, {
+          status: ut.status as WatchStatusType,
+          rating: ut.rating,
+          season: nextUpSeason,
+          episode: nextUpEpisode,
+          currentEpisode: watchedCount,
+        });
+
+        // Check if title matches query and media type
+        if (type !== "ALL" && title.type !== type) continue;
+
+        const matchesTitle = title.title.toLowerCase().includes(queryLower);
+        const matchesOverview = title.overview?.toLowerCase().includes(queryLower);
+        const matchesGenre = title.genres.some((g) => g.toLowerCase().includes(queryLower));
+
+        if (matchesTitle || matchesOverview || matchesGenre) {
+          shelfMatches.push({
+            id: `db-${title.id}`,
+            externalSource: title.externalSource as "tmdb" | "anilist",
+            externalId: title.externalId,
+            type: title.type as MediaType,
+            title: title.title,
+            overview: title.overview,
+            year: title.year,
+            posterUrl: title.posterUrl,
+            backdropUrl: title.backdropUrl,
+            genres: title.genres,
+            voteAverage: null,
+            totalEpisodes: title.seasons.reduce((acc, s) => acc + s.episodeCount, 0) || null,
+            totalSeasons: title.seasons.length || null,
+            isOnShelf: true,
+            status: ut.status as WatchStatusType,
+            rating: ut.rating,
+            season: nextUpSeason,
+            episode: nextUpEpisode,
+            currentEpisode: watchedCount,
+          });
+        }
+      }
+    } catch (dbError) {
+      console.error("[API Search Route] Database query failed, falling back to demo:", dbError);
+    }
+  }
+
+  // Fallback to demoTitles if unauthenticated or if user has no shelf matches
+  if (!userId || (shelfMatches.length === 0 && shelfLookup.size === 0)) {
+    for (const title of demoTitles) {
+      const key = `${title.externalSource}:${title.externalId}`;
+      shelfLookup.set(key, {
+        status: title.status,
+        rating: title.rating ?? null,
+        season: title.season || null,
+        episode: title.episode || null,
+        currentEpisode: title.currentEpisode || null,
+      });
+
+      if (type !== "ALL" && title.type !== type) continue;
+
       const matchesTitle = title.title.toLowerCase().includes(queryLower);
       const matchesOverview = title.overview?.toLowerCase().includes(queryLower);
       const matchesGenre = title.genres.some((g) => g.toLowerCase().includes(queryLower));
-      return matchesTitle || matchesOverview || matchesGenre;
-    })
-    .map((title) => ({
-      id: `demo-${title.externalSource}-${title.externalId}`,
-      externalSource: title.externalSource,
-      externalId: title.externalId,
-      type: title.type,
-      title: title.title,
-      overview: title.overview,
-      year: title.year,
-      posterUrl: title.posterUrl,
-      backdropUrl: title.backdropUrl,
-      genres: title.genres,
-      voteAverage: null,
-      totalEpisodes: title.totalEpisodes,
-      totalSeasons: title.seasons?.length || null,
-      isOnShelf: true,
-      status: title.status,
-      rating: title.rating,
-      season: title.season,
-      episode: title.episode,
-      currentEpisode: title.currentEpisode,
-    }));
 
-  // Create a quick lookup map of tracked items to badge external results
-  const shelfKeySet = new Set(demoTitles.map((t) => `${t.externalSource}:${t.externalId}`));
-  const shelfLookup = new Map(demoTitles.map((t) => [`${t.externalSource}:${t.externalId}`, t]));
+      if (matchesTitle || matchesOverview || matchesGenre) {
+        shelfMatches.push({
+          id: `demo-${title.externalSource}-${title.externalId}`,
+          externalSource: title.externalSource,
+          externalId: title.externalId,
+          type: title.type,
+          title: title.title,
+          overview: title.overview,
+          year: title.year,
+          posterUrl: title.posterUrl,
+          backdropUrl: title.backdropUrl,
+          genres: title.genres,
+          voteAverage: null,
+          totalEpisodes: title.totalEpisodes,
+          totalSeasons: title.seasons?.length || null,
+          isOnShelf: true,
+          status: title.status,
+          rating: title.rating,
+          season: title.season,
+          episode: title.episode,
+          currentEpisode: title.currentEpisode,
+        });
+      }
+    }
+  }
 
   // 2. Fetch external provider results via unified MetadataService
   let externalResults: SearchResultItem[] = [];
@@ -96,7 +219,7 @@ export async function GET(request: NextRequest) {
       .map((item) => {
         const key = `${item.externalSource}:${item.externalId}`;
         const shelfMatch = shelfLookup.get(key);
-        const isOnShelf = shelfKeySet.has(key);
+        const isOnShelf = Boolean(shelfMatch);
 
         return {
           id: item.id,
@@ -124,7 +247,6 @@ export async function GET(request: NextRequest) {
       });
   } catch (error) {
     console.error("[API Search Route] Provider search failed:", error);
-    // Even if external provider fails, onShelf results are still safely returned
   }
 
   return NextResponse.json({

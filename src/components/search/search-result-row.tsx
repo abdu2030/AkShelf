@@ -3,7 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Plus, Clapperboard, Tv, Sparkles, ImageOff } from "lucide-react";
+import { Plus, Clapperboard, Tv, Sparkles, ImageOff, Star } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { StatusBadge, WatchStatusType } from "@/components/ui/status-badge";
 import { MediaType } from "@/lib/metadata/types";
@@ -59,7 +59,7 @@ export function SearchResultRow({
   if (item.status === "WATCHED" && item.rating) {
     badgeDetail = `${item.rating}/10`;
   } else if (item.status === "WATCHING") {
-    const epNum = item.currentEpisode ?? item.episode;
+    const epNum = item.episode ?? item.currentEpisode;
     if (item.season && epNum) {
       badgeDetail = `S${item.season} E${epNum}`;
     } else if (epNum) {
@@ -102,6 +102,18 @@ export function SearchResultRow({
               </span>
             </div>
           )}
+
+          {/* Status Indicator Pill / Dot on Poster */}
+          {item.isOnShelf && item.status && (
+            <div data-testid="poster-status-indicator" className="absolute top-1 left-1 z-10">
+              <StatusBadge
+                status={item.status as WatchStatusType}
+                variant="dot"
+                detail={badgeDetail}
+                className="h-6 w-6 shadow-md border border-white/20 bg-[#0b0d1a]/85 backdrop-blur-sm [&>svg]:h-3.5 [&>svg]:w-3.5"
+              />
+            </div>
+          )}
         </div>
 
         {/* Text Details */}
@@ -111,7 +123,7 @@ export function SearchResultRow({
             {item.title}
           </h3>
 
-          {/* Subtitle: Year, Media Type Icon + Label, Genres */}
+          {/* Subtitle: Year, Media Type Icon + Label, Personal Rating / Score, Watching Progress, Genres */}
           <div className="flex items-center flex-wrap gap-2 text-xs text-ink-muted">
             {item.year && <span>{item.year}</span>}
             {item.year && <span className="text-white/20 dark:text-white/20">•</span>}
@@ -120,6 +132,53 @@ export function SearchResultRow({
               <MediaTypeIcon type={item.type} className="w-3.5 h-3.5 text-accent shrink-0" />
               <span>{typeLabel}</span>
             </span>
+
+            {/* User Personal Rating (Gold Star + font-mono tabular-nums) */}
+            {item.rating != null ? (
+              <>
+                <span className="text-white/20 dark:text-white/20">•</span>
+                <span
+                  data-testid="search-personal-rating"
+                  className="inline-flex items-center gap-1 font-semibold text-amber-400 font-mono tabular-nums"
+                  title={`Your Rating: ${item.rating}/10`}
+                >
+                  <Star
+                    className="w-3.5 h-3.5 fill-amber-400 text-amber-400 shrink-0"
+                    aria-hidden="true"
+                  />
+                  <span>{item.rating}</span>
+                  <span className="text-[10px] text-ink-muted font-normal font-sans">/10</span>
+                </span>
+              </>
+            ) : item.voteAverage != null && item.voteAverage > 0 ? (
+              <>
+                <span className="text-white/20 dark:text-white/20">•</span>
+                <span
+                  data-testid="search-public-rating"
+                  className="inline-flex items-center gap-1 text-ink-soft font-mono tabular-nums"
+                  title={`Community Score: ${item.voteAverage.toFixed(1)}/10`}
+                >
+                  <Star
+                    className="w-3.5 h-3.5 fill-amber-400/70 text-amber-400/70 shrink-0"
+                    aria-hidden="true"
+                  />
+                  <span>{item.voteAverage.toFixed(1)}</span>
+                </span>
+              </>
+            ) : null}
+
+            {/* Watching Progress in Subtitle */}
+            {item.status === "WATCHING" && badgeDetail && (
+              <>
+                <span className="text-white/20 dark:text-white/20">•</span>
+                <span
+                  data-testid="search-watching-progress"
+                  className="inline-flex items-center gap-1 font-semibold text-sky-400 text-xs"
+                >
+                  <span>{badgeDetail}</span>
+                </span>
+              </>
+            )}
 
             {item.genres && item.genres.length > 0 && (
               <>
