@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   mediaResultToPrismaCreateInput,
   mediaResultToPrismaUpsertArgs,
+  normalizedEpisodeToPrismaUpsertArgs,
   normalizedSeasonToPrismaUpsertArgs,
   prismaTitleToMediaResult,
   PrismaTitleWithRelations,
@@ -126,5 +127,40 @@ describe("Prisma Title Metadata Adapter", () => {
     });
     expect(fallbackArgs.create.name).toBe("Season 3");
     expect(fallbackArgs.create.episodeCount).toBe(0);
+  });
+
+  it("builds Prisma upsert arguments for normalized episode records", () => {
+    const args = normalizedEpisodeToPrismaUpsertArgs("season-123", {
+      episodeNumber: 4,
+      name: "The Pointy End",
+      airDate: "2011-05-08",
+      runtime: 55,
+    });
+
+    expect(args.where.seasonId_episodeNumber).toEqual({
+      seasonId: "season-123",
+      episodeNumber: 4,
+    });
+    expect(args.create).toEqual({
+      seasonId: "season-123",
+      episodeNumber: 4,
+      name: "The Pointy End",
+      airDate: "2011-05-08",
+      runtime: 55,
+    });
+    expect(args.update).toEqual({
+      name: "The Pointy End",
+      airDate: "2011-05-08",
+      runtime: 55,
+    });
+
+    // Test fallback naming when name is missing or whitespace
+    const fallbackArgs = normalizedEpisodeToPrismaUpsertArgs("season-123", {
+      episodeNumber: 5,
+      name: "   ",
+    });
+    expect(fallbackArgs.create.name).toBe("Episode 5");
+    expect(fallbackArgs.create.airDate).toBeNull();
+    expect(fallbackArgs.create.runtime).toBeNull();
   });
 });

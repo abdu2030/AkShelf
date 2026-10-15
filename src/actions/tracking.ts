@@ -3,15 +3,18 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { persistTitleSeasons } from "@/lib/season/storage";
+import { ensureSeasonRecord, persistTitleSeasons } from "@/lib/season/storage";
+import { persistSeasonEpisodes } from "@/lib/episode/storage";
 import {
   batchSeasonSchema,
+  syncSeasonEpisodesSchema,
   syncTitleSeasonsSchema,
   toggleEpisodeSchema,
   updateTitleDatesSchema,
   updateTitleRatingSchema,
   updateTitleStatusSchema,
   BatchSeasonInput,
+  SyncSeasonEpisodesInput,
   SyncTitleSeasonsInput,
   ToggleEpisodeInput,
   UpdateTitleDatesInput,
@@ -35,6 +38,12 @@ export type TrackingActionResult = {
     seasonNumber: number;
     name: string | null;
     episodeCount: number;
+  }>;
+  episodes?: Array<{
+    episodeNumber: number;
+    name: string | null;
+    airDate?: string | null;
+    runtime?: number | null;
   }>;
 };
 
@@ -906,6 +915,109 @@ export async function syncTitleSeasonsAction(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Database season mutation failed",
+    };
+  }
+}
+
+/**
+ * Server action to persist episode details for a selected season of a TV or anime title (Day 31).
+ * Supports selective episode persistence to avoid importing unnecessary records upfront.
+ */
+export async function syncSeasonEpisodesAction(
+  rawInput: SyncSeasonEpisodesInput,
+): Promise<TrackingActionResult> {
+  const parsed = syncSeasonEpisodesSchema.safeParse(rawInput);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: "Invalid episode sync input: " + parsed.error.issues.map((i) => i.message).join(", "),
+    };
+  }
+
+  const {
+    titleExternalSource,
+    titleExternalId,
+    seasonNumber,
+    seasonName,
+    titleName,
+    mediaType,
+    episodes,
+    selectiveEpisodeNumbers,
+  } = parsed.data;
+
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    const targetEpisodes = selectiveEpisodeNumbers
+      ? episodes.filter((ep) => selectiveEpisodeNumbers.includes(ep.episodeNumber))
+      : episodes;
+
+    return {
+      success: true,
+      count: targetEpisodes.length,
+      seasonNumber,
+      episodes: targetEpisodes.map((ep) => ({
+        episodeNumber: ep.episodeNumber,
+        name: ep.name ?? null,
+        airDate: ep.airDate ?? null,
+        runtime: ep.runtime ?? null,
+      })),
+      isDemo: true,
+    };
+  }
+
+  try {
+    const persisted = await prisma.$transaction(async (tx) => {
+      // 1. Ensure Title exists in database
+      const title = await tx.title.upsert({
+        where: {
+          externalSource_externalId: {
+            externalSource: titleExternalSource,
+            externalId: titleExternalId,
+          },
+        },
+        update: {},
+        create: {
+          externalSource: titleExternalSource,
+          externalId: titleExternalId,
+          title: titleName || `${titleExternalSource}:${titleExternalId}`,
+          type: mediaType || "TV",
+        },
+      });
+
+      // 2. Ensure Season exists in database
+      const season = await ensureSeasonRecord(tx, title.id, seasonNumber, {
+        name: seasonName,
+        episodeCount: episodes.length,
+      });
+
+      // 3. Persist episodes for this season
+      return persistSeasonEpisodes(tx, season.id, episodes, {
+        selectiveEpisodeNumbers,
+        updateSeasonCount: true,
+      });
+    });
+
+    revalidatePath(`/title/${titleExternalSource}:${titleExternalId}`);
+    revalidatePath(`/title/demo-${titleExternalSource}-${titleExternalId}`);
+
+    return {
+      success: true,
+      count: persisted.length,
+      seasonNumber,
+      episodes: persisted.map((ep) => ({
+        episodeNumber: ep.episodeNumber,
+        name: ep.name,
+        airDate: ep.airDate,
+        runtime: ep.runtime,
+      })),
+    };
+  } catch (error) {
+    console.error("[TrackingAction] Failed to sync season episodes:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Database episode mutation failed",
     };
   }
 }
