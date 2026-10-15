@@ -1,13 +1,17 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { CheckCheck, RotateCcw, Sparkles } from "lucide-react";
+import { CheckCheck, RotateCcw, Sparkles, Tv } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { SeasonSelector } from "./season-selector";
 import { EpisodeRow } from "./episode-row";
 import { Button } from "@/components/ui/button";
-import { batchSeasonProgressAction, toggleEpisodeProgressAction } from "@/actions/tracking";
+import {
+  batchSeasonProgressAction,
+  fetchSeasonEpisodesAction,
+  toggleEpisodeProgressAction,
+} from "@/actions/tracking";
 
 export interface EpisodeItem {
   episodeNumber: number;
@@ -35,6 +39,7 @@ export interface SeasonEpisodesSectionProps {
   titleName?: string;
   mediaType?: "MOVIE" | "TV" | "ANIME";
   onEpisodeToggle?: (seasonNumber: number, episodeNumber: number, watched: boolean) => void;
+  onMarkSeriesWatched?: () => void;
   className?: string;
 }
 
@@ -55,18 +60,42 @@ export function SeasonEpisodesSection({
   titleName,
   mediaType,
   onEpisodeToggle,
+  onMarkSeriesWatched,
   className,
 }: SeasonEpisodesSectionProps) {
+  // Local state holding dynamically fetched episodes per seasonNumber (allows lazy-loaded episodes to populate seamlessly)
+  const [dynamicEpisodesBySeason, setDynamicEpisodesBySeason] = useState<
+    Record<number, EpisodeItem[]>
+  >({});
+  const [isLoadingEpisodes, setIsLoadingEpisodes] = useState<boolean>(false);
+
+  // Merge base seasons with dynamically loaded episodes
+  const seasonsState = useMemo(() => {
+    return seasons.map((season) => {
+      const dynamicEpisodes = dynamicEpisodesBySeason[season.seasonNumber];
+      if (dynamicEpisodes && (!season.episodes || season.episodes.length === 0)) {
+        return {
+          ...season,
+          episodes: dynamicEpisodes,
+        };
+      }
+      return season;
+    });
+  }, [seasons, dynamicEpisodesBySeason]);
+
   // Determine default selected season:
   // "The current season opens by default; if the user is mid-series it opens on the season of the next unwatched episode."
   const defaultSeasonNumber = useMemo(() => {
-    if (!seasons || seasons.length === 0) return 1;
-    if (userCurrentSeason != null && seasons.some((s) => s.seasonNumber === userCurrentSeason)) {
+    if (!seasonsState || seasonsState.length === 0) return 1;
+    if (
+      userCurrentSeason != null &&
+      seasonsState.some((s) => s.seasonNumber === userCurrentSeason)
+    ) {
       return userCurrentSeason;
     }
     // Default to the first season in list
-    return seasons[0].seasonNumber;
-  }, [seasons, userCurrentSeason]);
+    return seasonsState[0].seasonNumber;
+  }, [seasonsState, userCurrentSeason]);
 
   const [selectedSeasonNumber, setSelectedSeasonNumber] = useState<number>(defaultSeasonNumber);
 
@@ -81,7 +110,6 @@ export function SeasonEpisodesSection({
       if (!season.episodes) continue;
       for (const ep of season.episodes) {
         const key = `${season.seasonNumber}:${ep.episodeNumber}`;
-        // If prior season or prior episode in current season, marked watched
         if (
           season.seasonNumber < currSeason ||
           (season.seasonNumber === currSeason && ep.episodeNumber <= currEp)
@@ -97,12 +125,12 @@ export function SeasonEpisodesSection({
 
   // Current active season object
   const activeSeason = useMemo(() => {
-    return seasons.find((s) => s.seasonNumber === selectedSeasonNumber) || seasons[0];
-  }, [seasons, selectedSeasonNumber]);
+    return seasonsState.find((s) => s.seasonNumber === selectedSeasonNumber) || seasonsState[0];
+  }, [seasonsState, selectedSeasonNumber]);
 
   // Compute watched counts per season for the SeasonSelector pills
   const seasonSelectorItems = useMemo(() => {
-    return seasons.map((season) => {
+    return seasonsState.map((season) => {
       let watchedCount = 0;
       if (season.episodes) {
         for (const ep of season.episodes) {
@@ -118,7 +146,50 @@ export function SeasonEpisodesSection({
         watchedCount,
       };
     });
-  }, [seasons, watchedMap]);
+  }, [seasonsState, watchedMap]);
+
+  // Handle season selection with lazy episode loading (Day 32)
+  const handleSelectSeason = async (seasonNum: number) => {
+    setSelectedSeasonNumber(seasonNum);
+    const targetSeason = seasonsState.find((s) => s.seasonNumber === seasonNum);
+
+    // If target season has no episodes and external provider info is present, fetch dynamically
+    if (
+      (!targetSeason?.episodes || targetSeason.episodes.length === 0) &&
+      titleExternalSource &&
+      titleExternalId
+    ) {
+      setIsLoadingEpisodes(true);
+      try {
+        const res = await fetchSeasonEpisodesAction({
+          titleExternalSource,
+          titleExternalId,
+          seasonNumber: seasonNum,
+          titleName,
+          mediaType,
+        });
+
+        if (res.success && res.episodes && res.episodes.length > 0) {
+          const loadedEpisodes: EpisodeItem[] = res.episodes.map((ep) => ({
+            episodeNumber: ep.episodeNumber,
+            seasonNumber: seasonNum,
+            name: ep.name ?? `Episode ${ep.episodeNumber}`,
+            airDate: ep.airDate ?? null,
+            runtime: ep.runtime ?? null,
+          }));
+
+          setDynamicEpisodesBySeason((prev) => ({
+            ...prev,
+            [seasonNum]: loadedEpisodes,
+          }));
+        }
+      } catch (err) {
+        console.warn("[SeasonEpisodesSection] Failed to dynamically load season episodes:", err);
+      } finally {
+        setIsLoadingEpisodes(false);
+      }
+    }
+  };
 
   // Compute active season episodes
   const activeEpisodes = activeSeason?.episodes || [];
@@ -256,9 +327,87 @@ export function SeasonEpisodesSection({
     }
   };
 
-  if (!seasons || seasons.length === 0) {
-    return null;
+  // Batch mark episodes 1 to N as watched (Catch up action - Section 9.14)
+  const handleMarkUpToWatched = (epNumber: number) => {
+    if (!activeSeason?.episodes) return;
+    const previousMap = { ...watchedMap };
+    const episodesToMark = activeSeason.episodes.filter((e) => e.episodeNumber <= epNumber);
+
+    setWatchedMap((prev) => {
+      const next = { ...prev };
+      for (const ep of episodesToMark) {
+        next[`${activeSeason.seasonNumber}:${ep.episodeNumber}`] = true;
+      }
+      return next;
+    });
+
+    if (titleExternalSource && titleExternalId) {
+      batchSeasonProgressAction({
+        titleExternalSource,
+        titleExternalId,
+        seasonNumber: activeSeason.seasonNumber,
+        watched: true,
+        episodeNumbers: episodesToMark.map((e) => e.episodeNumber),
+        titleName,
+        mediaType,
+      })
+        .then((res) => {
+          if (!res.success) {
+            setWatchedMap(previousMap);
+          }
+        })
+        .catch(() => {
+          setWatchedMap(previousMap);
+        });
+    }
+  };
+
+  if (!seasonsState || seasonsState.length === 0) {
+    return (
+      <section
+        aria-labelledby="episodes-section-heading"
+        className={cn(
+          "glass-2 rounded-[24px] p-5 sm:p-7 border border-white/10 shadow-sm space-y-6",
+          className,
+        )}
+      >
+        <div className="space-y-1">
+          <h2
+            id="episodes-section-heading"
+            className="text-lg sm:text-xl font-display font-bold text-ink tracking-tight flex items-center gap-2"
+          >
+            <Sparkles className="w-4 h-4 text-accent" aria-hidden="true" />
+            Episodes
+          </h2>
+          <p className="text-xs text-ink-muted">
+            Track individual episodes or mark entire seasons with one click.
+          </p>
+        </div>
+
+        <div className="p-8 text-center glass-1 rounded-2xl border border-white/10 space-y-3">
+          <div className="w-12 h-12 mx-auto rounded-full glass-2 flex items-center justify-center text-ink-muted">
+            <Tv className="w-6 h-6 text-accent/80" aria-hidden="true" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-display font-bold text-ink">No episode details yet</h3>
+            <p className="text-xs text-ink-secondary max-w-sm mx-auto">
+              You can still mark the whole series as watched.
+            </p>
+          </div>
+          {onMarkSeriesWatched && (
+            <Button variant="secondary" size="small" onClick={onMarkSeriesWatched} className="mt-2">
+              Mark series watched
+            </Button>
+          )}
+        </div>
+      </section>
+    );
   }
+
+  const percent = activeSeason?.episodeCount
+    ? Math.round((activeSeasonWatchedCount / activeSeason.episodeCount) * 100)
+    : 0;
+  const progressLabel = `${activeSeasonWatchedCount} / ${activeSeason?.episodeCount || 0} episodes - ${percent}%`;
 
   return (
     <section
@@ -297,15 +446,15 @@ export function SeasonEpisodesSection({
       </div>
 
       {/* 2. Season Selector Pills (if > 1 season) */}
-      {seasons.length > 1 && (
+      {seasonsState.length > 1 && (
         <SeasonSelector
           seasons={seasonSelectorItems}
           selectedSeason={selectedSeasonNumber}
-          onSelectSeason={setSelectedSeasonNumber}
+          onSelectSeason={handleSelectSeason}
         />
       )}
 
-      {/* 3. Progress Bar & Batch Controls */}
+      {/* 3. Progress Bar & Batch Controls (UI Spec 9.13 & 9.14) */}
       <div className="glass-1 rounded-2xl p-4 border border-white/5 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex-1 max-w-md">
@@ -313,7 +462,7 @@ export function SeasonEpisodesSection({
               value={activeSeasonWatchedCount}
               max={activeSeason?.episodeCount || 1}
               showPercent
-              label={`Season ${activeSeason?.seasonNumber}: ${activeSeasonWatchedCount} / ${activeSeason?.episodeCount} episodes`}
+              label={progressLabel}
             />
           </div>
 
@@ -342,9 +491,25 @@ export function SeasonEpisodesSection({
         </div>
       </div>
 
-      {/* 4. Episode List Breakdown */}
+      {/* 4. Episode List Breakdown (Loading, Episodes, or Spec Empty State) */}
       <div className="space-y-2">
-        {activeEpisodes.length > 0 ? (
+        {isLoadingEpisodes ? (
+          <div className="space-y-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="h-[64px] sm:h-[60px] rounded-xl glass-1 border border-white/5 animate-pulse flex items-center px-4 gap-3"
+              >
+                <div className="w-7 h-7 rounded-full bg-white/10" />
+                <div className="w-6 h-4 rounded bg-white/10" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="w-1/3 h-3.5 rounded bg-white/10" />
+                  <div className="w-1/4 h-2.5 rounded bg-white/5" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : activeEpisodes.length > 0 ? (
           activeEpisodes.map((ep) => {
             const isWatched = !!watchedMap[`${activeSeason?.seasonNumber}:${ep.episodeNumber}`];
             const isNextUp = ep.episodeNumber === nextUpEpisodeNumber;
@@ -362,12 +527,31 @@ export function SeasonEpisodesSection({
                 isNextUp={isNextUp}
                 isAired={ep.isAired ?? true}
                 onToggleWatched={handleToggle}
+                onMarkUpToWatched={handleMarkUpToWatched}
               />
             );
           })
         ) : (
-          <div className="p-6 text-center text-sm text-ink-muted glass-1 rounded-xl border border-white/5">
-            No episode details found for this season.
+          <div className="p-8 text-center glass-1 rounded-2xl border border-white/10 space-y-3">
+            <div className="w-12 h-12 mx-auto rounded-full glass-2 flex items-center justify-center text-ink-muted">
+              <Tv className="w-6 h-6 text-accent/80" aria-hidden="true" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-display font-bold text-ink">No episode details yet</h3>
+              <p className="text-xs text-ink-secondary max-w-sm mx-auto">
+                You can still mark the whole series as watched.
+              </p>
+            </div>
+            {onMarkSeriesWatched && (
+              <Button
+                variant="secondary"
+                size="small"
+                onClick={onMarkSeriesWatched}
+                className="mt-2"
+              >
+                Mark series watched
+              </Button>
+            )}
           </div>
         )}
       </div>

@@ -370,9 +370,9 @@ export default async function TitleDetailPage({ params }: TitleDetailPageProps) 
         />
 
         {/* 5. Seasons & Episodes Breakdown (for TV and Anime) */}
-        {titleData.seasons && titleData.seasons.length > 0 && (
+        {(titleData.type === "TV" || titleData.type === "ANIME") && (
           <SeasonEpisodesSection
-            seasons={titleData.seasons}
+            seasons={titleData.seasons || []}
             userCurrentSeason={titleData.season}
             userCurrentEpisode={titleData.currentEpisode ?? titleData.episode}
             titleExternalSource={titleData.externalSource}
