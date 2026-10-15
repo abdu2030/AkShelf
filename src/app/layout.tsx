@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { Aurora } from "@/components/layout/aurora";
+import { ToastProvider } from "@/components/ui/toast";
 
 export const metadata: Metadata = {
   title: "AkShelf | Personal Watch Tracker",
@@ -24,7 +25,7 @@ export default function RootLayout({
         </a>
         <ThemeProvider>
           <Aurora />
-          {children}
+          <ToastProvider>{children}</ToastProvider>
         </ThemeProvider>
       </body>
     </html>

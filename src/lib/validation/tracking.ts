@@ -9,6 +9,10 @@ export const toggleEpisodeSchema = z.object({
   titleName: z.string().optional(),
   mediaType: z.enum(["MOVIE", "TV", "ANIME"]).optional(),
   episodeName: z.string().optional(),
+  revertStatus: z
+    .enum(["WATCHED", "WATCHING", "PLAN_TO_WATCH", "ON_HOLD", "DROPPED"])
+    .optional()
+    .nullable(),
 });
 
 export type ToggleEpisodeInput = z.infer<typeof toggleEpisodeSchema>;

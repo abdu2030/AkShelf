@@ -33,6 +33,8 @@ export type TrackingActionResult = {
   episodeNumber?: number;
   count?: number;
   status?: string | null;
+  statusTransitioned?: boolean;
+  previousStatus?: string | null;
   rating?: number | null;
   startedAt?: Date | null;
   watchedAt?: Date | null;
@@ -76,6 +78,7 @@ export async function toggleEpisodeProgressAction(
     titleName,
     mediaType,
     episodeName,
+    revertStatus,
   } = parsed.data;
 
   // Derive authenticated user ID securely from server session
@@ -90,10 +93,16 @@ export async function toggleEpisodeProgressAction(
       seasonNumber,
       episodeNumber,
       isDemo: true,
+      statusTransitioned: false,
+      status: "WATCHING",
     };
   }
 
   try {
+    let statusTransitioned = false;
+    let previousStatus: string | null = null;
+    let currentStatus: string | null = null;
+
     await prisma.$transaction(async (tx) => {
       // 1. Ensure Title exists in database
       const title = await tx.title.upsert({
@@ -144,6 +153,25 @@ export async function toggleEpisodeProgressAction(
         },
       });
 
+      // Check existing user title status if supported by tx mock/client
+      let existingUserTitle: {
+        id: string;
+        status: "WATCHED" | "WATCHING" | "PLAN_TO_WATCH" | "ON_HOLD" | "DROPPED";
+      } | null = null;
+      if (typeof tx.userTitle?.findUnique === "function") {
+        existingUserTitle = (await tx.userTitle.findUnique({
+          where: {
+            userId_titleId: {
+              userId,
+              titleId: title.id,
+            },
+          },
+        })) as {
+          id: string;
+          status: "WATCHED" | "WATCHING" | "PLAN_TO_WATCH" | "ON_HOLD" | "DROPPED";
+        } | null;
+      }
+
       // 4. Update episode progress record
       if (watched) {
         await tx.userEpisode.upsert({
@@ -163,7 +191,21 @@ export async function toggleEpisodeProgressAction(
           },
         });
 
-        // 5. Update parent UserTitle relationship (move to WATCHING if not already tracked)
+        // 5. Update parent UserTitle relationship (move to WATCHING if untracked or PLAN_TO_WATCH)
+        if (!existingUserTitle) {
+          statusTransitioned = true;
+          previousStatus = null;
+        } else if (existingUserTitle.status === "PLAN_TO_WATCH") {
+          statusTransitioned = true;
+          previousStatus = "PLAN_TO_WATCH";
+        } else {
+          statusTransitioned = false;
+          previousStatus = existingUserTitle.status;
+        }
+
+        const targetStatus = revertStatus ?? "WATCHING";
+        currentStatus = targetStatus;
+
         await tx.userTitle.upsert({
           where: {
             userId_titleId: {
@@ -172,13 +214,13 @@ export async function toggleEpisodeProgressAction(
             },
           },
           update: {
-            status: "WATCHING",
+            status: targetStatus,
             updatedAt: new Date(),
           },
           create: {
             userId,
             titleId: title.id,
-            status: "WATCHING",
+            status: targetStatus,
             startedAt: new Date(),
           },
         });
@@ -201,6 +243,30 @@ export async function toggleEpisodeProgressAction(
           },
         });
 
+        if (revertStatus) {
+          await tx.userTitle.upsert({
+            where: {
+              userId_titleId: {
+                userId,
+                titleId: title.id,
+              },
+            },
+            update: {
+              status: revertStatus,
+              updatedAt: new Date(),
+            },
+            create: {
+              userId,
+              titleId: title.id,
+              status: revertStatus,
+              startedAt: new Date(),
+            },
+          });
+          currentStatus = revertStatus;
+        } else if (existingUserTitle) {
+          currentStatus = existingUserTitle.status;
+        }
+
         await tx.watchHistory.create({
           data: {
             userId,
@@ -218,12 +284,16 @@ export async function toggleEpisodeProgressAction(
     revalidatePath(`/title/demo-${titleExternalSource}-${titleExternalId}`);
     revalidatePath("/");
     revalidatePath("/library");
+    revalidatePath("/history");
 
     return {
       success: true,
       watched,
       seasonNumber,
       episodeNumber,
+      statusTransitioned,
+      previousStatus,
+      status: currentStatus,
     };
   } catch (error) {
     console.error("[TrackingAction] Failed to update episode progress:", error);

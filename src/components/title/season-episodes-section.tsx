@@ -7,6 +7,7 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { SeasonSelector } from "./season-selector";
 import { EpisodeRow } from "./episode-row";
 import { Button } from "@/components/ui/button";
+import { Toast } from "@/components/ui/toast";
 import {
   batchSeasonProgressAction,
   fetchSeasonEpisodesAction,
@@ -68,6 +69,12 @@ export function SeasonEpisodesSection({
     Record<number, EpisodeItem[]>
   >({});
   const [isLoadingEpisodes, setIsLoadingEpisodes] = useState<boolean>(false);
+  const [activeToast, setActiveToast] = useState<{
+    type: "success" | "error" | "info" | "warning";
+    message: string;
+    actionLabel?: string;
+    onAction?: () => void;
+  } | null>(null);
 
   // Merge base seasons with dynamically loaded episodes
   const seasonsState = useMemo(() => {
@@ -211,11 +218,13 @@ export function SeasonEpisodesSection({
     return nextEp ? nextEp.episodeNumber : null;
   }, [activeSeason, watchedMap]);
 
-  // Toggle single episode watched
+  // Toggle single episode watched (Day 33 - Section 9.17 & 17.4)
   const handleToggle = (epNumber: number) => {
     if (!activeSeason) return;
-    const key = `${activeSeason.seasonNumber}:${epNumber}`;
+    const seasonNum = activeSeason.seasonNumber;
+    const key = `${seasonNum}:${epNumber}`;
     const nextWatchedState = !watchedMap[key];
+    const prevWatchedState = watchedMap[key] ?? false;
 
     // Optimistic UI state update
     setWatchedMap((prev) => ({
@@ -223,7 +232,7 @@ export function SeasonEpisodesSection({
       [key]: nextWatchedState,
     }));
 
-    onEpisodeToggle?.(activeSeason.seasonNumber, epNumber, nextWatchedState);
+    onEpisodeToggle?.(seasonNum, epNumber, nextWatchedState);
 
     // Call server action if external title props are available
     if (titleExternalSource && titleExternalId) {
@@ -231,7 +240,7 @@ export function SeasonEpisodesSection({
       toggleEpisodeProgressAction({
         titleExternalSource,
         titleExternalId,
-        seasonNumber: activeSeason.seasonNumber,
+        seasonNumber: seasonNum,
         episodeNumber: epNumber,
         watched: nextWatchedState,
         titleName,
@@ -243,17 +252,96 @@ export function SeasonEpisodesSection({
             // Revert optimistic state on failure
             setWatchedMap((prev) => ({
               ...prev,
-              [key]: !nextWatchedState,
+              [key]: prevWatchedState,
             }));
+            setActiveToast({
+              type: "error",
+              message: "Could not save. Your change was not recorded.",
+              actionLabel: "Try again",
+              onAction: () => handleToggle(epNumber),
+            });
+            return;
           }
+
+          // Section 17.4 Toast Copy:
+          // Episode marked: "Watched S2 E4. Undo"
+          // First episode on Plan to Watch: "Moved to Watching. Watched S1 E1. Undo"
+          // Unmarked: "Unmarked S2 E4. Undo"
+          let toastMsg = "";
+          if (nextWatchedState) {
+            if (res.statusTransitioned && res.previousStatus === "PLAN_TO_WATCH") {
+              toastMsg = `Moved to Watching. Watched S${seasonNum} E${epNumber}.`;
+            } else {
+              toastMsg = `Watched S${seasonNum} E${epNumber}.`;
+            }
+          } else {
+            toastMsg = `Unmarked S${seasonNum} E${epNumber}.`;
+          }
+
+          setActiveToast({
+            type: "success",
+            message: toastMsg,
+            actionLabel: "Undo",
+            onAction: () => {
+              // Revert locally
+              setWatchedMap((prev) => ({
+                ...prev,
+                [key]: prevWatchedState,
+              }));
+              onEpisodeToggle?.(seasonNum, epNumber, prevWatchedState);
+
+              // Server action rollback
+              toggleEpisodeProgressAction({
+                titleExternalSource,
+                titleExternalId,
+                seasonNumber: seasonNum,
+                episodeNumber: epNumber,
+                watched: prevWatchedState,
+                titleName,
+                mediaType,
+                episodeName: epItem?.name,
+                revertStatus:
+                  res.statusTransitioned && res.previousStatus
+                    ? (res.previousStatus as
+                        "WATCHED" | "WATCHING" | "PLAN_TO_WATCH" | "ON_HOLD" | "DROPPED")
+                    : undefined,
+              }).catch((err) => {
+                console.error("[SeasonEpisodesSection] Failed to undo episode progress:", err);
+              });
+            },
+          });
         })
         .catch(() => {
           // Revert optimistic state on network failure
           setWatchedMap((prev) => ({
             ...prev,
-            [key]: !nextWatchedState,
+            [key]: prevWatchedState,
           }));
+          setActiveToast({
+            type: "error",
+            message: "Could not save. Your change was not recorded.",
+            actionLabel: "Try again",
+            onAction: () => handleToggle(epNumber),
+          });
         });
+    } else {
+      // In demo/mock client mode
+      const toastMsg = nextWatchedState
+        ? `Watched S${seasonNum} E${epNumber}.`
+        : `Unmarked S${seasonNum} E${epNumber}.`;
+
+      setActiveToast({
+        type: "success",
+        message: toastMsg,
+        actionLabel: "Undo",
+        onAction: () => {
+          setWatchedMap((prev) => ({
+            ...prev,
+            [key]: prevWatchedState,
+          }));
+          onEpisodeToggle?.(seasonNum, epNumber, prevWatchedState);
+        },
+      });
     }
   };
 
@@ -284,11 +372,49 @@ export function SeasonEpisodesSection({
         .then((res) => {
           if (!res.success) {
             setWatchedMap(previousMap);
+            setActiveToast({
+              type: "error",
+              message: "Could not save. Your change was not recorded.",
+              actionLabel: "Try again",
+              onAction: handleMarkSeasonWatched,
+            });
+            return;
           }
+
+          setActiveToast({
+            type: "success",
+            message: `Marked Season ${activeSeason.seasonNumber} as watched.`,
+            actionLabel: "Undo",
+            onAction: () => {
+              setWatchedMap(previousMap);
+              batchSeasonProgressAction({
+                titleExternalSource,
+                titleExternalId,
+                seasonNumber: activeSeason.seasonNumber,
+                watched: false,
+                episodeNumbers,
+                titleName,
+                mediaType,
+              }).catch(console.error);
+            },
+          });
         })
         .catch(() => {
           setWatchedMap(previousMap);
+          setActiveToast({
+            type: "error",
+            message: "Could not save. Your change was not recorded.",
+            actionLabel: "Try again",
+            onAction: handleMarkSeasonWatched,
+          });
         });
+    } else {
+      setActiveToast({
+        type: "success",
+        message: `Marked Season ${activeSeason.seasonNumber} as watched.`,
+        actionLabel: "Undo",
+        onAction: () => setWatchedMap(previousMap),
+      });
     }
   };
 
@@ -319,11 +445,49 @@ export function SeasonEpisodesSection({
         .then((res) => {
           if (!res.success) {
             setWatchedMap(previousMap);
+            setActiveToast({
+              type: "error",
+              message: "Could not save. Your change was not recorded.",
+              actionLabel: "Try again",
+              onAction: handleMarkSeasonUnwatched,
+            });
+            return;
           }
+
+          setActiveToast({
+            type: "success",
+            message: `Marked Season ${activeSeason.seasonNumber} as unwatched.`,
+            actionLabel: "Undo",
+            onAction: () => {
+              setWatchedMap(previousMap);
+              batchSeasonProgressAction({
+                titleExternalSource,
+                titleExternalId,
+                seasonNumber: activeSeason.seasonNumber,
+                watched: true,
+                episodeNumbers,
+                titleName,
+                mediaType,
+              }).catch(console.error);
+            },
+          });
         })
         .catch(() => {
           setWatchedMap(previousMap);
+          setActiveToast({
+            type: "error",
+            message: "Could not save. Your change was not recorded.",
+            actionLabel: "Try again",
+            onAction: handleMarkSeasonUnwatched,
+          });
         });
+    } else {
+      setActiveToast({
+        type: "success",
+        message: `Marked Season ${activeSeason.seasonNumber} as unwatched.`,
+        actionLabel: "Undo",
+        onAction: () => setWatchedMap(previousMap),
+      });
     }
   };
 
@@ -354,11 +518,51 @@ export function SeasonEpisodesSection({
         .then((res) => {
           if (!res.success) {
             setWatchedMap(previousMap);
+            setActiveToast({
+              type: "error",
+              message: "Could not save. Your change was not recorded.",
+              actionLabel: "Try again",
+              onAction: () => handleMarkUpToWatched(epNumber),
+            });
+            return;
           }
+
+          setActiveToast({
+            type: "success",
+            message: `Watched episodes 1 to ${epNumber}.`,
+            actionLabel: "Undo",
+            onAction: () => {
+              setWatchedMap(previousMap);
+              batchSeasonProgressAction({
+                titleExternalSource,
+                titleExternalId,
+                seasonNumber: activeSeason.seasonNumber,
+                watched: false,
+                episodeNumbers: episodesToMark
+                  .filter((e) => !previousMap[`${activeSeason.seasonNumber}:${e.episodeNumber}`])
+                  .map((e) => e.episodeNumber),
+                titleName,
+                mediaType,
+              }).catch(console.error);
+            },
+          });
         })
         .catch(() => {
           setWatchedMap(previousMap);
+          setActiveToast({
+            type: "error",
+            message: "Could not save. Your change was not recorded.",
+            actionLabel: "Try again",
+            onAction: () => handleMarkUpToWatched(epNumber),
+          });
         });
+    } else {
+      setActiveToast({
+        type: "success",
+        message: `Watched episodes 1 to ${epNumber}.`,
+        actionLabel: "Undo",
+        onAction: () => setWatchedMap(previousMap),
+      });
     }
   };
 
@@ -555,6 +759,20 @@ export function SeasonEpisodesSection({
           </div>
         )}
       </div>
+
+      {/* Undo Toast Notification (UI spec 9.17 & 17.4) */}
+      {activeToast && (
+        <div className="fixed bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 z-[60] w-[calc(100vw-32px)] max-w-[420px] pointer-events-auto">
+          <Toast
+            type={activeToast.type}
+            message={activeToast.message}
+            actionLabel={activeToast.actionLabel}
+            onAction={activeToast.onAction}
+            onClose={() => setActiveToast(null)}
+            duration={6000}
+          />
+        </div>
+      )}
     </section>
   );
 }

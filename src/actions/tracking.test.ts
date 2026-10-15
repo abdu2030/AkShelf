@@ -165,6 +165,95 @@ describe("Tracking Server Actions", () => {
         }),
       );
     });
+
+    it("transitions title status from PLAN_TO_WATCH to WATCHING on first episode watched (Spec 11.3 & 17.4)", async () => {
+      mockAuth.mockResolvedValueOnce({
+        user: { id: "user-123" },
+        expires: "2099-01-01",
+      });
+
+      const upsertUserTitleMock = vi.fn().mockResolvedValue({ id: "ut-ptw", status: "WATCHING" });
+
+      vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => {
+        const tx = {
+          title: { upsert: vi.fn().mockResolvedValue({ id: "title-1" }) },
+          season: { upsert: vi.fn().mockResolvedValue({ id: "season-1" }) },
+          episode: { upsert: vi.fn().mockResolvedValue({ id: "ep-1" }) },
+          userEpisode: { upsert: vi.fn().mockResolvedValue({ id: "ue-1" }), deleteMany: vi.fn() },
+          userTitle: {
+            findUnique: vi.fn().mockResolvedValue({ id: "ut-ptw", status: "PLAN_TO_WATCH" }),
+            upsert: upsertUserTitleMock,
+          },
+          watchHistory: { create: vi.fn().mockResolvedValue({ id: "wh-1" }) },
+        };
+        return callback(tx as unknown as Parameters<Parameters<typeof prisma.$transaction>[0]>[0]);
+      });
+
+      const result = await toggleEpisodeProgressAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "1399",
+        seasonNumber: 1,
+        episodeNumber: 1,
+        watched: true,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.statusTransitioned).toBe(true);
+      expect(result.previousStatus).toBe("PLAN_TO_WATCH");
+      expect(result.status).toBe("WATCHING");
+      expect(upsertUserTitleMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({
+            status: "WATCHING",
+          }),
+        }),
+      );
+    });
+
+    it("restores title status when undoing episode toggle with revertStatus", async () => {
+      mockAuth.mockResolvedValueOnce({
+        user: { id: "user-123" },
+        expires: "2099-01-01",
+      });
+
+      const upsertUserTitleMock = vi
+        .fn()
+        .mockResolvedValue({ id: "ut-ptw", status: "PLAN_TO_WATCH" });
+
+      vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => {
+        const tx = {
+          title: { upsert: vi.fn().mockResolvedValue({ id: "title-1" }) },
+          season: { upsert: vi.fn().mockResolvedValue({ id: "season-1" }) },
+          episode: { upsert: vi.fn().mockResolvedValue({ id: "ep-1" }) },
+          userEpisode: { upsert: vi.fn(), deleteMany: vi.fn().mockResolvedValue({ count: 1 }) },
+          userTitle: {
+            findUnique: vi.fn().mockResolvedValue({ id: "ut-ptw", status: "WATCHING" }),
+            upsert: upsertUserTitleMock,
+          },
+          watchHistory: { create: vi.fn().mockResolvedValue({ id: "wh-1" }) },
+        };
+        return callback(tx as unknown as Parameters<Parameters<typeof prisma.$transaction>[0]>[0]);
+      });
+
+      const result = await toggleEpisodeProgressAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "1399",
+        seasonNumber: 1,
+        episodeNumber: 1,
+        watched: false,
+        revertStatus: "PLAN_TO_WATCH",
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.status).toBe("PLAN_TO_WATCH");
+      expect(upsertUserTitleMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({
+            status: "PLAN_TO_WATCH",
+          }),
+        }),
+      );
+    });
   });
 
   describe("batchSeasonProgressAction", () => {
