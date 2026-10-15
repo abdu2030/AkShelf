@@ -52,4 +52,13 @@ describe("EpisodeRow Component", () => {
     expect(html).toContain("Airs Oct 20, 2026");
     expect(html).toContain("disabled");
   });
+
+  it("renders more options overflow button with accessible label", () => {
+    const html = renderToStaticMarkup(
+      <EpisodeRow episodeNumber={5} name="Courage" onMarkUpToWatched={() => {}} />,
+    );
+
+    expect(html).toContain('aria-label="More options for Episode 5"');
+    expect(html).toContain('aria-haspopup="menu"');
+  });
 });

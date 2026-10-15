@@ -42,7 +42,7 @@ describe("SeasonEpisodesSection Component", () => {
     expect(html).toContain("S2");
 
     // Progress bar for Season 1
-    expect(html).toContain("Season 1: 2 / 5 episodes");
+    expect(html).toContain("2 / 5 episodes - 40%");
     expect(html).toContain('role="progressbar"');
 
     // Primary Continue action for next unwatched episode (Episode 3)
@@ -54,9 +54,13 @@ describe("SeasonEpisodesSection Component", () => {
     expect(html).toContain("Episode 3");
   });
 
-  it("returns null when seasons array is empty", () => {
-    const html = renderToStaticMarkup(<SeasonEpisodesSection seasons={[]} />);
-    expect(html).toBe("");
+  it("renders spec empty state when seasons array is empty", () => {
+    const html = renderToStaticMarkup(
+      <SeasonEpisodesSection seasons={[]} onMarkSeriesWatched={() => {}} />,
+    );
+    expect(html).toContain("No episode details yet");
+    expect(html).toContain("You can still mark the whole series as watched.");
+    expect(html).toContain("Mark series watched");
   });
 
   it("renders with external title props and batch season controls", () => {

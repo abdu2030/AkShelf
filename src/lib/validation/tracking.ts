@@ -69,6 +69,16 @@ export const syncSeasonEpisodesSchema = z.object({
 
 export type SyncSeasonEpisodesInput = z.infer<typeof syncSeasonEpisodesSchema>;
 
+export const fetchSeasonEpisodesSchema = z.object({
+  titleExternalSource: z.enum(["tmdb", "anilist"]),
+  titleExternalId: z.string().min(1, "titleExternalId is required"),
+  seasonNumber: z.number().int().min(0, "seasonNumber must be >= 0"),
+  titleName: z.string().optional(),
+  mediaType: z.enum(["MOVIE", "TV", "ANIME"]).optional(),
+});
+
+export type FetchSeasonEpisodesInput = z.infer<typeof fetchSeasonEpisodesSchema>;
+
 export const updateTitleStatusSchema = z.object({
   titleExternalSource: z.enum(["tmdb", "anilist"]),
   titleExternalId: z.string().min(1, "titleExternalId is required"),

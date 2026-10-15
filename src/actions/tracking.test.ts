@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   batchSeasonProgressAction,
+  fetchSeasonEpisodesAction,
   syncSeasonEpisodesAction,
   syncTitleSeasonsAction,
   toggleEpisodeProgressAction,
@@ -10,10 +11,18 @@ import {
 } from "./tracking";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { metadataService } from "@/lib/metadata/service";
 import { revalidatePath } from "next/cache";
 
 vi.mock("@/lib/auth", () => ({
   auth: vi.fn(),
+}));
+
+vi.mock("@/lib/metadata/service", () => ({
+  metadataService: {
+    getTvSeason: vi.fn(),
+    getAnimeDetails: vi.fn(),
+  },
 }));
 
 vi.mock("@/lib/db", () => ({
@@ -1015,6 +1024,139 @@ describe("Tracking Server Actions", () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("Deadlock detected during episode upsert");
+    });
+  });
+
+  describe("fetchSeasonEpisodesAction", () => {
+    it("returns error on invalid input", async () => {
+      const result = await fetchSeasonEpisodesAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "",
+        seasonNumber: -1,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Invalid fetch season input");
+    });
+
+    it("fetches TMDB season episodes in demo mode without database calls", async () => {
+      mockAuth.mockResolvedValueOnce(null);
+
+      vi.mocked(metadataService.getTvSeason).mockResolvedValueOnce({
+        seasonNumber: 1,
+        name: "Season 1",
+        episodeCount: 2,
+        episodes: [
+          { episodeNumber: 1, name: "Winter Is Coming", runtime: 62 },
+          { episodeNumber: 2, name: "The Kingsroad", runtime: 56 },
+        ],
+      } as unknown as never);
+
+      const result = await fetchSeasonEpisodesAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "1399",
+        seasonNumber: 1,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.isDemo).toBe(true);
+      expect(result.count).toBe(2);
+      expect(result.episodes).toHaveLength(2);
+      expect(result.episodes?.[0].name).toBe("Winter Is Coming");
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it("fetches AniList anime episodes in demo mode", async () => {
+      mockAuth.mockResolvedValueOnce(null);
+
+      vi.mocked(metadataService.getAnimeDetails).mockResolvedValueOnce({
+        id: "anilist:16498",
+        externalSource: "anilist",
+        externalId: "16498",
+        type: "ANIME",
+        title: "Attack on Titan",
+        genres: ["Action"],
+        seasons: [
+          {
+            seasonNumber: 1,
+            name: "Season 1",
+            episodeCount: 2,
+            episodes: [
+              { episodeNumber: 1, name: "To You, in 2000 Years" },
+              { episodeNumber: 2, name: "That Day" },
+            ],
+          },
+        ],
+      } as unknown as never);
+
+      const result = await fetchSeasonEpisodesAction({
+        titleExternalSource: "anilist",
+        titleExternalId: "16498",
+        seasonNumber: 1,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.count).toBe(2);
+      expect(result.episodes?.[0].name).toBe("To You, in 2000 Years");
+    });
+
+    it("fetches and lazily persists episodes in database when authenticated", async () => {
+      mockAuth.mockResolvedValueOnce({
+        user: { id: "user-123", email: "owner@akshelf.local" },
+        expires: "2099-01-01",
+      });
+
+      vi.mocked(metadataService.getTvSeason).mockResolvedValueOnce({
+        seasonNumber: 1,
+        name: "Season 1",
+        episodeCount: 2,
+        episodes: [
+          { episodeNumber: 1, name: "Pilot", runtime: 58 },
+          { episodeNumber: 2, name: "Cat's in the Bag...", runtime: 48 },
+        ],
+      } as unknown as never);
+
+      const titleUpsertMock = vi.fn().mockResolvedValue({ id: "title-bb" });
+      const seasonUpsertMock = vi.fn().mockResolvedValue({
+        id: "season-bb-1",
+        titleId: "title-bb",
+        seasonNumber: 1,
+        episodeCount: 2,
+      });
+      const seasonUpdateMock = vi.fn().mockResolvedValue({ id: "season-bb-1" });
+      const episodeUpsertMock = vi.fn().mockImplementation((args) =>
+        Promise.resolve({
+          id: `ep-${args.create.episodeNumber}`,
+          seasonId: "season-bb-1",
+          episodeNumber: args.create.episodeNumber,
+          name: args.create.name,
+          createdAt: new Date(),
+        }),
+      );
+
+      vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => {
+        const tx = {
+          title: { upsert: titleUpsertMock },
+          season: { upsert: seasonUpsertMock, update: seasonUpdateMock },
+          episode: { upsert: episodeUpsertMock },
+        };
+        return callback(tx as unknown as Parameters<Parameters<typeof prisma.$transaction>[0]>[0]);
+      });
+
+      const result = await fetchSeasonEpisodesAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "1396",
+        seasonNumber: 1,
+        titleName: "Breaking Bad",
+        mediaType: "TV",
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.count).toBe(2);
+      expect(result.episodes).toHaveLength(2);
+      expect(titleUpsertMock).toHaveBeenCalled();
+      expect(seasonUpsertMock).toHaveBeenCalled();
+      expect(episodeUpsertMock).toHaveBeenCalledTimes(2);
     });
   });
 });

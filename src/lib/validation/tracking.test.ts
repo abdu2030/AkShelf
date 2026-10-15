@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   batchSeasonSchema,
   episodeInputSchema,
+  fetchSeasonEpisodesSchema,
   seasonSummaryInputSchema,
   syncSeasonEpisodesSchema,
   syncTitleSeasonsSchema,
@@ -372,6 +373,28 @@ describe("Tracking Validation Schemas", () => {
         titleExternalSource: "tmdb",
         titleExternalId: "1399",
         seasons: [],
+      });
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe("fetchSeasonEpisodesSchema", () => {
+    it("validates valid fetch season episodes input", () => {
+      const result = fetchSeasonEpisodesSchema.safeParse({
+        titleExternalSource: "tmdb",
+        titleExternalId: "1399",
+        seasonNumber: 1,
+        titleName: "Game of Thrones",
+        mediaType: "TV",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects missing titleExternalId or negative seasonNumber", () => {
+      const result = fetchSeasonEpisodesSchema.safeParse({
+        titleExternalSource: "tmdb",
+        titleExternalId: "",
+        seasonNumber: -1,
       });
       expect(result.success).toBe(false);
     });

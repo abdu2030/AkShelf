@@ -1,5 +1,5 @@
-import React from "react";
-import { Check, Clock, Play } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Check, CheckCheck, Clock, MoreHorizontal, Play, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 export interface EpisodeRowProps {
@@ -13,6 +13,7 @@ export interface EpisodeRowProps {
   isNextUp?: boolean;
   isAired?: boolean;
   onToggleWatched?: (episodeNumber: number) => void;
+  onMarkUpToWatched?: (episodeNumber: number) => void;
   className?: string;
 }
 
@@ -24,6 +25,7 @@ export interface EpisodeRowProps {
  * - Title and meta: Title (one line); Caption below with air date and runtime
  * - Next-up marker: 'Continue' accent chip and a 3px accent bar on left edge
  * - Not yet aired: Checkbox disabled, caption 'Airs <date>'
+ * - Overflow menu: 'Mark episodes 1 to N as watched' and 'Mark as unwatched'
  */
 export function EpisodeRow({
   episodeNumber,
@@ -34,8 +36,35 @@ export function EpisodeRow({
   isNextUp = false,
   isAired = true,
   onToggleWatched,
+  onMarkUpToWatched,
   className,
 }: EpisodeRowProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [menuOpen]);
+
   // Format caption string: e.g. "Oct 2, 2023 • 24 min"
   const metaParts: string[] = [];
   if (!isAired && airDate) {
@@ -133,6 +162,73 @@ export function EpisodeRow({
             </p>
           )}
         </div>
+      </div>
+
+      {/* Right side: Overflow menu (Section 9.14) */}
+      <div ref={menuRef} className="relative shrink-0">
+        <button
+          type="button"
+          aria-label={`More options for Episode ${episodeNumber}`}
+          aria-expanded={menuOpen}
+          aria-haspopup="menu"
+          onClick={(e) => {
+            e.stopPropagation();
+            setMenuOpen((prev) => !prev);
+          }}
+          className={cn(
+            "w-9 h-9 rounded-lg flex items-center justify-center transition-colors cursor-pointer",
+            "text-ink-muted hover:text-ink hover:bg-white/10",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+            menuOpen && "bg-white/10 text-ink",
+          )}
+        >
+          <MoreHorizontal className="w-4 h-4" aria-hidden="true" />
+        </button>
+
+        {menuOpen && (
+          <div
+            role="menu"
+            aria-orientation="vertical"
+            className="absolute right-0 top-full mt-1.5 z-30 w-56 p-1.5 rounded-xl glass-3 border border-white/15 shadow-xl animate-in fade-in zoom-in-95 duration-150"
+          >
+            {onMarkUpToWatched && (
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onMarkUpToWatched(episodeNumber);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-ink-soft hover:text-ink hover:bg-white/10 transition-colors text-left cursor-pointer"
+              >
+                <CheckCheck className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
+                <span>Mark episodes 1 to {episodeNumber} as watched</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setMenuOpen(false);
+                onToggleWatched?.(episodeNumber);
+              }}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-ink-soft hover:text-ink hover:bg-white/10 transition-colors text-left cursor-pointer"
+            >
+              {isWatched ? (
+                <>
+                  <RotateCcw className="w-3.5 h-3.5 text-ink-muted" aria-hidden="true" />
+                  <span>Mark as unwatched</span>
+                </>
+              ) : (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
+                  <span>Mark as watched</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -5,8 +5,10 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { ensureSeasonRecord, persistTitleSeasons } from "@/lib/season/storage";
 import { persistSeasonEpisodes } from "@/lib/episode/storage";
+import { metadataService } from "@/lib/metadata/service";
 import {
   batchSeasonSchema,
+  fetchSeasonEpisodesSchema,
   syncSeasonEpisodesSchema,
   syncTitleSeasonsSchema,
   toggleEpisodeSchema,
@@ -14,6 +16,7 @@ import {
   updateTitleRatingSchema,
   updateTitleStatusSchema,
   BatchSeasonInput,
+  FetchSeasonEpisodesInput,
   SyncSeasonEpisodesInput,
   SyncTitleSeasonsInput,
   ToggleEpisodeInput,
@@ -1018,6 +1021,120 @@ export async function syncSeasonEpisodesAction(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Database episode mutation failed",
+    };
+  }
+}
+
+/**
+ * Server action to fetch and optionally cache/persist episode details for a specific season (Day 32).
+ * Enables lazy-loading of episodes when navigating season tabs.
+ */
+export async function fetchSeasonEpisodesAction(
+  rawInput: FetchSeasonEpisodesInput,
+): Promise<TrackingActionResult> {
+  const parsed = fetchSeasonEpisodesSchema.safeParse(rawInput);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: "Invalid fetch season input: " + parsed.error.issues.map((i) => i.message).join(", "),
+    };
+  }
+
+  const { titleExternalSource, titleExternalId, seasonNumber, titleName, mediaType } = parsed.data;
+
+  try {
+    let episodes: Array<{
+      episodeNumber: number;
+      name: string | null;
+      airDate?: string | null;
+      runtime?: number | null;
+      overview?: string | null;
+    }> = [];
+
+    // 1. If TV on TMDB, fetch using metadataService.getTvSeason
+    if (titleExternalSource === "tmdb") {
+      try {
+        const seasonData = await metadataService.getTvSeason(titleExternalId, seasonNumber);
+        if (seasonData?.episodes) {
+          episodes = seasonData.episodes.map((ep) => ({
+            episodeNumber: ep.episodeNumber,
+            name: ep.name ?? `Episode ${ep.episodeNumber}`,
+            airDate: ep.airDate ?? null,
+            runtime: ep.runtime ?? null,
+            overview: ep.overview ?? null,
+          }));
+        }
+      } catch (err) {
+        console.warn("[TrackingAction] Failed to fetch season from TMDB:", err);
+      }
+    } else if (titleExternalSource === "anilist") {
+      try {
+        const titleData = await metadataService.getAnimeDetails(titleExternalId);
+        const targetSeason =
+          titleData?.seasons?.find((s) => s.seasonNumber === seasonNumber) ||
+          titleData?.seasons?.[0];
+        if (targetSeason?.episodes) {
+          episodes = targetSeason.episodes.map((ep) => ({
+            episodeNumber: ep.episodeNumber,
+            name: ep.name ?? `Episode ${ep.episodeNumber}`,
+            airDate: ep.airDate ?? null,
+            runtime: ep.runtime ?? null,
+            overview: ep.overview ?? null,
+          }));
+        }
+      } catch (err) {
+        console.warn("[TrackingAction] Failed to fetch anime details from AniList:", err);
+      }
+    }
+
+    // 2. If authenticated and episodes found, persist them lazily (Day 31 storage integration)
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (userId && episodes.length > 0) {
+      try {
+        await prisma.$transaction(async (tx) => {
+          const title = await tx.title.upsert({
+            where: {
+              externalSource_externalId: {
+                externalSource: titleExternalSource,
+                externalId: titleExternalId,
+              },
+            },
+            update: {},
+            create: {
+              externalSource: titleExternalSource,
+              externalId: titleExternalId,
+              title: titleName || `${titleExternalSource}:${titleExternalId}`,
+              type: mediaType || "TV",
+            },
+          });
+
+          const season = await ensureSeasonRecord(tx, title.id, seasonNumber, {
+            episodeCount: episodes.length,
+          });
+
+          await persistSeasonEpisodes(tx, season.id, episodes, {
+            updateSeasonCount: true,
+          });
+        });
+      } catch (dbErr) {
+        console.warn("[TrackingAction] Failed to lazily persist fetched episodes:", dbErr);
+      }
+    }
+
+    return {
+      success: true,
+      seasonNumber,
+      count: episodes.length,
+      episodes,
+      isDemo: !userId,
+    };
+  } catch (error) {
+    console.error("[TrackingAction] Failed to fetch season episodes:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch season episodes",
     };
   }
 }
