@@ -5,7 +5,7 @@
 
 [![CI](https://github.com/abdu2030/AkShelf/actions/workflows/ci.yml/badge.svg)](https://github.com/abdu2030/AkShelf/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Week%201-Complete%20v0.1.0-success)](#roadmap-status)
+[![Status](https://img.shields.io/badge/Week%204-Complete%20v0.4.0-success)](#roadmap-status)
 
 ---
 
@@ -176,8 +176,14 @@ AkShelf enforces a strict separation between external entertainment metadata and
   - [x] **Day 18**: Title detail synopsis, cast preview, and metadata overview panel.
   - [x] **Day 19**: Season selector and episode list breakdown with next-up indicator.
   - [x] **Day 20**: Episode progress tracking mutations (one-click checkmark & batch season actions).
-  - [x] **Day 21**: Week 3 review, integration tests, hydration stability & checkpoint release `v0.3.0` ([Review Document](docs/WEEK_3_REVIEW.md)).
-- [ ] **Week 4: Watch Tracking, Ratings & History (`v0.4.0`)**
+- [x] **Week 4: Watch Tracking, Ratings & History (`v0.4.0`)**
+  - [x] **Day 22**: Title detail watch status mutation actions (`updateTitleStatusAction`) & schema validation.
+  - [x] **Day 23**: Watch status selector UI dropdown with optimistic transitions & responsive states.
+  - [x] **Day 24**: Personal 1–10 rating scale input (`RatingControl`), rating persistence & card badges.
+  - [x] **Day 25**: Date tracking engine (`startedAt`, `watchedAt`), date pickers & auto-timestamps.
+  - [x] **Day 26**: Watch history service, chronological audit logging & sentence formatting.
+  - [x] **Day 27**: Watch history feed UI (`HistoryList`, `HistoryRow`) & dedicated `/history` page.
+  - [x] **Day 28**: End-to-end core MVP verification, documentation review & checkpoint release `v0.4.0` ([Review Document](docs/WEEK_4_REVIEW.md)).
 - [ ] **Week 5: TV / Anime Seasons & Episode Progress (`v0.5.0`)**
 - [ ] **Week 6: Dashboard, Statistics & UX Polish (`v0.6.0`)**
 - [ ] **Week 7: Testing, Security, Performance & Data Safety (`v1.0.0-rc.1`)**
