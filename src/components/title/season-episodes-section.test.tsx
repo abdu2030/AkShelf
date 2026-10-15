@@ -79,4 +79,19 @@ describe("SeasonEpisodesSection Component", () => {
     expect(html).toContain("Mark Season Watched");
     expect(html).toContain("Continue S1 E3");
   });
+
+  it("marks past episodes as watched based on userCurrentEpisode", () => {
+    const html = renderToStaticMarkup(
+      <SeasonEpisodesSection seasons={mockSeasons} userCurrentSeason={1} userCurrentEpisode={3} />,
+    );
+
+    // Episode 1, 2, 3 should have aria-checked="true"
+    expect(html).toContain('aria-label="Mark Episode 1 as unwatched"');
+    expect(html).toContain('aria-label="Mark Episode 2 as unwatched"');
+    expect(html).toContain('aria-label="Mark Episode 3 as unwatched"');
+
+    // Episode 4 should be unwatched
+    expect(html).toContain('aria-label="Mark Episode 4 as watched"');
+    expect(html).toContain("Continue S1 E4");
+  });
 });
