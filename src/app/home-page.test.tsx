@@ -19,9 +19,12 @@ vi.mock("@/lib/db", () => {
     userTitle: {
       groupBy: vi.fn(),
       findMany: vi.fn(),
+      count: vi.fn(),
+      aggregate: vi.fn(),
     },
     userEpisode: {
       findMany: vi.fn(),
+      count: vi.fn(),
     },
   };
   return { prisma: mockPrisma };
@@ -30,8 +33,8 @@ vi.mock("@/lib/db", () => {
 import HomePage from "./page";
 import { prisma } from "@/lib/db";
 
-describe("HomePage (Dashboard - Day 36 & Day 37)", () => {
-  it("renders live dashboard stats, continue watching shelf, and recently watched section", async () => {
+describe("HomePage (Dashboard - Day 36, Day 37 & Day 38)", () => {
+  it("renders live dashboard stats, continue watching, recently watched, and shelf analytics", async () => {
     vi.mocked(prisma.userTitle.groupBy).mockResolvedValueOnce([
       { status: "WATCHED", _count: { status: 18 } },
       { status: "WATCHING", _count: { status: 3 } },
@@ -105,6 +108,19 @@ describe("HomePage (Dashboard - Day 36 & Day 37)", () => {
       },
     ] as unknown as never);
 
+    // Analytics mocks (counts by type, aggregate rating, episode count)
+    vi.mocked(prisma.userTitle.count)
+      .mockResolvedValueOnce(18) // movies
+      .mockResolvedValueOnce(6) // tv
+      .mockResolvedValueOnce(4); // anime
+
+    vi.mocked(prisma.userTitle.aggregate).mockResolvedValueOnce({
+      _avg: { rating: 9.24 },
+      _count: { rating: 20 },
+    } as unknown as never);
+
+    vi.mocked(prisma.userEpisode.count).mockResolvedValueOnce(142);
+
     const page = await HomePage();
     const html = renderToStaticMarkup(page);
 
@@ -133,6 +149,21 @@ describe("HomePage (Dashboard - Day 36 & Day 37)", () => {
     expect(html).toContain("Inception");
     expect(html).toContain("9.5");
 
+    // Shelf Analytics (Day 38)
+    expect(html).toContain("Shelf Analytics");
+    expect(html).toContain("Collection by Format");
+    expect(html).toContain("Movies");
+    expect(html).toContain("18");
+    expect(html).toContain("TV Shows");
+    expect(html).toContain("6");
+    expect(html).toContain("Anime");
+    expect(html).toContain("4");
+    expect(html).toContain("Average Personal Rating");
+    expect(html).toContain("9.2");
+    expect(html).toContain("20 titles rated");
+    expect(html).toContain("Total Watched Episodes");
+    expect(html).toContain("142");
+
     // Active shelf overview
     expect(html).toContain("Active Shelf Overview");
     expect(html).toContain("View Library");
@@ -145,6 +176,15 @@ describe("HomePage (Dashboard - Day 36 & Day 37)", () => {
     vi.mocked(prisma.userTitle.groupBy).mockResolvedValueOnce([] as unknown as never);
     vi.mocked(prisma.userTitle.findMany).mockResolvedValueOnce([] as unknown as never);
     vi.mocked(prisma.userTitle.findMany).mockResolvedValueOnce([] as unknown as never);
+    vi.mocked(prisma.userTitle.count)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(0);
+    vi.mocked(prisma.userTitle.aggregate).mockResolvedValueOnce({
+      _avg: { rating: null },
+      _count: { rating: 0 },
+    } as unknown as never);
+    vi.mocked(prisma.userEpisode.count).mockResolvedValueOnce(0);
 
     const page = await HomePage();
     const html = renderToStaticMarkup(page);
@@ -160,7 +200,8 @@ describe("HomePage (Dashboard - Day 36 & Day 37)", () => {
     expect(html).toContain("Search for a movie, show or anime to start.");
     expect(html).toContain("Search titles");
 
-    // Continue Watching & Recently Watched sections should not appear in zero state
+    // Continue Watching, Recently Watched & Analytics sections should not appear in zero state
     expect(html).not.toContain("Active Shelf Overview");
+    expect(html).not.toContain("Collection by Format");
   });
 });

@@ -25,6 +25,7 @@ export {
   ContinueWatchingShelf,
   RecentlyWatchedCard,
   RecentlyWatchedSection,
+  AnalyticsStats,
 } from "@/components/dashboard";
 export type {
   StatTileProps,
@@ -33,4 +34,5 @@ export type {
   ContinueWatchingShelfProps,
   RecentlyWatchedCardProps,
   RecentlyWatchedSectionProps,
+  AnalyticsStatsProps,
 } from "@/components/dashboard";

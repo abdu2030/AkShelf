@@ -5,6 +5,14 @@ export {
   getRecentlyWatched,
   getDemoContinueWatchingItems,
   getDemoRecentlyWatchedItems,
+  computeDashboardAnalytics,
+  getDashboardAnalytics,
+  getDemoDashboardAnalytics,
 } from "./service";
 
-export type { DashboardStats, ContinueWatchingItem, RecentlyWatchedItem } from "./service";
+export type {
+  DashboardStats,
+  ContinueWatchingItem,
+  RecentlyWatchedItem,
+  DashboardAnalytics,
+} from "./service";
