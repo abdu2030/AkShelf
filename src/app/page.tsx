@@ -1,8 +1,18 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
-import { StatsBand, ContinueWatchingShelf, RecentlyWatchedSection } from "@/components/dashboard";
-import { getDashboardStats, getContinueWatching, getRecentlyWatched } from "@/lib/dashboard";
+import {
+  StatsBand,
+  ContinueWatchingShelf,
+  RecentlyWatchedSection,
+  AnalyticsStats,
+} from "@/components/dashboard";
+import {
+  getDashboardStats,
+  getContinueWatching,
+  getRecentlyWatched,
+  getDashboardAnalytics,
+} from "@/lib/dashboard";
 import { auth } from "@/lib/auth";
 import { LayoutDashboard, Film, Bookmark, Clock, ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -11,10 +21,11 @@ export default async function HomePage() {
   const session = await auth();
   const userId = session?.user?.id;
 
-  const [stats, continueWatching, recentlyWatched] = await Promise.all([
+  const [stats, continueWatching, recentlyWatched, analytics] = await Promise.all([
     getDashboardStats({ userId }),
     getContinueWatching({ userId, limit: 4 }),
     getRecentlyWatched({ userId, limit: 8 }),
+    getDashboardAnalytics({ userId }),
   ]);
 
   return (
@@ -46,6 +57,9 @@ export default async function HomePage() {
 
             {/* Recently Watched Section (Week 6 Day 37) */}
             {recentlyWatched.length > 0 && <RecentlyWatchedSection items={recentlyWatched} />}
+
+            {/* Shelf Analytics & Insights (Week 6 Day 38) */}
+            <AnalyticsStats analytics={analytics} />
 
             {/* Active Shelf Overview & Quick Navigation */}
             <section aria-label="Shelf quick actions" className="space-y-4">

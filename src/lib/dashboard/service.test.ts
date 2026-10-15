@@ -6,6 +6,9 @@ import {
   getRecentlyWatched,
   getDemoContinueWatchingItems,
   getDemoRecentlyWatchedItems,
+  computeDashboardAnalytics,
+  getDashboardAnalytics,
+  getDemoDashboardAnalytics,
 } from "./service";
 import { prisma } from "@/lib/db";
 
@@ -14,15 +17,18 @@ vi.mock("@/lib/db", () => {
     userTitle: {
       groupBy: vi.fn(),
       findMany: vi.fn(),
+      count: vi.fn(),
+      aggregate: vi.fn(),
     },
     userEpisode: {
       findMany: vi.fn(),
+      count: vi.fn(),
     },
   };
   return { prisma: mockPrisma };
 });
 
-describe("Dashboard Service (Day 36 & Day 37)", () => {
+describe("Dashboard Service (Day 36, Day 37 & Day 38)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -104,7 +110,6 @@ describe("Dashboard Service (Day 36 & Day 37)", () => {
     it("falls back to demo title counts when no userId is supplied (guest mode)", async () => {
       const stats = await getDashboardStats({ userId: null });
 
-      // Demo dataset has titles tracked
       expect(stats.totalTracked).toBeGreaterThan(0);
       expect(stats.watched).toBeGreaterThan(0);
       expect(prisma.userTitle.groupBy).not.toHaveBeenCalled();
@@ -273,6 +278,84 @@ describe("Dashboard Service (Day 36 & Day 37)", () => {
     });
   });
 
+  describe("computeDashboardAnalytics (Day 38 Pure Function)", () => {
+    it("computes counts by type, average rating, and total episodes correctly", () => {
+      const titles = [
+        { type: "MOVIE", rating: 9.0 },
+        { type: "MOVIE", rating: 8.5 },
+        { type: "TV", rating: 9.5 },
+        { type: "ANIME", rating: null },
+        { type: "ANIME", rating: 10.0 },
+      ];
+
+      const analytics = computeDashboardAnalytics(titles, 42);
+
+      expect(analytics.countsByType.movies).toBe(2);
+      expect(analytics.countsByType.tv).toBe(1);
+      expect(analytics.countsByType.anime).toBe(2);
+      // (9.0 + 8.5 + 9.5 + 10.0) / 4 = 37.0 / 4 = 9.25 => rounded to 9.3
+      expect(analytics.averageRating).toBe(9.3);
+      expect(analytics.ratedCount).toBe(4);
+      expect(analytics.totalWatchedEpisodes).toBe(42);
+    });
+
+    it("handles empty items array gracefully with null average rating", () => {
+      const analytics = computeDashboardAnalytics([], 0);
+
+      expect(analytics.countsByType).toEqual({ movies: 0, tv: 0, anime: 0 });
+      expect(analytics.averageRating).toBeNull();
+      expect(analytics.ratedCount).toBe(0);
+      expect(analytics.totalWatchedEpisodes).toBe(0);
+    });
+  });
+
+  describe("getDashboardAnalytics (Day 38 Database Integration)", () => {
+    it("returns demo analytics in guest mode", async () => {
+      const analytics = await getDashboardAnalytics({ userId: null });
+
+      expect(analytics.countsByType.movies).toBeGreaterThan(0);
+      expect(analytics.countsByType.tv).toBeGreaterThan(0);
+      expect(analytics.countsByType.anime).toBeGreaterThan(0);
+      expect(analytics.averageRating).toBeGreaterThan(0);
+      expect(analytics.totalWatchedEpisodes).toBeGreaterThan(0);
+      expect(prisma.userTitle.count).not.toHaveBeenCalled();
+    });
+
+    it("queries database for authenticated user and returns accurate analytical metrics", async () => {
+      vi.mocked(prisma.userTitle.count)
+        .mockResolvedValueOnce(12) // movies
+        .mockResolvedValueOnce(5) // tv
+        .mockResolvedValueOnce(7); // anime
+
+      vi.mocked(prisma.userTitle.aggregate).mockResolvedValueOnce({
+        _avg: { rating: 8.86 },
+        _count: { rating: 15 },
+      } as unknown as never);
+
+      vi.mocked(prisma.userEpisode.count).mockResolvedValueOnce(84);
+
+      const analytics = await getDashboardAnalytics({ userId: "owner-1" });
+
+      expect(analytics.countsByType.movies).toBe(12);
+      expect(analytics.countsByType.tv).toBe(5);
+      expect(analytics.countsByType.anime).toBe(7);
+      expect(analytics.averageRating).toBe(8.9);
+      expect(analytics.ratedCount).toBe(15);
+      expect(analytics.totalWatchedEpisodes).toBe(84);
+    });
+
+    it("safely returns zero/null fallback if database query fails", async () => {
+      vi.mocked(prisma.userTitle.count).mockRejectedValueOnce(new Error("Timeout"));
+
+      const analytics = await getDashboardAnalytics({ userId: "owner-err" });
+
+      expect(analytics.countsByType).toEqual({ movies: 0, tv: 0, anime: 0 });
+      expect(analytics.averageRating).toBeNull();
+      expect(analytics.ratedCount).toBe(0);
+      expect(analytics.totalWatchedEpisodes).toBe(0);
+    });
+  });
+
   describe("Synthetic Demo Generators", () => {
     it("getDemoContinueWatchingItems returns valid items with nextUp", () => {
       const demoItems = getDemoContinueWatchingItems();
@@ -285,6 +368,13 @@ describe("Dashboard Service (Day 36 & Day 37)", () => {
       const demoItems = getDemoRecentlyWatchedItems();
       expect(demoItems.length).toBeGreaterThan(0);
       expect(demoItems.every((item) => item.status === "WATCHED")).toBe(true);
+    });
+
+    it("getDemoDashboardAnalytics returns valid analytics", () => {
+      const demoAnalytics = getDemoDashboardAnalytics();
+      expect(demoAnalytics.countsByType.movies).toBeGreaterThan(0);
+      expect(demoAnalytics.averageRating).toBeGreaterThan(0);
+      expect(demoAnalytics.totalWatchedEpisodes).toBeGreaterThan(0);
     });
   });
 });

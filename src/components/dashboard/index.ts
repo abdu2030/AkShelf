@@ -15,3 +15,6 @@ export type { RecentlyWatchedCardProps } from "./recently-watched-card";
 
 export { RecentlyWatchedSection } from "./recently-watched-section";
 export type { RecentlyWatchedSectionProps } from "./recently-watched-section";
+
+export { AnalyticsStats } from "./analytics-stats";
+export type { AnalyticsStatsProps } from "./analytics-stats";

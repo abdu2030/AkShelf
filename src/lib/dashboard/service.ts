@@ -47,6 +47,17 @@ export interface RecentlyWatchedItem {
   watchedAt?: string | null;
 }
 
+export interface DashboardAnalytics {
+  countsByType: {
+    movies: number;
+    tv: number;
+    anime: number;
+  };
+  averageRating: number | null;
+  ratedCount: number;
+  totalWatchedEpisodes: number;
+}
+
 /**
  * Pure function to aggregate status counts from an array of title status items.
  */
@@ -433,5 +444,114 @@ export async function getRecentlyWatched(params: {
   } catch (error) {
     console.error("[DashboardService] Failed to fetch recently watched titles from DB:", error);
     return [];
+  }
+}
+
+/**
+ * Pure function to calculate dashboard analytics from an array of titles and episode count.
+ */
+export function computeDashboardAnalytics(
+  items: Array<{
+    type?: string | null;
+    rating?: number | null;
+  }>,
+  episodeCount = 0,
+): DashboardAnalytics {
+  let movies = 0;
+  let tv = 0;
+  let anime = 0;
+  let ratingSum = 0;
+  let ratedCount = 0;
+
+  for (const item of items) {
+    if (item.type === "MOVIE") movies++;
+    else if (item.type === "TV") tv++;
+    else if (item.type === "ANIME") anime++;
+
+    if (typeof item.rating === "number" && !isNaN(item.rating)) {
+      ratingSum += item.rating;
+      ratedCount++;
+    }
+  }
+
+  const averageRating = ratedCount > 0 ? Math.round((ratingSum / ratedCount) * 10) / 10 : null;
+
+  return {
+    countsByType: { movies, tv, anime },
+    averageRating,
+    ratedCount,
+    totalWatchedEpisodes: episodeCount,
+  };
+}
+
+/**
+ * Returns synthetic demo dashboard analytics.
+ */
+export function getDemoDashboardAnalytics(): DashboardAnalytics {
+  const demoEpisodesWatched = demoTitles
+    .filter((t) => t.status === "WATCHING" && t.currentEpisode)
+    .reduce((acc, t) => acc + (t.currentEpisode || 0), 0);
+
+  return computeDashboardAnalytics(demoTitles, demoEpisodesWatched || 13);
+}
+
+/**
+ * Retrieves simple analytics for the dashboard (Day 38):
+ * - Title counts by type (Movies, TV, Anime)
+ * - Average personal rating and count of rated titles
+ * - Total watched episodes across TV and anime
+ */
+export async function getDashboardAnalytics(params: {
+  userId?: string | null;
+}): Promise<DashboardAnalytics> {
+  const { userId } = params;
+
+  if (!userId) {
+    return getDemoDashboardAnalytics();
+  }
+
+  try {
+    const [movieCount, tvCount, animeCount, ratingAgg, episodeCount] = await Promise.all([
+      prisma.userTitle.count({
+        where: { userId, title: { type: "MOVIE" } },
+      }),
+      prisma.userTitle.count({
+        where: { userId, title: { type: "TV" } },
+      }),
+      prisma.userTitle.count({
+        where: { userId, title: { type: "ANIME" } },
+      }),
+      prisma.userTitle.aggregate({
+        where: { userId, rating: { not: null } },
+        _avg: { rating: true },
+        _count: { rating: true },
+      }),
+      prisma.userEpisode.count({
+        where: { userId },
+      }),
+    ]);
+
+    const rawAvg = ratingAgg._avg.rating;
+    const averageRating =
+      typeof rawAvg === "number" && !isNaN(rawAvg) ? Math.round(rawAvg * 10) / 10 : null;
+
+    return {
+      countsByType: {
+        movies: movieCount,
+        tv: tvCount,
+        anime: animeCount,
+      },
+      averageRating,
+      ratedCount: ratingAgg._count.rating,
+      totalWatchedEpisodes: episodeCount,
+    };
+  } catch (error) {
+    console.error("[DashboardService] Failed to fetch dashboard analytics from DB:", error);
+    return {
+      countsByType: { movies: 0, tv: 0, anime: 0 },
+      averageRating: null,
+      ratedCount: 0,
+      totalWatchedEpisodes: 0,
+    };
   }
 }
