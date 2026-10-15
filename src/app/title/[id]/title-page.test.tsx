@@ -8,6 +8,10 @@ vi.mock("@/components/layout/app-shell", () => ({
   ),
 }));
 
+vi.mock("@/lib/auth", () => ({
+  auth: vi.fn().mockResolvedValue(null),
+}));
+
 import TitleDetailPage from "./page";
 
 describe("TitleDetailPage Component", () => {

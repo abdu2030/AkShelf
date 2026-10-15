@@ -37,6 +37,9 @@ describe("SeasonEpisodesSection Component", () => {
     // Section title
     expect(html).toContain("Episodes");
 
+    // Overall series progress badge (Day 34)
+    expect(html).toContain("2 / 8 (25%)");
+
     // Season selector pills
     expect(html).toContain("S1");
     expect(html).toContain("S2");
@@ -93,5 +96,26 @@ describe("SeasonEpisodesSection Component", () => {
     // Episode 4 should be unwatched
     expect(html).toContain('aria-label="Mark Episode 4 as watched"');
     expect(html).toContain("Continue S1 E4");
+  });
+
+  it("advances next-up button to Season 2 Episode 1 when Season 1 is completed (Day 34)", () => {
+    const html = renderToStaticMarkup(
+      <SeasonEpisodesSection seasons={mockSeasons} userCurrentSeason={1} userCurrentEpisode={5} />,
+    );
+
+    // Series progress is 5 / 8 = 63%
+    expect(html).toContain("5 / 8 (63%)");
+
+    // Continue button dynamically points to Season 2 Episode 1!
+    expect(html).toContain("Continue S2 E1");
+  });
+
+  it("renders 'All Episodes Watched' when every episode in series is watched", () => {
+    const html = renderToStaticMarkup(
+      <SeasonEpisodesSection seasons={mockSeasons} userCurrentSeason={2} userCurrentEpisode={3} />,
+    );
+
+    expect(html).toContain("8 / 8 (100%)");
+    expect(html).toContain("All Episodes Watched");
   });
 });

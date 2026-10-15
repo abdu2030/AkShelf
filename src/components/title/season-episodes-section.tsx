@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { CheckCheck, RotateCcw, Sparkles, Tv } from "lucide-react";
+import { Check, CheckCheck, RotateCcw, Sparkles, Tv } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { SeasonSelector } from "./season-selector";
 import { EpisodeRow } from "./episode-row";
 import { Button } from "@/components/ui/button";
 import { Toast } from "@/components/ui/toast";
+import { computeSeriesProgress } from "@/lib/progress";
 import {
   batchSeasonProgressAction,
   fetchSeasonEpisodesAction,
@@ -90,22 +91,6 @@ export function SeasonEpisodesSection({
     });
   }, [seasons, dynamicEpisodesBySeason]);
 
-  // Determine default selected season:
-  // "The current season opens by default; if the user is mid-series it opens on the season of the next unwatched episode."
-  const defaultSeasonNumber = useMemo(() => {
-    if (!seasonsState || seasonsState.length === 0) return 1;
-    if (
-      userCurrentSeason != null &&
-      seasonsState.some((s) => s.seasonNumber === userCurrentSeason)
-    ) {
-      return userCurrentSeason;
-    }
-    // Default to the first season in list
-    return seasonsState[0].seasonNumber;
-  }, [seasonsState, userCurrentSeason]);
-
-  const [selectedSeasonNumber, setSelectedSeasonNumber] = useState<number>(defaultSeasonNumber);
-
   // Local state for tracking watched episodes (optimistic UI)
   // Maps `${seasonNumber}:${episodeNumber}` -> boolean
   const [watchedMap, setWatchedMap] = useState<Record<string, boolean>>(() => {
@@ -130,30 +115,73 @@ export function SeasonEpisodesSection({
     return initial;
   });
 
+  // Calculate comprehensive series progress, next-up episode, and per-season progress (Day 34)
+  const seriesProgress = useMemo(() => {
+    return computeSeriesProgress(seasonsState, watchedMap);
+  }, [seasonsState, watchedMap]);
+
+  // Determine default selected season:
+  // "The current season opens by default; if the user is mid-series it opens on the season of the next unwatched episode."
+  const defaultSeasonNumber = useMemo(() => {
+    if (!seasonsState || seasonsState.length === 0) return 1;
+    if (seriesProgress.nextUp) {
+      return seriesProgress.nextUp.seasonNumber;
+    }
+    if (
+      userCurrentSeason != null &&
+      seasonsState.some((s) => s.seasonNumber === userCurrentSeason)
+    ) {
+      return userCurrentSeason;
+    }
+    return seasonsState[0].seasonNumber;
+  }, [seasonsState, userCurrentSeason, seriesProgress.nextUp]);
+
+  const [selectedSeasonNumber, setSelectedSeasonNumber] = useState<number>(defaultSeasonNumber);
+
   // Current active season object
   const activeSeason = useMemo(() => {
     return seasonsState.find((s) => s.seasonNumber === selectedSeasonNumber) || seasonsState[0];
   }, [seasonsState, selectedSeasonNumber]);
 
+  const activeEpisodes = activeSeason?.episodes || [];
+
+  // Active season progress summary
+  const activeSeasonProgress = useMemo(() => {
+    return (
+      seriesProgress.seasonProgress.find((sp) => sp.seasonNumber === selectedSeasonNumber) || {
+        seasonNumber: selectedSeasonNumber,
+        totalEpisodes: activeSeason?.episodeCount || activeSeason?.episodes?.length || 0,
+        watchedEpisodes: 0,
+        percentage: 0,
+        isCompleted: false,
+      }
+    );
+  }, [seriesProgress, selectedSeasonNumber, activeSeason]);
+
+  const activeSeasonWatchedCount = activeSeasonProgress.watchedEpisodes;
+  const activeSeasonTotalEpisodes =
+    activeSeasonProgress.totalEpisodes ||
+    activeSeason?.episodeCount ||
+    activeSeason?.episodes?.length ||
+    0;
+  const activeSeasonPercentage = activeSeasonProgress.percentage;
+
+  // Identify whether next-up episode resides in the currently selected season
+  const isNextUpInActiveSeason = seriesProgress.nextUp?.seasonNumber === selectedSeasonNumber;
+  const nextUpEpisodeNumber = isNextUpInActiveSeason ? seriesProgress.nextUp?.episodeNumber : null;
+
   // Compute watched counts per season for the SeasonSelector pills
   const seasonSelectorItems = useMemo(() => {
-    return seasonsState.map((season) => {
-      let watchedCount = 0;
-      if (season.episodes) {
-        for (const ep of season.episodes) {
-          if (watchedMap[`${season.seasonNumber}:${ep.episodeNumber}`]) {
-            watchedCount++;
-          }
-        }
-      }
+    return seriesProgress.seasonProgress.map((sp) => {
+      const seasonObj = seasonsState.find((s) => s.seasonNumber === sp.seasonNumber);
       return {
-        seasonNumber: season.seasonNumber,
-        name: season.name,
-        episodeCount: season.episodeCount,
-        watchedCount,
+        seasonNumber: sp.seasonNumber,
+        name: seasonObj?.name,
+        episodeCount: sp.totalEpisodes,
+        watchedCount: sp.watchedEpisodes,
       };
     });
-  }, [seasonsState, watchedMap]);
+  }, [seriesProgress, seasonsState]);
 
   // Handle season selection with lazy episode loading (Day 32)
   const handleSelectSeason = async (seasonNum: number) => {
@@ -198,30 +226,10 @@ export function SeasonEpisodesSection({
     }
   };
 
-  // Compute active season episodes
-  const activeEpisodes = activeSeason?.episodes || [];
-
-  // Count watched in active season
-  const activeSeasonWatchedCount = useMemo(() => {
-    if (!activeSeason?.episodes) return 0;
-    return activeSeason.episodes.filter(
-      (ep) => watchedMap[`${activeSeason.seasonNumber}:${ep.episodeNumber}`],
-    ).length;
-  }, [activeSeason, watchedMap]);
-
-  // Identify next unwatched episode across the active season
-  const nextUpEpisodeNumber = useMemo(() => {
-    if (!activeSeason?.episodes) return null;
-    const nextEp = activeSeason.episodes.find(
-      (ep) => !watchedMap[`${activeSeason.seasonNumber}:${ep.episodeNumber}`],
-    );
-    return nextEp ? nextEp.episodeNumber : null;
-  }, [activeSeason, watchedMap]);
-
-  // Toggle single episode watched (Day 33 - Section 9.17 & 17.4)
-  const handleToggle = (epNumber: number) => {
-    if (!activeSeason) return;
-    const seasonNum = activeSeason.seasonNumber;
+  // Toggle single episode watched (Day 33 & Day 34)
+  const handleToggle = (epNumber: number, targetSeasonNum?: number) => {
+    const seasonNum = targetSeasonNum ?? activeSeason?.seasonNumber ?? 1;
+    const targetSeasonObj = seasonsState.find((s) => s.seasonNumber === seasonNum) || activeSeason;
     const key = `${seasonNum}:${epNumber}`;
     const nextWatchedState = !watchedMap[key];
     const prevWatchedState = watchedMap[key] ?? false;
@@ -236,7 +244,7 @@ export function SeasonEpisodesSection({
 
     // Call server action if external title props are available
     if (titleExternalSource && titleExternalId) {
-      const epItem = activeSeason.episodes?.find((e) => e.episodeNumber === epNumber);
+      const epItem = targetSeasonObj?.episodes?.find((e) => e.episodeNumber === epNumber);
       toggleEpisodeProgressAction({
         titleExternalSource,
         titleExternalId,
@@ -608,10 +616,7 @@ export function SeasonEpisodesSection({
     );
   }
 
-  const percent = activeSeason?.episodeCount
-    ? Math.round((activeSeasonWatchedCount / activeSeason.episodeCount) * 100)
-    : 0;
-  const progressLabel = `${activeSeasonWatchedCount} / ${activeSeason?.episodeCount || 0} episodes - ${percent}%`;
+  const progressLabel = `${activeSeasonWatchedCount} / ${activeSeasonTotalEpisodes} episodes - ${activeSeasonPercentage}%`;
 
   return (
     <section
@@ -621,32 +626,55 @@ export function SeasonEpisodesSection({
         className,
       )}
     >
-      {/* 1. Header with title & Continue primary action */}
+      {/* 1. Header with title & Continue primary action (Day 34) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="space-y-1">
-          <h2
-            id="episodes-section-heading"
-            className="text-lg sm:text-xl font-display font-bold text-ink tracking-tight flex items-center gap-2"
-          >
-            <Sparkles className="w-4 h-4 text-accent" aria-hidden="true" />
-            Episodes
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2
+              id="episodes-section-heading"
+              className="text-lg sm:text-xl font-display font-bold text-ink tracking-tight flex items-center gap-2"
+            >
+              <Sparkles className="w-4 h-4 text-accent" aria-hidden="true" />
+              Episodes
+            </h2>
+
+            {/* Overall series completion badge (Day 34) */}
+            {seriesProgress.totalEpisodes > 0 && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono font-medium glass-2 text-ink-muted border border-white/10">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                {seriesProgress.watchedEpisodes} / {seriesProgress.totalEpisodes} (
+                {seriesProgress.percentage}%)
+              </span>
+            )}
+          </div>
           <p className="text-xs text-ink-muted">
             Track individual episodes or mark entire seasons with one click.
           </p>
         </div>
 
-        {/* Primary Continue Button */}
-        {nextUpEpisodeNumber != null && (
+        {/* Primary Continue Button / All Watched Indicator (Day 34) */}
+        {seriesProgress.nextUp ? (
           <Button
             variant="primary"
             size="small"
-            onClick={() => handleToggle(nextUpEpisodeNumber)}
+            onClick={() => {
+              const targetSeason = seriesProgress.nextUp!.seasonNumber;
+              const targetEp = seriesProgress.nextUp!.episodeNumber;
+              if (selectedSeasonNumber !== targetSeason) {
+                handleSelectSeason(targetSeason);
+              }
+              handleToggle(targetEp, targetSeason);
+            }}
             className="self-start sm:self-auto shadow-md"
           >
-            Continue S{activeSeason?.seasonNumber} E{nextUpEpisodeNumber}
+            Continue S{seriesProgress.nextUp.seasonNumber} E{seriesProgress.nextUp.episodeNumber}
           </Button>
-        )}
+        ) : seriesProgress.isCompleted ? (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 text-xs font-bold font-mono self-start sm:self-auto">
+            <Check className="w-4 h-4 text-emerald-400 stroke-[2.5]" aria-hidden="true" />
+            All Episodes Watched
+          </span>
+        ) : null}
       </div>
 
       {/* 2. Season Selector Pills (if > 1 season) */}
@@ -664,7 +692,7 @@ export function SeasonEpisodesSection({
           <div className="flex-1 max-w-md">
             <ProgressBar
               value={activeSeasonWatchedCount}
-              max={activeSeason?.episodeCount || 1}
+              max={activeSeasonTotalEpisodes || 1}
               showPercent
               label={progressLabel}
             />
