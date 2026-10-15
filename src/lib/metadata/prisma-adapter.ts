@@ -117,3 +117,34 @@ export function normalizedSeasonToPrismaUpsertArgs(
     },
   };
 }
+
+/**
+ * Builds Prisma upsert arguments for storing an episode record (Day 31).
+ */
+export function normalizedEpisodeToPrismaUpsertArgs(
+  seasonId: string,
+  episode: NormalizedEpisode,
+): Prisma.EpisodeUpsertArgs {
+  const defaultName = episode.name?.trim() || `Episode ${episode.episodeNumber}`;
+
+  return {
+    where: {
+      seasonId_episodeNumber: {
+        seasonId,
+        episodeNumber: episode.episodeNumber,
+      },
+    },
+    create: {
+      seasonId,
+      episodeNumber: episode.episodeNumber,
+      name: defaultName,
+      airDate: episode.airDate ?? null,
+      runtime: episode.runtime ?? null,
+    },
+    update: {
+      name: defaultName,
+      ...(episode.airDate !== undefined ? { airDate: episode.airDate ?? null } : {}),
+      ...(episode.runtime !== undefined ? { runtime: episode.runtime ?? null } : {}),
+    },
+  };
+}

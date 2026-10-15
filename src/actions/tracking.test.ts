@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   batchSeasonProgressAction,
+  syncSeasonEpisodesAction,
   syncTitleSeasonsAction,
   toggleEpisodeProgressAction,
   updateTitleDatesAction,
@@ -803,6 +804,217 @@ describe("Tracking Server Actions", () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("Deadlock detected during season upsert");
+    });
+  });
+
+  describe("syncSeasonEpisodesAction", () => {
+    it("returns error on invalid input", async () => {
+      const result = await syncSeasonEpisodesAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "",
+        seasonNumber: -1,
+        episodes: [],
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("Invalid episode sync input");
+    });
+
+    it("simulates episode sync in demo mode without database calls", async () => {
+      mockAuth.mockResolvedValueOnce(null);
+
+      const result = await syncSeasonEpisodesAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "1399",
+        seasonNumber: 1,
+        seasonName: "Season 1",
+        titleName: "Game of Thrones",
+        mediaType: "TV",
+        episodes: [
+          { episodeNumber: 1, name: "Winter Is Coming", runtime: 62 },
+          { episodeNumber: 2, name: "The Kingsroad", runtime: 56 },
+        ],
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.isDemo).toBe(true);
+      expect(result.count).toBe(2);
+      expect(result.seasonNumber).toBe(1);
+      expect(result.episodes).toHaveLength(2);
+      expect(result.episodes?.[0].episodeNumber).toBe(1);
+      expect(result.episodes?.[0].name).toBe("Winter Is Coming");
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it("simulates selective episode sync in demo mode", async () => {
+      mockAuth.mockResolvedValueOnce(null);
+
+      const result = await syncSeasonEpisodesAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "1399",
+        seasonNumber: 1,
+        episodes: [
+          { episodeNumber: 1, name: "Winter Is Coming" },
+          { episodeNumber: 2, name: "The Kingsroad" },
+        ],
+        selectiveEpisodeNumbers: [2],
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.isDemo).toBe(true);
+      expect(result.count).toBe(1);
+      expect(result.episodes).toEqual([
+        { episodeNumber: 2, name: "The Kingsroad", airDate: null, runtime: null },
+      ]);
+    });
+
+    it("persists episode details in database when authenticated", async () => {
+      mockAuth.mockResolvedValueOnce({
+        user: { id: "user-123", email: "owner@akshelf.local" },
+        expires: "2099-01-01",
+      });
+
+      const titleUpsertMock = vi.fn().mockResolvedValue({ id: "title-got" });
+      const seasonUpsertMock = vi.fn().mockResolvedValue({
+        id: "season-got-1",
+        titleId: "title-got",
+        seasonNumber: 1,
+        name: "Season 1",
+        episodeCount: 2,
+        createdAt: new Date(),
+      });
+      const seasonUpdateMock = vi.fn().mockResolvedValue({ id: "season-got-1" });
+      const episodeUpsertMock = vi.fn().mockImplementation((args) =>
+        Promise.resolve({
+          id: `ep-${args.create.episodeNumber}`,
+          seasonId: "season-got-1",
+          episodeNumber: args.create.episodeNumber,
+          name: args.create.name,
+          airDate: args.create.airDate,
+          runtime: args.create.runtime,
+          createdAt: new Date(),
+        }),
+      );
+
+      vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => {
+        const tx = {
+          title: { upsert: titleUpsertMock },
+          season: { upsert: seasonUpsertMock, update: seasonUpdateMock },
+          episode: { upsert: episodeUpsertMock },
+        };
+        return callback(tx as unknown as Parameters<Parameters<typeof prisma.$transaction>[0]>[0]);
+      });
+
+      const result = await syncSeasonEpisodesAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "1399",
+        seasonNumber: 1,
+        seasonName: "Season 1",
+        titleName: "Game of Thrones",
+        mediaType: "TV",
+        episodes: [
+          { episodeNumber: 1, name: "Winter Is Coming", airDate: "2011-04-17", runtime: 62 },
+          { episodeNumber: 2, name: "The Kingsroad", airDate: "2011-04-24", runtime: 56 },
+        ],
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.count).toBe(2);
+      expect(result.seasonNumber).toBe(1);
+      expect(result.episodes).toHaveLength(2);
+      expect(titleUpsertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            externalSource_externalId: {
+              externalSource: "tmdb",
+              externalId: "1399",
+            },
+          },
+        }),
+      );
+      expect(seasonUpsertMock).toHaveBeenCalled();
+      expect(episodeUpsertMock).toHaveBeenCalledTimes(2);
+      expect(revalidatePath).toHaveBeenCalledWith("/title/tmdb:1399");
+    });
+
+    it("persists only selected episodes when selectiveEpisodeNumbers is specified", async () => {
+      mockAuth.mockResolvedValueOnce({
+        user: { id: "user-123", email: "owner@akshelf.local" },
+        expires: "2099-01-01",
+      });
+
+      const episodeUpsertMock = vi.fn().mockImplementation((args) =>
+        Promise.resolve({
+          id: `ep-${args.create.episodeNumber}`,
+          seasonId: "season-got-1",
+          episodeNumber: args.create.episodeNumber,
+          name: args.create.name,
+          createdAt: new Date(),
+        }),
+      );
+
+      vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => {
+        const tx = {
+          title: { upsert: vi.fn().mockResolvedValue({ id: "title-got" }) },
+          season: {
+            upsert: vi.fn().mockResolvedValue({
+              id: "season-got-1",
+              titleId: "title-got",
+              seasonNumber: 1,
+            }),
+            update: vi.fn(),
+          },
+          episode: { upsert: episodeUpsertMock },
+        };
+        return callback(tx as unknown as Parameters<Parameters<typeof prisma.$transaction>[0]>[0]);
+      });
+
+      const result = await syncSeasonEpisodesAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "1399",
+        seasonNumber: 1,
+        episodes: [
+          { episodeNumber: 1, name: "Winter Is Coming" },
+          { episodeNumber: 2, name: "The Kingsroad" },
+          { episodeNumber: 3, name: "Lord Snow" },
+        ],
+        selectiveEpisodeNumbers: [2],
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.count).toBe(1);
+      expect(episodeUpsertMock).toHaveBeenCalledTimes(1);
+      expect(episodeUpsertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            seasonId_episodeNumber: {
+              seasonId: "season-got-1",
+              episodeNumber: 2,
+            },
+          },
+        }),
+      );
+    });
+
+    it("handles database transaction failure gracefully", async () => {
+      mockAuth.mockResolvedValueOnce({
+        user: { id: "user-123", email: "owner@akshelf.local" },
+        expires: "2099-01-01",
+      });
+
+      vi.mocked(prisma.$transaction).mockRejectedValueOnce(
+        new Error("Deadlock detected during episode upsert"),
+      );
+
+      const result = await syncSeasonEpisodesAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "1399",
+        seasonNumber: 1,
+        episodes: [{ episodeNumber: 1, name: "Winter Is Coming" }],
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Deadlock detected during episode upsert");
     });
   });
 });

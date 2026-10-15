@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   batchSeasonSchema,
+  episodeInputSchema,
+  seasonSummaryInputSchema,
+  syncSeasonEpisodesSchema,
+  syncTitleSeasonsSchema,
   toggleEpisodeSchema,
   updateTitleDatesSchema,
   updateTitleRatingSchema,
@@ -281,6 +285,95 @@ describe("Tracking Validation Schemas", () => {
         startedAt: "2026-10-01",
       });
       expect(missingId.success).toBe(false);
+    });
+  });
+
+  describe("episodeInputSchema", () => {
+    it("validates valid episode input", () => {
+      const result = episodeInputSchema.safeParse({
+        episodeNumber: 1,
+        name: "Pilot",
+        airDate: "2008-01-20",
+        runtime: 58,
+        externalId: "ep-123",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects episodeNumber < 1", () => {
+      const result = episodeInputSchema.safeParse({
+        episodeNumber: 0,
+      });
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe("syncSeasonEpisodesSchema", () => {
+    it("validates valid season episodes sync payload", () => {
+      const result = syncSeasonEpisodesSchema.safeParse({
+        titleExternalSource: "tmdb",
+        titleExternalId: "1399",
+        seasonNumber: 1,
+        seasonName: "Season 1",
+        episodes: [
+          { episodeNumber: 1, name: "Winter Is Coming" },
+          { episodeNumber: 2, name: "The Kingsroad" },
+        ],
+        selectiveEpisodeNumbers: [1],
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects empty episodes array", () => {
+      const result = syncSeasonEpisodesSchema.safeParse({
+        titleExternalSource: "tmdb",
+        titleExternalId: "1399",
+        seasonNumber: 1,
+        episodes: [],
+      });
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe("seasonSummaryInputSchema", () => {
+    it("validates valid season summary", () => {
+      const result = seasonSummaryInputSchema.safeParse({
+        seasonNumber: 1,
+        name: "Season 1",
+        episodeCount: 10,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("defaults episodeCount to 0 and permits optional name", () => {
+      const result = seasonSummaryInputSchema.safeParse({
+        seasonNumber: 2,
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.episodeCount).toBe(0);
+        expect(result.data.name).toBeUndefined();
+      }
+    });
+  });
+
+  describe("syncTitleSeasonsSchema", () => {
+    it("validates valid title seasons sync payload", () => {
+      const result = syncTitleSeasonsSchema.safeParse({
+        titleExternalSource: "tmdb",
+        titleExternalId: "1399",
+        seasons: [{ seasonNumber: 1, episodeCount: 10 }],
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("rejects empty seasons array", () => {
+      const result = syncTitleSeasonsSchema.safeParse({
+        titleExternalSource: "tmdb",
+        titleExternalId: "1399",
+        seasons: [],
+      });
+      expect(result.success).toBe(false);
     });
   });
 });

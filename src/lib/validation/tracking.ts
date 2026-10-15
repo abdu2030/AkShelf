@@ -46,6 +46,29 @@ export const syncTitleSeasonsSchema = z.object({
 
 export type SyncTitleSeasonsInput = z.infer<typeof syncTitleSeasonsSchema>;
 
+export const episodeInputSchema = z.object({
+  episodeNumber: z.number().int().min(1, "episodeNumber must be >= 1"),
+  name: z.string().optional().nullable(),
+  airDate: z.string().optional().nullable(),
+  runtime: z.number().int().nonnegative().optional().nullable(),
+  externalId: z.string().optional().nullable(),
+});
+
+export type EpisodeInput = z.infer<typeof episodeInputSchema>;
+
+export const syncSeasonEpisodesSchema = z.object({
+  titleExternalSource: z.enum(["tmdb", "anilist"]),
+  titleExternalId: z.string().min(1, "titleExternalId is required"),
+  seasonNumber: z.number().int().min(0, "seasonNumber must be >= 0"),
+  seasonName: z.string().optional().nullable(),
+  titleName: z.string().optional(),
+  mediaType: z.enum(["MOVIE", "TV", "ANIME"]).optional(),
+  episodes: z.array(episodeInputSchema).min(1, "At least one episode is required"),
+  selectiveEpisodeNumbers: z.array(z.number().int().min(1)).optional(),
+});
+
+export type SyncSeasonEpisodesInput = z.infer<typeof syncSeasonEpisodesSchema>;
+
 export const updateTitleStatusSchema = z.object({
   titleExternalSource: z.enum(["tmdb", "anilist"]),
   titleExternalId: z.string().min(1, "titleExternalId is required"),
