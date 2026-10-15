@@ -27,6 +27,25 @@ export const batchSeasonSchema = z.object({
 
 export type BatchSeasonInput = z.infer<typeof batchSeasonSchema>;
 
+export const seasonSummaryInputSchema = z.object({
+  seasonNumber: z.number().int().min(0),
+  name: z.string().optional().nullable(),
+  episodeCount: z.number().int().min(0).default(0),
+});
+
+export type SeasonSummaryInput = z.infer<typeof seasonSummaryInputSchema>;
+
+export const syncTitleSeasonsSchema = z.object({
+  titleExternalSource: z.enum(["tmdb", "anilist"]),
+  titleExternalId: z.string().min(1, "titleExternalId is required"),
+  titleName: z.string().optional(),
+  mediaType: z.enum(["MOVIE", "TV", "ANIME"]).optional(),
+  seasons: z.array(seasonSummaryInputSchema).min(1, "At least one season is required"),
+  selectedSeasonNumber: z.number().int().min(0).optional(),
+});
+
+export type SyncTitleSeasonsInput = z.infer<typeof syncTitleSeasonsSchema>;
+
 export const updateTitleStatusSchema = z.object({
   titleExternalSource: z.enum(["tmdb", "anilist"]),
   titleExternalId: z.string().min(1, "titleExternalId is required"),
@@ -44,6 +63,7 @@ export const updateTitleStatusSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}(T.*)?$/, "Must be a valid date string (YYYY-MM-DD or ISO)")
     .nullable()
     .optional(),
+  seasons: z.array(seasonSummaryInputSchema).optional(),
 });
 
 export type UpdateTitleStatusInput = z.infer<typeof updateTitleStatusSchema>;

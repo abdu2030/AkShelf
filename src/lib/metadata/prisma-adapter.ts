@@ -90,3 +90,30 @@ export function prismaTitleToMediaResult(record: PrismaTitleWithRelations): Medi
     seasons,
   };
 }
+
+/**
+ * Builds Prisma upsert arguments for storing a season summary (Day 30).
+ */
+export function normalizedSeasonToPrismaUpsertArgs(
+  titleId: string,
+  season: NormalizedSeason,
+): Prisma.SeasonUpsertArgs {
+  return {
+    where: {
+      titleId_seasonNumber: {
+        titleId,
+        seasonNumber: season.seasonNumber,
+      },
+    },
+    create: {
+      titleId,
+      seasonNumber: season.seasonNumber,
+      name: season.name || `Season ${season.seasonNumber}`,
+      episodeCount: season.episodeCount || 0,
+    },
+    update: {
+      name: season.name || `Season ${season.seasonNumber}`,
+      episodeCount: season.episodeCount || 0,
+    },
+  };
+}
