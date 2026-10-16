@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
 import { ArrowUpRight } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export type StatTileVariant = "total" | "watched" | "watching" | "plan_to_watch";
 
@@ -98,5 +99,26 @@ export function StatTile({
         </span>
       </div>
     </Link>
+  );
+}
+
+export function StatTileSkeleton({ className }: { className?: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      data-testid="stat-tile-skeleton"
+      className={cn(
+        "flex flex-col justify-between p-4 sm:p-5 rounded-2xl glass-1 border border-white/5 min-h-[96px]",
+        className,
+      )}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <Skeleton className="h-4 w-24 rounded-md" />
+        <Skeleton className="h-3.5 w-3.5 rounded-full" />
+      </div>
+      <div className="mt-3">
+        <Skeleton className="h-8 w-16 rounded-md" />
+      </div>
+    </div>
   );
 }

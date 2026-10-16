@@ -5,6 +5,7 @@ import { CheckCircle, Film, Sparkles, Star, Tv } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { RecentlyWatchedItem } from "@/lib/dashboard";
 import { formatRating } from "@/lib/utils/format";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface RecentlyWatchedCardProps {
   item: RecentlyWatchedItem;
@@ -89,5 +90,26 @@ export function RecentlyWatchedCard({ item, className }: RecentlyWatchedCardProp
         </div>
       </div>
     </Link>
+  );
+}
+
+export function RecentlyWatchedCardSkeleton({ className }: { className?: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      data-testid="recently-watched-card-skeleton"
+      className={cn(
+        "glass-1 rounded-2xl p-3 sm:p-3.5 border border-white/5 flex flex-col justify-between",
+        className,
+      )}
+    >
+      <div className="space-y-3">
+        <Skeleton aspectRatio="poster" className="w-full rounded-xl" />
+        <div className="space-y-1.5 pt-0.5">
+          <Skeleton className="h-4 w-4/5 rounded" />
+          <Skeleton className="h-3 w-1/2 rounded" />
+        </div>
+      </div>
+    </div>
   );
 }

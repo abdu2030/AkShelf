@@ -1,6 +1,6 @@
 import React from "react";
 import { cn } from "@/lib/utils/cn";
-import { StatTile } from "./stat-tile";
+import { StatTile, StatTileSkeleton } from "./stat-tile";
 import { DashboardStats } from "@/lib/dashboard";
 
 export interface StatsBandProps {
@@ -42,6 +42,21 @@ export function StatsBand({ stats, className }: StatsBandProps) {
         variant="plan_to_watch"
         testId="stat-tile-plan-to-watch"
       />
+    </div>
+  );
+}
+
+export function StatsBandSkeleton({ className }: { className?: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      data-testid="stats-band-skeleton"
+      className={cn("grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4", className)}
+    >
+      <StatTileSkeleton />
+      <StatTileSkeleton />
+      <StatTileSkeleton />
+      <StatTileSkeleton />
     </div>
   );
 }

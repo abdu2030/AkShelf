@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Play, Sparkles, Tv, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { ContinueWatchingItem } from "@/lib/dashboard";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface ContinueWatchingCardProps {
   item: ContinueWatchingItem;
@@ -137,5 +138,34 @@ export function ContinueWatchingCard({ item, className }: ContinueWatchingCardPr
         </div>
       </div>
     </article>
+  );
+}
+
+export function ContinueWatchingCardSkeleton({ className }: { className?: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      data-testid="continue-watching-card-skeleton"
+      className={cn(
+        "glass-1 rounded-2xl p-4 sm:p-5 border border-white/5 flex flex-col sm:flex-row gap-4",
+        className,
+      )}
+    >
+      <div className="w-20 h-28 sm:w-24 sm:h-36 rounded-xl shrink-0 bg-white/5 animate-pulse" />
+      <div className="flex-1 min-w-0 flex flex-col justify-between space-y-3 py-1">
+        <div className="space-y-2">
+          <Skeleton className="h-5 w-3/4 rounded-md" />
+          <Skeleton className="h-4 w-1/3 rounded-md" />
+        </div>
+        <div className="space-y-1.5">
+          <div className="flex justify-between">
+            <Skeleton className="h-3 w-20 rounded" />
+            <Skeleton className="h-3 w-10 rounded" />
+          </div>
+          <Skeleton className="h-1.5 w-full rounded-full" />
+        </div>
+        <Skeleton className="h-9 w-36 rounded-xl" />
+      </div>
+    </div>
   );
 }

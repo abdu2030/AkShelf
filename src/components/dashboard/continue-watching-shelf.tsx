@@ -3,7 +3,8 @@ import Link from "next/link";
 import { PlayCircle, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { ContinueWatchingItem } from "@/lib/dashboard";
-import { ContinueWatchingCard } from "./continue-watching-card";
+import { ContinueWatchingCard, ContinueWatchingCardSkeleton } from "./continue-watching-card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface ContinueWatchingShelfProps {
   items: ContinueWatchingItem[];
@@ -53,5 +54,27 @@ export function ContinueWatchingShelf({ items, className }: ContinueWatchingShel
         ))}
       </div>
     </section>
+  );
+}
+
+export function ContinueWatchingShelfSkeleton({ className }: { className?: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      data-testid="continue-watching-shelf-skeleton"
+      className={cn("space-y-4", className)}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <Skeleton className="w-8 h-8 rounded-lg" />
+          <Skeleton className="w-44 h-6 rounded-md" />
+        </div>
+        <Skeleton className="w-16 h-4 rounded-md" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+        <ContinueWatchingCardSkeleton />
+        <ContinueWatchingCardSkeleton />
+      </div>
+    </div>
   );
 }

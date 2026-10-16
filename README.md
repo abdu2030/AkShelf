@@ -5,7 +5,7 @@
 
 [![CI](https://github.com/abdu2030/AkShelf/actions/workflows/ci.yml/badge.svg)](https://github.com/abdu2030/AkShelf/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Week%205-Complete%20v0.5.0-success)](#roadmap-status)
+[![Status](https://img.shields.io/badge/Week%206-Complete%20v0.6.0-success)](#roadmap-status)
 
 ---
 
@@ -192,7 +192,14 @@ AkShelf enforces a strict separation between external entertainment metadata and
   - [x] **Day 33**: Episode tracking mutations, batch season actions & 6-second undo toasts.
   - [x] **Day 34**: Series & season progress calculation ($\frac{\text{watched}}{\text{total}} \times 100\%$) and next-up continuation.
   - [x] **Day 35**: Interrupted viewing, completed seasons, re-opening stability & checkpoint release `v0.5.0` ([Review Document](docs/WEEK_5_REVIEW.md)).
-- [ ] **Week 6: Dashboard, Statistics & UX Polish (`v0.6.0`)**
+- [x] **Week 6: Dashboard, Statistics & UX Polish (`v0.6.0`)**
+  - [x] **Day 36**: Connect dashboard cards to real database counts (`totalTracked`, `watching`, `watched`, `planToWatch`).
+  - [x] **Day 37**: Add Recently Watched section and Continue Watching shelf on the dashboard.
+  - [x] **Day 38**: Add simple statistics: title counts by type, average personal rating, total watched episodes.
+  - [x] **Day 39**: Improve search cards so `Watched`, `Watching`, and ratings are visible without opening the title.
+  - [x] **Day 40**: Library sorting enhancements (recently updated, rating, release year, title).
+  - [x] **Day 41**: Accessibility and keyboard pass: focus states, labels, contrast, semantic buttons, dialog behavior.
+  - [x] **Day 42**: Visual cleanup: spacing, typography, posters, responsive cards, loading states (`v0.6.0`) ([Review Document](docs/WEEK_6_REVIEW.md)).
 - [ ] **Week 7: Testing, Security, Performance & Data Safety (`v1.0.0-rc.1`)**
 - [ ] **Week 8: Deployment, Documentation & v1.0 Launch (`v1.0.0`)**
 
