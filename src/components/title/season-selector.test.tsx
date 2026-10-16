@@ -23,12 +23,16 @@ describe("SeasonSelector Component", () => {
     expect(html).toContain("0/10");
   });
 
-  it("marks the selected season with aria-selected true", () => {
+  it("marks the selected season with aria-selected true and roving tabIndex", () => {
     const html = renderToStaticMarkup(
       <SeasonSelector seasons={mockSeasons} selectedSeason={2} onSelectSeason={vi.fn()} />,
     );
 
+    expect(html).toContain('role="tablist"');
+    expect(html).toContain('aria-label="Season selection"');
     expect(html).toContain('aria-selected="true"');
+    expect(html).toContain('tabindex="0"');
+    expect(html).toContain('tabindex="-1"');
   });
 
   it("returns null if only 1 season exists (no selector needed)", () => {

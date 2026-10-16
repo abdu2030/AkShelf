@@ -704,7 +704,7 @@ export function SeasonEpisodesSection({
               <button
                 type="button"
                 onClick={handleMarkSeasonWatched}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium glass-2 text-ink-soft hover:text-ink border border-white/10 hover:border-white/20 transition-colors cursor-pointer select-none"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium glass-2 text-ink-soft hover:text-ink border border-white/10 hover:border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors cursor-pointer select-none"
               >
                 <CheckCheck className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
                 Mark Season Watched
@@ -713,7 +713,7 @@ export function SeasonEpisodesSection({
               <button
                 type="button"
                 onClick={handleMarkSeasonUnwatched}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium glass-2 text-ink-soft hover:text-ink border border-white/10 hover:border-white/20 transition-colors cursor-pointer select-none"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium glass-2 text-ink-soft hover:text-ink border border-white/10 hover:border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors cursor-pointer select-none"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-ink-muted" aria-hidden="true" />
                 Reset Season

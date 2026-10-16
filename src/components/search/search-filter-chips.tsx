@@ -27,6 +27,25 @@ export interface SearchFilterChipsProps {
 }
 
 export function SearchFilterChips({ selected, onSelect, className }: SearchFilterChipsProps) {
+  const buttonRefs = React.useRef<(HTMLButtonElement | null)[]>([]);
+
+  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+    let nextIndex: number | null = null;
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      nextIndex = (index + 1) % FILTER_OPTIONS.length;
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      nextIndex = (index - 1 + FILTER_OPTIONS.length) % FILTER_OPTIONS.length;
+    }
+
+    if (nextIndex !== null) {
+      const nextOption = FILTER_OPTIONS[nextIndex];
+      onSelect(nextOption.key);
+      buttonRefs.current[nextIndex]?.focus();
+    }
+  };
+
   return (
     <div
       role="radiogroup"
@@ -36,17 +55,22 @@ export function SearchFilterChips({ selected, onSelect, className }: SearchFilte
         className,
       )}
     >
-      {FILTER_OPTIONS.map((option) => {
+      {FILTER_OPTIONS.map((option, index) => {
         const isSelected = selected === option.key;
         const Icon = option.icon;
 
         return (
           <button
             key={option.key}
+            ref={(el) => {
+              buttonRefs.current[index] = el;
+            }}
             type="button"
             role="radio"
             aria-checked={isSelected}
+            tabIndex={isSelected ? 0 : -1}
             onClick={() => onSelect(option.key)}
+            onKeyDown={(e) => handleKeyDown(e, index)}
             className={cn(
               "h-10 px-4 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer",
               "flex items-center gap-2 shrink-0 border",

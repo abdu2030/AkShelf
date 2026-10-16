@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useRef } from "react";
 import { cn } from "@/lib/utils/cn";
 
 export interface SeasonSelectorItem {
@@ -26,9 +28,34 @@ export function SeasonSelector({
   onSelectSeason,
   className,
 }: SeasonSelectorProps) {
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
   if (!seasons || seasons.length <= 1) {
     return null;
   }
+
+  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+    let nextIndex: number | null = null;
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      nextIndex = (index + 1) % seasons.length;
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      nextIndex = (index - 1 + seasons.length) % seasons.length;
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      nextIndex = 0;
+    } else if (e.key === "End") {
+      e.preventDefault();
+      nextIndex = seasons.length - 1;
+    }
+
+    if (nextIndex !== null) {
+      const nextSeason = seasons[nextIndex];
+      onSelectSeason(nextSeason.seasonNumber);
+      tabRefs.current[nextIndex]?.focus();
+    }
+  };
 
   return (
     <div
@@ -39,7 +66,7 @@ export function SeasonSelector({
         className,
       )}
     >
-      {seasons.map((season) => {
+      {seasons.map((season, index) => {
         const isSelected = season.seasonNumber === selectedSeason;
         const seasonLabel = season.seasonNumber === 0 ? "Specials" : `S${season.seasonNumber}`;
         const hasCount = season.watchedCount != null;
@@ -47,10 +74,15 @@ export function SeasonSelector({
         return (
           <button
             key={season.seasonNumber}
+            ref={(el) => {
+              tabRefs.current[index] = el;
+            }}
             type="button"
             role="tab"
             aria-selected={isSelected}
+            tabIndex={isSelected ? 0 : -1}
             onClick={() => onSelectSeason(season.seasonNumber)}
+            onKeyDown={(e) => handleKeyDown(e, index)}
             className={cn(
               "snap-start shrink-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer select-none",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",

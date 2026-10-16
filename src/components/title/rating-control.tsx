@@ -140,7 +140,7 @@ export function RatingControl({
             type="button"
             onClick={() => handleRate(null)}
             disabled={isPending}
-            className="inline-flex items-center gap-1 text-[11px] font-semibold text-ink-muted hover:text-danger hover:underline transition-colors cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-ink-muted hover:text-danger hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-md px-1 py-0.5 transition-colors cursor-pointer disabled:opacity-50"
             aria-label="Clear rating"
           >
             <X className="w-3 h-3" aria-hidden="true" />
@@ -177,6 +177,7 @@ export function RatingControl({
               onClick={() => handleRate(score)}
               className={cn(
                 "h-10 sm:h-9 w-full sm:w-9 rounded-xl flex items-center justify-center text-xs font-semibold transition-all duration-150 cursor-pointer disabled:cursor-not-allowed",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
                 isSelected
                   ? "bg-accent-fill text-white border border-accent-fill font-bold shadow-md ring-2 ring-accent/30 scale-105"
                   : isHovered
