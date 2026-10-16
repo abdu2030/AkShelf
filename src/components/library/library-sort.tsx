@@ -3,7 +3,12 @@
 import React from "react";
 import { ArrowDownWideNarrow, ArrowUpNarrowWide } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { SortField, SortDirection, sortOptions } from "@/lib/utils/sort";
+import {
+  SortField,
+  SortDirection,
+  sortOptions,
+  getSortDirectionDescription,
+} from "@/lib/utils/sort";
 
 export interface LibrarySortProps {
   sortField: SortField;
@@ -14,8 +19,8 @@ export interface LibrarySortProps {
 }
 
 /**
- * Library sorting control (Day 11).
- * Allows sorting by Date Added, Title, Rating, and Release Year with direction toggle.
+ * Library sorting control (Day 11 & Day 40).
+ * Allows sorting by Recently Updated, Date Added, Title, Rating, and Release Year with direction toggle.
  */
 export function LibrarySort({
   sortField,
@@ -37,6 +42,8 @@ export function LibrarySort({
       onSortDirectionChange(option.defaultDirection);
     }
   };
+
+  const directionDesc = getSortDirectionDescription(sortField, sortDirection);
 
   return (
     <div data-testid="library-sort" className={cn("inline-flex items-center gap-1.5", className)}>
@@ -80,6 +87,7 @@ export function LibrarySort({
         type="button"
         onClick={toggleDirection}
         data-testid="sort-direction-button"
+        data-sort-description={directionDesc}
         aria-label={
           sortDirection === "asc"
             ? "Sort ascending (switch to descending)"

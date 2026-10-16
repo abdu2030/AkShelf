@@ -865,4 +865,6 @@ export const demoLibraryItems: MediaCardProps[] = demoTitles.map((item) => ({
   currentEpisode: item.currentEpisode,
   totalEpisodes: item.totalEpisodes,
   addedAt: item.addedAt,
+  watchedAt: item.watchedAt,
+  updatedAt: item.watchedAt ?? item.startedAt ?? item.addedAt,
 }));

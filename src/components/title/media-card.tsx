@@ -38,6 +38,8 @@ export interface MediaCardProps {
   rating?: number | null;
   userRating?: number | null;
   addedAt?: string | Date | null;
+  watchedAt?: string | Date | null;
+  updatedAt?: string | Date | null;
   currentEpisode?: number | null;
   totalEpisodes?: number | null;
   season?: number | null;
