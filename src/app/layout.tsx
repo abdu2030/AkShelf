@@ -1,8 +1,23 @@
 import type { Metadata } from "next";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { Aurora } from "@/components/layout/aurora";
 import { ToastProvider } from "@/components/ui/toast";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+  weight: ["400", "500", "600"],
+});
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
+  display: "swap",
+  weight: ["600", "700"],
+});
 
 export const metadata: Metadata = {
   title: "AkShelf | Personal Watch Tracker",
@@ -15,7 +30,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${inter.variable} ${plusJakartaSans.variable}`}
+    >
       <body className="min-h-screen flex flex-col font-sans antialiased text-ink">
         <a
           href="#main-content"
