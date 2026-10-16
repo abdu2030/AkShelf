@@ -83,6 +83,13 @@ export const fetchSeasonEpisodesSchema = z.object({
 
 export type FetchSeasonEpisodesInput = z.infer<typeof fetchSeasonEpisodesSchema>;
 
+export const dateStringSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}(T.*)?$/, "Must be a valid date string (YYYY-MM-DD or ISO)")
+  .refine((val) => !isNaN(Date.parse(val)), "Must be a valid calendar date")
+  .nullable()
+  .optional();
+
 export const updateTitleStatusSchema = z.object({
   titleExternalSource: z.enum(["tmdb", "anilist"]),
   titleExternalId: z.string().min(1, "titleExternalId is required"),
@@ -90,16 +97,8 @@ export const updateTitleStatusSchema = z.object({
   titleName: z.string().optional(),
   mediaType: z.enum(["MOVIE", "TV", "ANIME"]).optional(),
   rating: z.number().min(0).max(10).optional().nullable(),
-  startedAt: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}(T.*)?$/, "Must be a valid date string (YYYY-MM-DD or ISO)")
-    .nullable()
-    .optional(),
-  watchedAt: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}(T.*)?$/, "Must be a valid date string (YYYY-MM-DD or ISO)")
-    .nullable()
-    .optional(),
+  startedAt: dateStringSchema,
+  watchedAt: dateStringSchema,
   seasons: z.array(seasonSummaryInputSchema).optional(),
 });
 
@@ -122,16 +121,8 @@ export type UpdateTitleRatingInput = z.infer<typeof updateTitleRatingSchema>;
 export const updateTitleDatesSchema = z.object({
   titleExternalSource: z.enum(["tmdb", "anilist"]),
   titleExternalId: z.string().min(1, "titleExternalId is required"),
-  startedAt: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}(T.*)?$/, "Must be a valid date string (YYYY-MM-DD or ISO)")
-    .nullable()
-    .optional(),
-  watchedAt: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}(T.*)?$/, "Must be a valid date string (YYYY-MM-DD or ISO)")
-    .nullable()
-    .optional(),
+  startedAt: dateStringSchema,
+  watchedAt: dateStringSchema,
   titleName: z.string().optional(),
   mediaType: z.enum(["MOVIE", "TV", "ANIME"]).optional(),
 });

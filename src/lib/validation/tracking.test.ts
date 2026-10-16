@@ -279,6 +279,15 @@ describe("Tracking Validation Schemas", () => {
       expect(invalidDate.success).toBe(false);
     });
 
+    it("rejects non-existent calendar dates", () => {
+      const invalidCalendarDate = updateTitleDatesSchema.safeParse({
+        titleExternalSource: "tmdb",
+        titleExternalId: "27205",
+        startedAt: "2026-99-99",
+      });
+      expect(invalidCalendarDate.success).toBe(false);
+    });
+
     it("rejects missing titleExternalId", () => {
       const missingId = updateTitleDatesSchema.safeParse({
         titleExternalSource: "tmdb",
