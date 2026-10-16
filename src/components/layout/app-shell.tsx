@@ -46,6 +46,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row relative">
+      {/* Skip to Main Content accessible link for keyboard users (WCAG 2.4.1) */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2.5 focus:rounded-xl focus:bg-accent-fill focus:text-white focus:font-semibold focus:shadow-xl focus:outline-none focus:ring-2 focus:ring-white"
+      >
+        Skip to main content
+      </a>
+
       {/* 1. Desktop Sidebar (lg and up: >= 1024px) */}
       <aside className="hidden lg:flex fixed top-3 bottom-3 left-3 w-60 z-20 flex-col glass-2 rounded-[20px] p-4 select-none">
         {/* Brand Header */}
@@ -208,6 +216,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           aria-label="Settings"
           className={cn(
             "h-10 w-10 rounded-full flex items-center justify-center text-ink-soft hover:text-ink transition-colors",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
             pathname.startsWith("/settings") && "text-accent bg-white/10",
           )}
         >
@@ -241,7 +250,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex flex-col items-center justify-center min-w-[56px] py-1 text-center transition-all",
+                "flex flex-col items-center justify-center min-w-[56px] py-1 text-center transition-all rounded-xl",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
                 active ? "text-accent font-semibold" : "text-ink-soft font-medium",
               )}
             >

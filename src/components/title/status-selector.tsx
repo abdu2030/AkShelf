@@ -195,6 +195,7 @@ export function StatusSelector({
                   onClick={() => handleSelect(statKey)}
                   className={cn(
                     "w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer text-left",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
                     isSelected
                       ? "bg-white/15 text-ink font-semibold"
                       : "text-ink-soft hover:text-ink hover:bg-white/10",
@@ -220,7 +221,7 @@ export function StatusSelector({
                 type="button"
                 role="menuitem"
                 onClick={() => handleSelect(null)}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors cursor-pointer text-left"
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 transition-colors cursor-pointer text-left"
               >
                 <Trash2 className="w-4 h-4 shrink-0 text-rose-400" aria-hidden="true" />
                 <span>Remove from Shelf</span>

@@ -199,7 +199,7 @@ export function EpisodeRow({
                   setMenuOpen(false);
                   onMarkUpToWatched(episodeNumber);
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-ink-soft hover:text-ink hover:bg-white/10 transition-colors text-left cursor-pointer"
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-ink-soft hover:text-ink hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors text-left cursor-pointer"
               >
                 <CheckCheck className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
                 <span>Mark episodes 1 to {episodeNumber} as watched</span>
@@ -213,7 +213,7 @@ export function EpisodeRow({
                 setMenuOpen(false);
                 onToggleWatched?.(episodeNumber);
               }}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-ink-soft hover:text-ink hover:bg-white/10 transition-colors text-left cursor-pointer"
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-ink-soft hover:text-ink hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors text-left cursor-pointer"
             >
               {isWatched ? (
                 <>

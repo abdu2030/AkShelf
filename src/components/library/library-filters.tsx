@@ -199,7 +199,7 @@ export function LibraryFilters({
               onClick={handleReset}
               aria-label="Reset all filters"
               data-testid="filter-reset-button"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent hover:text-ink transition-colors px-2.5 py-1.5 rounded-md hover:bg-white/6 active:scale-95"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors px-2.5 py-1.5 rounded-md hover:bg-white/6 active:scale-95"
             >
               <RotateCcw className="h-3 w-3 shrink-0" aria-hidden="true" />
               <span>Reset filters</span>
