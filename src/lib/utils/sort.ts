@@ -1,29 +1,73 @@
-export type SortField = "DATE_ADDED" | "TITLE" | "RATING" | "RELEASE_YEAR";
+export type SortField = "RECENTLY_UPDATED" | "DATE_ADDED" | "TITLE" | "RATING" | "RELEASE_YEAR";
 export type SortDirection = "asc" | "desc";
 
 export interface SortOption {
   field: SortField;
   label: string;
   defaultDirection: SortDirection;
+  ascLabel?: string;
+  descLabel?: string;
 }
 
 export const sortOptions: SortOption[] = [
-  { field: "DATE_ADDED", label: "Date Added", defaultDirection: "desc" },
-  { field: "TITLE", label: "Title", defaultDirection: "asc" },
-  { field: "RATING", label: "Rating", defaultDirection: "desc" },
-  { field: "RELEASE_YEAR", label: "Release Year", defaultDirection: "desc" },
+  {
+    field: "RECENTLY_UPDATED",
+    label: "Recently Updated",
+    defaultDirection: "desc",
+    ascLabel: "Least recently updated",
+    descLabel: "Recently updated first",
+  },
+  {
+    field: "DATE_ADDED",
+    label: "Date Added",
+    defaultDirection: "desc",
+    ascLabel: "Oldest added first",
+    descLabel: "Recently added first",
+  },
+  {
+    field: "TITLE",
+    label: "Title",
+    defaultDirection: "asc",
+    ascLabel: "A to Z",
+    descLabel: "Z to A",
+  },
+  {
+    field: "RATING",
+    label: "Rating",
+    defaultDirection: "desc",
+    ascLabel: "Lowest rated first",
+    descLabel: "Highest rated first",
+  },
+  {
+    field: "RELEASE_YEAR",
+    label: "Release Year",
+    defaultDirection: "desc",
+    ascLabel: "Oldest release first",
+    descLabel: "Newest release first",
+  },
 ];
 
 export interface SortableMediaItem {
   title?: string | null;
   rating?: number | null;
   userRating?: number | null;
+  voteAverage?: number | null;
   year?: number | string | null;
   releaseYear?: number | string | null;
   addedAt?: string | Date | null;
   watchedAt?: string | Date | null;
+  startedAt?: string | Date | null;
   createdAt?: string | Date | null;
   updatedAt?: string | Date | null;
+}
+
+/**
+ * Returns human-readable description for a given sort field and direction.
+ */
+export function getSortDirectionDescription(field: SortField, direction: SortDirection): string {
+  const opt = sortOptions.find((o) => o.field === field);
+  if (!opt) return direction === "asc" ? "Ascending order" : "Descending order";
+  return direction === "asc" ? (opt.ascLabel ?? "Ascending") : (opt.descLabel ?? "Descending");
 }
 
 /**
@@ -85,12 +129,32 @@ export function sortMediaItems<T extends SortableMediaItem>(
         break;
       }
 
-      case "DATE_ADDED": {
-        const dateA = a.addedAt ?? a.watchedAt ?? a.createdAt ?? a.updatedAt;
-        const dateB = b.addedAt ?? b.watchedAt ?? b.createdAt ?? b.updatedAt;
+      case "RECENTLY_UPDATED": {
+        const dateA = a.updatedAt ?? a.watchedAt ?? a.startedAt ?? a.addedAt ?? a.createdAt;
+        const dateB = b.updatedAt ?? b.watchedAt ?? b.startedAt ?? b.addedAt ?? b.createdAt;
 
         const timeA = dateA ? new Date(dateA).getTime() : 0;
         const timeB = dateB ? new Date(dateB).getTime() : 0;
+
+        if (!timeA && !timeB) break;
+        if (!timeA) return 1;
+        if (!timeB) return -1;
+
+        const diff = (timeA - timeB) * modifier;
+        if (diff !== 0) return diff;
+        break;
+      }
+
+      case "DATE_ADDED": {
+        const dateA = a.addedAt ?? a.createdAt;
+        const dateB = b.addedAt ?? b.createdAt;
+
+        const timeA = dateA ? new Date(dateA).getTime() : 0;
+        const timeB = dateB ? new Date(dateB).getTime() : 0;
+
+        if (!timeA && !timeB) break;
+        if (!timeA) return 1;
+        if (!timeB) return -1;
 
         const diff = (timeA - timeB) * modifier;
         if (diff !== 0) return diff;
@@ -99,6 +163,9 @@ export function sortMediaItems<T extends SortableMediaItem>(
     }
 
     // Secondary deterministic sort by title
-    return (a.title ?? "").localeCompare(b.title ?? "", undefined, { sensitivity: "base" });
+    return (a.title ?? "").localeCompare(b.title ?? "", undefined, {
+      sensitivity: "base",
+      numeric: true,
+    });
   });
 }

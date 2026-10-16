@@ -91,4 +91,32 @@ describe("LibrarySort", () => {
     expect(html).toContain('data-testid="library-header"');
     expect(html).toContain('data-testid="library-sort"');
   });
+
+  it("renders Recently Updated option as the first option", () => {
+    const html = renderToStaticMarkup(
+      <LibrarySort
+        sortField="RECENTLY_UPDATED"
+        onSortFieldChange={() => {}}
+        sortDirection="desc"
+        onSortDirectionChange={() => {}}
+      />,
+    );
+
+    expect(html).toContain('value="RECENTLY_UPDATED"');
+    expect(html).toContain("Recently Updated");
+    expect(html).toContain('data-sort-description="Recently updated first"');
+  });
+
+  it("displays custom human-readable direction description for Rating", () => {
+    const html = renderToStaticMarkup(
+      <LibrarySort
+        sortField="RATING"
+        onSortFieldChange={() => {}}
+        sortDirection="desc"
+        onSortDirectionChange={() => {}}
+      />,
+    );
+
+    expect(html).toContain('data-sort-description="Highest rated first"');
+  });
 });

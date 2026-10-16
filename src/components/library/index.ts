@@ -15,6 +15,9 @@ export type { LibrarySortProps } from "./library-sort";
 export { LibraryEmptyState, getFilterEmptyStateText } from "./library-empty-state";
 export type { LibraryEmptyStateProps } from "./library-empty-state";
 
+export { LibraryView } from "./library-view";
+export type { LibraryViewProps } from "./library-view";
+
 export { sortMediaItems, sortOptions } from "@/lib/utils/sort";
 export type { SortField, SortDirection, SortOption, SortableMediaItem } from "@/lib/utils/sort";
 
