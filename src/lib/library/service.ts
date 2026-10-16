@@ -42,7 +42,7 @@ export async function getLibraryItems(
     });
 
     if (userTitles.length === 0) {
-      return demoLibraryItems;
+      return [];
     }
 
     const userEpisodes = await prisma.userEpisode.findMany({
