@@ -102,17 +102,38 @@ export default function SettingsPage() {
         <section className="glass-1 p-6 rounded-[20px] space-y-4">
           <div className="flex items-center gap-2.5 text-accent">
             <Database className="h-5 w-5" aria-hidden="true" />
-            <h2 className="text-lg font-bold font-display text-ink">Your Data</h2>
+            <h2 className="text-lg font-bold font-display text-ink">Your Data & Backups</h2>
           </div>
           <p className="text-sm text-ink-soft font-medium leading-relaxed">
-            Your personal watch records, ratings, and episode progress are stored in PostgreSQL.
-            Keep a copy outside AkShelf now and then.
+            Your personal watch records, ratings, and episode progress are stored in your database.
+            Keep an offline copy outside AkShelf anytime for full data ownership.
           </p>
-          <div>
-            <Button variant="secondary" size="medium" disabled>
-              Export data (Coming in Week 7)
-            </Button>
+
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <a
+              href="/api/export/json"
+              download
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold glass-1 hover:glass-2 border border-white/12 text-ink-base transition-all hover:scale-[1.02] cursor-pointer"
+            >
+              <Database className="w-4 h-4 text-accent" aria-hidden="true" />
+              <span>Export JSON (Full Backup)</span>
+            </a>
+
+            <a
+              href="/api/export/csv"
+              download
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold glass-1 hover:glass-2 border border-white/12 text-ink-base transition-all hover:scale-[1.02] cursor-pointer"
+            >
+              <Info className="w-4 h-4 text-accent" aria-hidden="true" />
+              <span>Export CSV (Spreadsheet)</span>
+            </a>
           </div>
+
+          <p className="text-[11px] text-ink-muted">
+            <strong>JSON</strong> includes full title metadata, episode progress, and audit history.{" "}
+            <strong>CSV</strong> contains your shelf titles, status, ratings, and dates for Excel or
+            Google Sheets.
+          </p>
         </section>
 
         {/* Panel 4: About & Attributions */}
@@ -122,7 +143,7 @@ export default function SettingsPage() {
             <h2 className="text-lg font-bold font-display text-ink">About & Data Sources</h2>
           </div>
           <div className="text-xs text-ink-muted font-medium space-y-2 leading-relaxed">
-            <p>AkShelf Version 0.1.0 (Week 1)</p>
+            <p>AkShelf Version 1.0.0-rc.1 (Week 7)</p>
             <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
             <p>Anime data provided by the AniList GraphQL API.</p>
           </div>
