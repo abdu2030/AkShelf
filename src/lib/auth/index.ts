@@ -5,6 +5,7 @@ import { loginSchema } from "@/lib/validation/auth";
 import { verifyOwnerCredentials } from "@/lib/auth/password";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true,
   providers: [
     Credentials({
       name: "Owner Credentials",
@@ -28,22 +29,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const ownerEmail = process.env.OWNER_EMAIL || "owner@akshelf.local";
 
-        // Get or create the owner in PostgreSQL database
-        const user = await prisma.user.upsert({
-          where: { email: ownerEmail },
-          update: {},
-          create: {
+        // Get or create the owner in PostgreSQL database with resilient fallback
+        let userRecord: { id: string; email: string; name: string | null; image?: string | null } =
+          {
+            id: "owner-fallback-id",
             email: ownerEmail,
             name: "AkShelf Owner",
-          },
-        });
+            image: null,
+          };
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-        };
+        try {
+          const user = await prisma.user.upsert({
+            where: { email: ownerEmail },
+            update: {},
+            create: {
+              email: ownerEmail,
+              name: "AkShelf Owner",
+            },
+          });
+          userRecord = user;
+        } catch (dbError) {
+          console.warn(
+            "[Auth] Database unavailable during auth, using local owner session:",
+            dbError,
+          );
+        }
+
+        return userRecord;
       },
     }),
   ],
