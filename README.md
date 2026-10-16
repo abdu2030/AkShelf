@@ -5,7 +5,7 @@
 
 [![CI](https://github.com/abdu2030/AkShelf/actions/workflows/ci.yml/badge.svg)](https://github.com/abdu2030/AkShelf/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Week%206-Complete%20v0.6.0-success)](#roadmap-status)
+[![Status](https://img.shields.io/badge/Week%207-Complete%20v1.0.0--rc.1-success)](#roadmap-status)
 
 ---
 
@@ -200,7 +200,14 @@ AkShelf enforces a strict separation between external entertainment metadata and
   - [x] **Day 40**: Library sorting enhancements (recently updated, rating, release year, title).
   - [x] **Day 41**: Accessibility and keyboard pass: focus states, labels, contrast, semantic buttons, dialog behavior.
   - [x] **Day 42**: Visual cleanup: spacing, typography, posters, responsive cards, loading states (`v0.6.0`) ([Review Document](docs/WEEK_6_REVIEW.md)).
-- [ ] **Week 7: Testing, Security, Performance & Data Safety (`v1.0.0-rc.1`)**
+- [x] **Week 7: Testing, Security, Performance & Data Safety (`v1.0.0-rc.1`)**
+  - [x] **Day 43**: Write core unit tests for status transitions, rating validation, and provider normalization.
+  - [x] **Day 44**: Write Playwright end-to-end browser tests for login, search, mark watched, rating, watchlist, and library filters.
+  - [x] **Day 45**: Test permission boundaries and verify security on server actions against unauthorized access.
+  - [x] **Day 46**: Audit environment variables, secrets, API key exposure, error messages, and logging sanitization.
+  - [x] **Day 47**: Performance pass: image sizing, layout shifts (CLS), cache headers, bundle analysis, and inline float ratings.
+  - [x] **Day 48**: Data safety pass: SQLite / PostgreSQL export to JSON / CSV, verify restore and schema consistency.
+  - [x] **Day 49**: Week 7 review, security checklist, and release candidate `v1.0.0-rc.1` ([Review Document](docs/WEEK_7_REVIEW.md)).
 - [ ] **Week 8: Deployment, Documentation & v1.0 Launch (`v1.0.0`)**
 
 ---

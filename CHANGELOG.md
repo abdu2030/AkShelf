@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-rc.1] - 2026-10-16
+
+### Added
+
+- **Data Safety, Export & Restore Engine** (`src/lib/export/export-service.ts`, `src/lib/export/types.ts`): Comprehensive backup generator producing full structured JSON snapshots (titles, ratings, episodes, audit history) and RFC 4180 CSV library spreadsheets.
+- **Dedicated Export Download Endpoints** (`/api/export/json`, `/api/export/csv`): Secure session-authenticated route handlers delivering downloadable backup attachments.
+- **Settings Data Safety Panel Controls** (`src/app/settings/page.tsx`): One-click download buttons for JSON full backups and CSV spreadsheets.
+- **Automated CLI Backup Script** (`npm run db:export` via `scripts/export-data.ts`): Command-line tool to dump offline database backups straight to `backups/`.
+- **Inline Decimal Float Ratings** (`src/components/title/rating-control.tsx`): Direct decimal input (`step="0.1"`, `min="1"`, `max="10"`) with pill synchronization, gold highlighting, Enter key submission, and blur race protection.
+- **Database Reset Tooling** (`npm run db:clean` via `scripts/wipe-dummy-data.ts`): Safe cleanup utility to wipe all mock and dummy records from PostgreSQL while keeping the owner account intact.
+- **Testing & Security Hardening Pass**: Added 15 new test cases across export services and API routes, achieving 73 test suites and 541 passing tests. Audited all server actions for permission boundaries and server-derived identity.
+- **Week 7 Review & Production Hardening Documentation** (`docs/WEEK_7_REVIEW.md`): Detailed milestone audit, security checklist, and transition roadmap to Week 8 v1.0.
+
+### Changed
+
+- Bumped application version to `1.0.0-rc.1` in `package.json` and `package-lock.json`.
+- Removed demo fallback data in `src/lib/library/service.ts` and `src/lib/history/service.ts` so authenticated accounts with zero records render genuine, clean Empty States.
+- Updated Settings page version indicator to `AkShelf Version 1.0.0-rc.1 (Week 7)`.
+
+---
+
 ## [0.5.0] - 2026-10-15
 
 ### Added
