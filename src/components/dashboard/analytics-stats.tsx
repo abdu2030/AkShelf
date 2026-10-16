@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Clapperboard, Tv, Sparkles, Star, CheckCircle2, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { DashboardAnalytics } from "@/lib/dashboard";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface AnalyticsStatsProps {
   analytics: DashboardAnalytics;
@@ -158,5 +159,37 @@ export function AnalyticsStats({ analytics, className }: AnalyticsStatsProps) {
         </div>
       </div>
     </section>
+  );
+}
+
+export function AnalyticsStatsSkeleton({ className }: { className?: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      data-testid="analytics-stats-skeleton"
+      className={cn("space-y-4", className)}
+    >
+      <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
+        <Skeleton className="w-36 h-6 rounded-md" />
+        <Skeleton className="w-64 h-4 rounded-md" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="glass-1 rounded-2xl p-5 border border-white/5 space-y-4 min-h-[160px]"
+          >
+            <div className="space-y-1">
+              <Skeleton className="w-28 h-3 rounded" />
+              <Skeleton className="w-40 h-3 rounded" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="w-full h-8 rounded-xl" />
+              <Skeleton className="w-full h-8 rounded-xl" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

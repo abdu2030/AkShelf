@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { StatTile } from "./stat-tile";
+import { StatTile, StatTileSkeleton } from "./stat-tile";
 
 describe("StatTile Component (Day 36)", () => {
   it("renders label, count, and accessible link correctly", () => {
@@ -48,5 +48,11 @@ describe("StatTile Component (Day 36)", () => {
     expect(planHtml).toContain("bg-sky-400");
     expect(planHtml).toContain("Plan to Watch");
     expect(planHtml).toContain("14");
+  });
+
+  it("renders StatTileSkeleton with aria-hidden and testid", () => {
+    const html = renderToStaticMarkup(<StatTileSkeleton />);
+    expect(html).toContain('data-testid="stat-tile-skeleton"');
+    expect(html).toContain('aria-hidden="true"');
   });
 });

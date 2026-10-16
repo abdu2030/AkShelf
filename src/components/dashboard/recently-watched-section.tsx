@@ -3,7 +3,8 @@ import Link from "next/link";
 import { CheckCircle2, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { RecentlyWatchedItem } from "@/lib/dashboard";
-import { RecentlyWatchedCard } from "./recently-watched-card";
+import { RecentlyWatchedCard, RecentlyWatchedCardSkeleton } from "./recently-watched-card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface RecentlyWatchedSectionProps {
   items: RecentlyWatchedItem[];
@@ -53,5 +54,29 @@ export function RecentlyWatchedSection({ items, className }: RecentlyWatchedSect
         ))}
       </div>
     </section>
+  );
+}
+
+export function RecentlyWatchedSectionSkeleton({ className }: { className?: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      data-testid="recently-watched-section-skeleton"
+      className={cn("space-y-4", className)}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <Skeleton className="w-8 h-8 rounded-lg" />
+          <Skeleton className="w-40 h-6 rounded-md" />
+        </div>
+        <Skeleton className="w-16 h-4 rounded-md" />
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5 sm:gap-4">
+        <RecentlyWatchedCardSkeleton />
+        <RecentlyWatchedCardSkeleton />
+        <RecentlyWatchedCardSkeleton />
+        <RecentlyWatchedCardSkeleton />
+      </div>
+    </div>
   );
 }
