@@ -14,13 +14,12 @@ import {
 } from "@/components/library";
 import { MediaGrid } from "@/components/title/media-grid";
 import { MediaCardProps } from "@/components/title/media-card";
-import { demoLibraryItems } from "@/lib/data/demo-titles";
 
 export interface LibraryViewProps {
   initialItems?: MediaCardProps[];
 }
 
-export function LibraryView({ initialItems = demoLibraryItems }: LibraryViewProps) {
+export function LibraryView({ initialItems = [] }: LibraryViewProps) {
   const [selectedType, setSelectedType] = useState<MediaTypeFilter>("ALL");
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("ALL");
   const [sortField, setSortField] = useState<SortField>("RECENTLY_UPDATED");

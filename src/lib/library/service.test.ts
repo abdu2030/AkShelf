@@ -85,10 +85,10 @@ describe("Library Service (getLibraryItems)", () => {
     expect(items).toEqual(demoLibraryItems);
   });
 
-  it("returns demo titles if authenticated user has no library entries", async () => {
+  it("returns empty array if authenticated user has no library entries", async () => {
     vi.mocked(prisma.userTitle.findMany).mockResolvedValueOnce([] as unknown as never);
 
     const items = await getLibraryItems({ userId: "user-123" });
-    expect(items).toEqual(demoLibraryItems);
+    expect(items).toEqual([]);
   });
 });
