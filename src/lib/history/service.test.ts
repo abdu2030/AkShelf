@@ -81,4 +81,20 @@ describe("getWatchHistory Service", () => {
     expect(result.items[0].actionSentence).toBe("Marked as Watched");
     expect(result.totalCount).toBe(1);
   });
+
+  it("returns empty array and zero count when authenticated user has no activity", async () => {
+    mockAuth.mockResolvedValueOnce({
+      user: { id: "user-123" },
+      expires: "2099-01-01",
+    });
+
+    vi.mocked(prisma.watchHistory.findMany).mockResolvedValueOnce([]);
+    vi.mocked(prisma.watchHistory.count).mockResolvedValueOnce(0);
+
+    const result = await getWatchHistory();
+
+    expect(result.items).toEqual([]);
+    expect(result.totalCount).toBe(0);
+    expect(result.hasMore).toBe(false);
+  });
 });

@@ -199,16 +199,12 @@ export async function getWatchHistory(
       prisma.watchHistory.count({ where: whereClause }),
     ]);
 
-    // If authenticated user has no activity yet, fallback to demo history for seamless UX
+    // If authenticated user has no activity yet, return empty list (genuine empty state)
     if (totalCount === 0) {
-      let demoItems = getDemoHistoryItems();
-      if (typeFilter && typeFilter !== "ALL") {
-        demoItems = demoItems.filter((i) => i.mediaType === typeFilter);
-      }
       return {
-        items: demoItems.slice(offset, offset + limit),
-        totalCount: demoItems.length,
-        hasMore: offset + limit < demoItems.length,
+        items: [],
+        totalCount: 0,
+        hasMore: false,
       };
     }
 
