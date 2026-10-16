@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { Star, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { updateTitleRatingAction } from "@/actions/tracking";
@@ -36,6 +36,14 @@ export function RatingControl({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
+  // Concurrency and race condition guards
+  const lastCommittedScoreRef = useRef<number | null>(currentRating);
+  const isSubmittingRef = useRef(false);
+
+  useEffect(() => {
+    lastCommittedScoreRef.current = currentRating;
+  }, [currentRating]);
+
   // Sync state during render when prop changes externally (React 19 pattern)
   if (prevPropRating !== currentRating) {
     setPrevPropRating(currentRating);
@@ -45,15 +53,19 @@ export function RatingControl({
 
   const handleRate = useCallback(
     async (newScore: number | null) => {
-      if (newScore === rating && newScore !== null) return;
+      if (newScore === lastCommittedScoreRef.current) return;
+      if (isSubmittingRef.current) return;
 
       const previousRating = rating;
+      lastCommittedScoreRef.current = newScore;
+      isSubmittingRef.current = true;
       setRating(newScore);
       setCustomInput(newScore != null ? String(newScore) : "");
       setErrorMsg(null);
       onRatingChange?.(newScore);
 
       if (!titleExternalSource || !titleExternalId) {
+        isSubmittingRef.current = false;
         return;
       }
 
@@ -68,17 +80,20 @@ export function RatingControl({
         });
 
         if (!result.success) {
+          lastCommittedScoreRef.current = previousRating;
           setRating(previousRating);
           setCustomInput(previousRating != null ? String(previousRating) : "");
           onRatingChange?.(previousRating);
           setErrorMsg(result.error || "Failed to update rating. Must be between 1 and 10.");
         }
       } catch (err) {
+        lastCommittedScoreRef.current = previousRating;
         setRating(previousRating);
         setCustomInput(previousRating != null ? String(previousRating) : "");
         onRatingChange?.(previousRating);
         setErrorMsg(err instanceof Error ? err.message : "Failed to update rating");
       } finally {
+        isSubmittingRef.current = false;
         setIsPending(false);
       }
     },
@@ -86,9 +101,11 @@ export function RatingControl({
   );
 
   const commitCustomInput = useCallback(() => {
+    if (isSubmittingRef.current) return;
+
     const trimmed = customInput.trim();
     if (!trimmed) {
-      if (rating !== null) {
+      if (lastCommittedScoreRef.current !== null) {
         handleRate(null);
       }
       return;
@@ -103,6 +120,10 @@ export function RatingControl({
 
     // Round to at most 2 decimal places to avoid floating-point display quirks
     const rounded = Math.round(parsed * 100) / 100;
+    if (rounded === lastCommittedScoreRef.current) {
+      return;
+    }
+
     setCustomInput(String(rounded));
     handleRate(rounded);
   }, [customInput, rating, handleRate]);
@@ -255,7 +276,7 @@ export function RatingControl({
               onBlur={commitCustomInput}
               placeholder="e.g. 8.5"
               aria-label="Custom decimal rating from 1 to 10"
-              disabled={isPending}
+              readOnly={isPending}
               className={cn(
                 "w-20 sm:w-16 h-10 sm:h-9 text-center text-xs font-bold rounded-xl glass-1 border px-2 transition-all",
                 "text-ink placeholder:text-ink-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
