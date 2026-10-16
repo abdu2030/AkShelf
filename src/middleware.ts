@@ -1,7 +1,10 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
-export default auth((req) => {
+export function handleMiddleware(req: {
+  auth?: unknown;
+  nextUrl: { pathname: string; search: string; origin: string };
+}) {
   const isLoggedIn = !!req.auth;
   const { pathname, search } = req.nextUrl;
   const isLoginPage = pathname === "/login" || pathname.startsWith("/login/");
@@ -28,7 +31,9 @@ export default auth((req) => {
   }
 
   return NextResponse.next();
-});
+}
+
+export default auth((req) => handleMiddleware(req));
 
 export const config = {
   matcher: [
