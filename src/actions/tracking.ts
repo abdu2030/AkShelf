@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { ensureSeasonRecord, persistTitleSeasons } from "@/lib/season/storage";
 import { persistSeasonEpisodes } from "@/lib/episode/storage";
 import { metadataService } from "@/lib/metadata/service";
+import { safeLogger, sanitizeErrorMessage } from "@/lib/security/sanitizer";
 import {
   batchSeasonSchema,
   fetchSeasonEpisodesSchema,
@@ -296,10 +297,12 @@ export async function toggleEpisodeProgressAction(
       status: currentStatus,
     };
   } catch (error) {
-    console.error("[TrackingAction] Failed to update episode progress:", error);
+    safeLogger.error("[TrackingAction] Failed to update episode progress:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Database mutation failed",
+      error: sanitizeErrorMessage(
+        error instanceof Error ? error.message : "Database mutation failed",
+      ),
     };
   }
 }
@@ -476,10 +479,12 @@ export async function batchSeasonProgressAction(
       count: episodeNumbers.length,
     };
   } catch (error) {
-    console.error("[TrackingAction] Failed to batch update season:", error);
+    safeLogger.error("[TrackingAction] Failed to batch update season:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Database batch mutation failed",
+      error: sanitizeErrorMessage(
+        error instanceof Error ? error.message : "Database batch mutation failed",
+      ),
     };
   }
 }
@@ -659,10 +664,12 @@ export async function updateTitleStatusAction(
       status,
     };
   } catch (error) {
-    console.error("[TrackingAction] Failed to update title status:", error);
+    safeLogger.error("[TrackingAction] Failed to update title status:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Database status mutation failed",
+      error: sanitizeErrorMessage(
+        error instanceof Error ? error.message : "Database status mutation failed",
+      ),
     };
   }
 }
@@ -785,10 +792,12 @@ export async function updateTitleRatingAction(
       rating,
     };
   } catch (error) {
-    console.error("[TrackingAction] Failed to update title rating:", error);
+    safeLogger.error("[TrackingAction] Failed to update title rating:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Database rating mutation failed",
+      error: sanitizeErrorMessage(
+        error instanceof Error ? error.message : "Database rating mutation failed",
+      ),
     };
   }
 }
@@ -892,10 +901,12 @@ export async function updateTitleDatesAction(
       watchedAt: parsedWatchedAt ?? null,
     };
   } catch (error) {
-    console.error("[TrackingAction] Failed to update title dates:", error);
+    safeLogger.error("[TrackingAction] Failed to update title dates:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Database date mutation failed",
+      error: sanitizeErrorMessage(
+        error instanceof Error ? error.message : "Database date mutation failed",
+      ),
     };
   }
 }
@@ -984,10 +995,12 @@ export async function syncTitleSeasonsAction(
       })),
     };
   } catch (error) {
-    console.error("[TrackingAction] Failed to sync seasons:", error);
+    safeLogger.error("[TrackingAction] Failed to sync seasons:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Database season mutation failed",
+      error: sanitizeErrorMessage(
+        error instanceof Error ? error.message : "Database season mutation failed",
+      ),
     };
   }
 }
@@ -1087,10 +1100,12 @@ export async function syncSeasonEpisodesAction(
       })),
     };
   } catch (error) {
-    console.error("[TrackingAction] Failed to sync season episodes:", error);
+    safeLogger.error("[TrackingAction] Failed to sync season episodes:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Database episode mutation failed",
+      error: sanitizeErrorMessage(
+        error instanceof Error ? error.message : "Database episode mutation failed",
+      ),
     };
   }
 }
@@ -1201,10 +1216,12 @@ export async function fetchSeasonEpisodesAction(
       isDemo: !userId,
     };
   } catch (error) {
-    console.error("[TrackingAction] Failed to fetch season episodes:", error);
+    safeLogger.error("[TrackingAction] Failed to fetch season episodes:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to fetch season episodes",
+      error: sanitizeErrorMessage(
+        error instanceof Error ? error.message : "Failed to fetch season episodes",
+      ),
     };
   }
 }

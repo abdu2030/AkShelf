@@ -1,4 +1,5 @@
 import { prisma } from "./prisma";
+import { sanitizeErrorMessage } from "@/lib/security/sanitizer";
 
 export interface DatabaseHealthResult {
   connected: boolean;
@@ -31,7 +32,7 @@ export async function checkDatabaseConnection(): Promise<DatabaseHealthResult> {
     return {
       connected: false,
       timestamp,
-      error: message,
+      error: sanitizeErrorMessage(message),
     };
   }
 }

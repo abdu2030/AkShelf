@@ -40,4 +40,18 @@ describe("checkDatabaseConnection", () => {
     expect(result.connected).toBe(false);
     expect(result.error).toContain("Connection refused");
   });
+
+  it("sanitizes database password from connection error messages", async () => {
+    process.env.DATABASE_URL = "postgresql://postgres:SecretPass123@db.supabase.co:5432/postgres";
+    vi.spyOn(prisma, "$queryRaw").mockRejectedValueOnce(
+      new Error(
+        "Can't reach database server at postgresql://postgres:SecretPass123@db.supabase.co:5432/postgres",
+      ),
+    );
+
+    const result = await checkDatabaseConnection();
+    expect(result.connected).toBe(false);
+    expect(result.error).not.toContain("SecretPass123");
+    expect(result.error).toContain("postgresql://postgres:***@db.supabase.co:5432/postgres");
+  });
 });
