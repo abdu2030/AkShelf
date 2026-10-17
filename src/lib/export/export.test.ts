@@ -71,7 +71,7 @@ describe("Day 48 - Data Safety & Export Service", () => {
   describe("verifySchemaConsistency", () => {
     const validPayload: ExportDataJson = {
       app: "AkShelf",
-      version: "1.0.0-rc.1",
+      version: "1.0.0",
       schemaVersion: 1,
       exportedAt: "2026-10-16T12:00:00.000Z",
       user: {
@@ -280,7 +280,7 @@ describe("Day 48 - Data Safety & Export Service", () => {
 
       const payload: ExportDataJson = {
         app: "AkShelf",
-        version: "1.0.0-rc.1",
+        version: "1.0.0",
         schemaVersion: 1,
         exportedAt: "2026-10-16T12:00:00.000Z",
         user: { email: "owner@akshelf.local" },

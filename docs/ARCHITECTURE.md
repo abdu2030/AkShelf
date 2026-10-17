@@ -1,7 +1,7 @@
 # AkShelf System Architecture & Technical Specification 🏛️
 
 **Application**: AkShelf (Personal Watch Tracker)  
-**Edition**: v1.0.0-rc.1 / October 2026  
+**Edition**: v1.0.0 / October 2026  
 **License**: MIT
 
 ---

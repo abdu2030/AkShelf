@@ -114,7 +114,7 @@ export async function generateJsonExport(userId: string): Promise<ExportDataJson
 
   return {
     app: "AkShelf",
-    version: "1.0.0-rc.1",
+    version: "1.0.0",
     schemaVersion: 1,
     exportedAt: new Date().toISOString(),
     user: {

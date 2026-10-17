@@ -1,7 +1,7 @@
 # Production Custom Domain & SSL/TLS Configuration Guide 🔒
 
 **Target Environment**: Vercel Production + Custom Domain  
-**Edition**: v1.0.0-rc.1 / October 2026
+**Edition**: v1.0.0 / October 2026
 
 ---
 
