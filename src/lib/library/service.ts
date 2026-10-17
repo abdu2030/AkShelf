@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { withDbRetry } from "@/lib/db/retry";
 import { demoLibraryItems } from "@/lib/data/demo-titles";
 import { MediaCardProps } from "@/components/title/media-card";
 import { WatchStatusType } from "@/components/ui/status-badge";
@@ -23,24 +24,28 @@ export async function getLibraryItems(
   }
 
   try {
-    const userTitles = await prisma.userTitle.findMany({
-      where: { userId },
-      include: {
-        title: {
+    const userTitles = await withDbRetry(
+      () =>
+        prisma.userTitle.findMany({
+          where: { userId },
           include: {
-            seasons: {
-              orderBy: { seasonNumber: "asc" },
+            title: {
               include: {
-                episodes: {
-                  orderBy: { episodeNumber: "asc" },
+                seasons: {
+                  orderBy: { seasonNumber: "asc" },
+                  include: {
+                    episodes: {
+                      orderBy: { episodeNumber: "asc" },
+                    },
+                  },
                 },
               },
             },
           },
-        },
-      },
-      orderBy: { updatedAt: "desc" },
-    });
+          orderBy: { updatedAt: "desc" },
+        }),
+      { label: "getLibraryItems:titles" },
+    );
 
     if (userTitles.length === 0) {
       return [];
@@ -85,10 +90,14 @@ export async function getLibraryItems(
       }),
     );
 
-    const userEpisodes = await prisma.userEpisode.findMany({
-      where: { userId },
-      select: { episodeId: true },
-    });
+    const userEpisodes = await withDbRetry(
+      () =>
+        prisma.userEpisode.findMany({
+          where: { userId },
+          select: { episodeId: true },
+        }),
+      { label: "getLibraryItems:episodes" },
+    );
     const watchedEpisodeSet = new Set(userEpisodes.map((ue) => ue.episodeId));
 
     return userTitles.map((ut) => {
@@ -128,7 +137,10 @@ export async function getLibraryItems(
       };
     });
   } catch (error) {
-    console.error("[LibraryService] Failed to fetch user library from DB:", error);
+    console.warn(
+      "[LibraryService] Failed to fetch user library from DB, falling back to demo library:",
+      error instanceof Error ? error.message : error,
+    );
     return demoLibraryItems;
   }
 }
