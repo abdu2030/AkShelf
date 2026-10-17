@@ -17,6 +17,8 @@
     "test:smoke:devices": "playwright test e2e/smoke.spec.ts",
     "db:migrate": "node --env-file=.env.local node_modules/prisma/build/index.js migrate dev",
     "db:seed": "node --env-file=.env.local node_modules/prisma/build/index.js db seed",
+    "db:seed:clean": "node --env-file=.env.local node_modules/prisma/build/index.js db seed -- --clean",
+    "db:provision": "tsx --env-file=.env.local scripts/provision-owner.ts",
     "db:check": "tsx --env-file=.env.local scripts/test-db.ts",
     "db:clean": "tsx --env-file=.env.local scripts/wipe-dummy-data.ts",
     "db:export": "tsx --env-file=.env.local scripts/export-data.ts",

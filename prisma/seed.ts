@@ -22,16 +22,43 @@ async function withRetry<T>(operation: () => Promise<T>, retries = 5, delayMs = 
 }
 
 async function seed() {
-  console.log("🌱 Seeding expanded demo database records (Day 13)...");
+  const isCleanMode =
+    process.env.SEED_MODE === "clean" ||
+    process.argv.includes("--clean") ||
+    process.env.NODE_ENV === "production";
+
+  const ownerEmail = (process.env.OWNER_EMAIL || "owner@akshelf.local").toLowerCase().trim();
+  const ownerName = process.env.OWNER_NAME || "AkShelf Owner";
+
+  if (isCleanMode) {
+    console.log("🌱 Running clean production seed (Owner provisioning only)...");
+    const ownerUser = await withRetry(() =>
+      prisma.user.upsert({
+        where: { email: ownerEmail },
+        update: { name: ownerName },
+        create: {
+          email: ownerEmail,
+          name: ownerName,
+        },
+      }),
+    );
+
+    console.log(`👤 Verified owner user: ${ownerUser.email} (${ownerUser.id})`);
+    console.log(`🛡️ Clean seed mode active: 0 dummy titles inserted.`);
+    console.log(`✨ Database is ready for production use.`);
+    return;
+  }
+
+  console.log("🌱 Seeding expanded demo database records (Development Mode)...");
 
   // 1. Create or upsert demo owner user
   const demoUser = await withRetry(() =>
     prisma.user.upsert({
-      where: { email: "owner@akshelf.local" },
+      where: { email: ownerEmail },
       update: {},
       create: {
-        email: "owner@akshelf.local",
-        name: "AkShelf Owner",
+        email: ownerEmail,
+        name: ownerName,
       },
     }),
   );
