@@ -78,6 +78,50 @@ describe("Library Service (getLibraryItems)", () => {
     });
   });
 
+  it("omits episode progress fields for movies in the user library", async () => {
+    vi.mocked(prisma.userTitle.findMany).mockResolvedValueOnce([
+      {
+        id: "ut-movie",
+        userId: "user-123",
+        titleId: "title-movie",
+        status: "WATCHING",
+        rating: 8.0,
+        watchedAt: null,
+        startedAt: new Date("2026-03-01T12:00:00Z"),
+        createdAt: new Date("2026-03-01T12:00:00Z"),
+        updatedAt: new Date("2026-03-10T15:30:00Z"),
+        title: {
+          id: "title-movie",
+          externalSource: "tmdb",
+          externalId: "980489",
+          type: "MOVIE",
+          title: "Gran Turismo",
+          year: 2023,
+          posterUrl: "https://image.tmdb.org/t/p/w500/granturismo.jpg",
+          seasons: [],
+        },
+      },
+    ] as unknown as never);
+
+    vi.mocked(prisma.userEpisode.findMany).mockResolvedValueOnce([] as unknown as never);
+
+    const items = await getLibraryItems({ userId: "user-123" });
+
+    expect(items.length).toBe(1);
+    expect(items[0]).toMatchObject({
+      id: "db-title-movie",
+      title: "Gran Turismo",
+      mediaType: "MOVIE",
+      year: 2023,
+      status: "WATCHING",
+      rating: 8.0,
+      currentEpisode: null,
+      season: null,
+      episode: null,
+      totalEpisodes: null,
+    });
+  });
+
   it("safely falls back to demo titles if database query fails", async () => {
     vi.mocked(prisma.userTitle.findMany).mockRejectedValueOnce(new Error("DB connection timeout"));
 

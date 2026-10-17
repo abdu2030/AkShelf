@@ -157,7 +157,9 @@ export function TitleHero({
                 {formattedRuntime}
               </span>
             )}
-            {totalEpisodes != null && totalEpisodes > 1 && <span>• {totalEpisodes} Episodes</span>}
+            {type !== "MOVIE" && totalEpisodes != null && totalEpisodes > 1 && (
+              <span>• {totalEpisodes} Episodes</span>
+            )}
           </div>
 
           {/* Genres Chips */}

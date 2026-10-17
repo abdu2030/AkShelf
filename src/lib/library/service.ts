@@ -102,22 +102,27 @@ export async function getLibraryItems(
 
     return userTitles.map((ut) => {
       const title = ut.title;
+      const isMovie = title.type === "MOVIE";
       let watchedCount = 0;
       let nextUpSeason: number | null = null;
       let nextUpEpisode: number | null = null;
 
-      for (const season of title.seasons) {
-        for (const ep of season.episodes) {
-          if (watchedEpisodeSet.has(ep.id)) {
-            watchedCount++;
-          } else if (nextUpSeason === null) {
-            nextUpSeason = season.seasonNumber;
-            nextUpEpisode = ep.episodeNumber;
+      if (!isMovie) {
+        for (const season of title.seasons) {
+          for (const ep of season.episodes) {
+            if (watchedEpisodeSet.has(ep.id)) {
+              watchedCount++;
+            } else if (nextUpSeason === null) {
+              nextUpSeason = season.seasonNumber;
+              nextUpEpisode = ep.episodeNumber;
+            }
           }
         }
       }
 
-      const totalEpisodes = title.seasons.reduce((acc, s) => acc + s.episodeCount, 0) || null;
+      const totalEpisodes = !isMovie
+        ? title.seasons.reduce((acc, s) => acc + s.episodeCount, 0) || null
+        : null;
 
       return {
         id: `db-${title.id}`,
@@ -127,10 +132,10 @@ export async function getLibraryItems(
         posterUrl: title.posterUrl,
         status: ut.status as WatchStatusType,
         rating: ut.rating,
-        season: nextUpSeason,
-        episode: nextUpEpisode,
-        currentEpisode: watchedCount,
-        totalEpisodes,
+        season: isMovie ? null : nextUpSeason,
+        episode: isMovie ? null : nextUpEpisode,
+        currentEpisode: isMovie ? null : watchedCount,
+        totalEpisodes: isMovie ? null : totalEpisodes,
         addedAt: ut.createdAt.toISOString(),
         watchedAt: ut.watchedAt?.toISOString() ?? null,
         updatedAt: ut.updatedAt.toISOString(),

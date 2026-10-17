@@ -60,6 +60,13 @@ describe("formatEpisodePosition", () => {
   it("handles empty values gracefully", () => {
     expect(formatEpisodePosition(null, null)).toBe("");
   });
+
+  it("returns empty string when episode is 0 or negative", () => {
+    expect(formatEpisodePosition(null, 0)).toBe("");
+    expect(formatEpisodePosition(1, 0)).toBe("");
+    expect(formatEpisodePosition(0, 0)).toBe("");
+    expect(formatEpisodePosition(null, -1)).toBe("");
+  });
 });
 
 describe("formatDate", () => {
