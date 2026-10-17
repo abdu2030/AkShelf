@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { getWatchHistory } from "./service";
+import { getWatchHistory, clearWatchHistory } from "./service";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
@@ -12,6 +12,7 @@ vi.mock("@/lib/db", () => ({
     watchHistory: {
       findMany: vi.fn(),
       count: vi.fn(),
+      deleteMany: vi.fn(),
     },
   },
 }));
@@ -96,5 +97,30 @@ describe("getWatchHistory Service", () => {
     expect(result.items).toEqual([]);
     expect(result.totalCount).toBe(0);
     expect(result.hasMore).toBe(false);
+  });
+});
+
+describe("clearWatchHistory Service", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("deletes all watch history entries for the specified user", async () => {
+    vi.mocked(prisma.watchHistory.deleteMany).mockResolvedValueOnce({ count: 5 });
+
+    const result = await clearWatchHistory("user-123");
+
+    expect(prisma.watchHistory.deleteMany).toHaveBeenCalledWith({
+      where: { userId: "user-123" },
+    });
+    expect(result).toEqual({ success: true, count: 5 });
+  });
+
+  it("handles database exceptions gracefully and returns failure", async () => {
+    vi.mocked(prisma.watchHistory.deleteMany).mockRejectedValueOnce(new Error("DB error"));
+
+    const result = await clearWatchHistory("user-123");
+
+    expect(result).toEqual({ success: false, count: 0 });
   });
 });
