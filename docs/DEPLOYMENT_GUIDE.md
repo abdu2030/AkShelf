@@ -1,7 +1,7 @@
 # AkShelf Production Deployment Guide 🚀
 
 **Target Architecture**: Next.js (Vercel Serverless) + PostgreSQL (Supabase with Connection Pooling)  
-**Edition**: v1.0.0-rc.1 / October 2026
+**Edition**: v1.0.0 / October 2026
 
 ---
 
@@ -122,7 +122,7 @@ node -e "const b=require('bcryptjs'); console.log(b.hashSync('YourStrongPassword
    {
      "status": "ok",
      "app": "AkShelf",
-     "version": "1.0.0-rc.1",
+     "version": "1.0.0",
      "services": {
        "database": {
          "status": "connected"

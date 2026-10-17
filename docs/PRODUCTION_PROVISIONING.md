@@ -148,7 +148,7 @@ Before opening your AkShelf instance to daily use, verify the deployment:
    ```json
    {
      "status": "healthy",
-     "version": "1.0.0-rc.1",
+     "version": "1.0.0",
      "database": {
        "status": "connected",
        "latencyMs": 45

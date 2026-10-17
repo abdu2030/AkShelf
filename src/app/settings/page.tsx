@@ -143,7 +143,7 @@ export default function SettingsPage() {
             <h2 className="text-lg font-bold font-display text-ink">About & Data Sources</h2>
           </div>
           <div className="text-xs text-ink-muted font-medium space-y-2 leading-relaxed">
-            <p>AkShelf Version 1.0.0-rc.1 (Week 7)</p>
+            <p>AkShelf Version 1.0.0 (Production Release)</p>
             <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
             <p>Anime data provided by the AniList GraphQL API.</p>
           </div>

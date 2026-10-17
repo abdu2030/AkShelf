@@ -36,7 +36,7 @@ describe("Export API Routes (/api/export/json & /api/export/csv)", () => {
 
       const mockData = {
         app: "AkShelf",
-        version: "1.0.0-rc.1",
+        version: "1.0.0",
         schemaVersion: 1,
         exportedAt: "2026-10-16T12:00:00.000Z",
         user: { email: "owner@akshelf.local" },

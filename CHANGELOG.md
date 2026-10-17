@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-10-17
+
+### Added
+
+- **Production Deployment Configuration & Connection Pooling** (`src/lib/db/prisma.ts`, `vercel.json`): Serverless connection reuse via `globalForPrisma`, Supabase Transaction Pooler support (port 6543) with `pgbouncer=true&connection_limit=1`, and dedicated migration direct session routing (port 5432).
+- **Production Health Monitoring Endpoint** (`/api/health`, `src/app/api/health/route.ts`): Real-time health check reporting application status, version (`1.0.0`), uptime, and active database connection pool latency.
+- **Deployment Pre-Flight Check CLI** (`npm run deploy:check`, `scripts/verify-deployment.ts`): Automated 9-point pre-flight validation auditing environment variables, connection pool latency, and relational database schema tables.
+- **Enterprise Security Headers Suite** (`next.config.ts`, `src/lib/security/headers.test.ts`): Enforced Content Security Policy (CSP), HTTP Strict Transport Security (HSTS with 2-year max-age, includeSubDomains, preload), `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and restrictive `Permissions-Policy`.
+- **Multi-Device & Responsive Smoke Test Suite** (`e2e/smoke.spec.ts`): Automated cross-viewport Playwright smoke test covering Desktop Chromium, Mobile Safari (iPhone 14, 390x844), and Mobile Chrome (Pixel 7, 412x915) validating zero-horizontal-overflow, accessible touch targets (>=44x44px), and backup export links.
+- **Production Owner Provisioning & Clean Seed Engine** (`src/lib/auth/provision.ts`, `scripts/provision-owner.ts`): Idempotent single-owner provisioning CLI (`npm run db:provision`), offline salted bcrypt hash generation (`--hash-only`), database zero-pollution auditing (`--audit-only`), and clean seed mode (`npm run db:seed:clean`).
+- **Complete Operational Documentation Suite** (`docs/`):
+  - `docs/ARCHITECTURE.md`: Complete system architecture, topology, serverless pooling, data model, and security invariants.
+  - `docs/USER_MANUAL.md`: Operator manual covering search, tracking, decimal ratings, episode checklists, and multi-dimensional library filters.
+  - `docs/BACKUP_AND_RECOVERY.md`: JSON snapshot backups, CSV exports, transactional restore, and disaster recovery procedures.
+  - `docs/DEPLOYMENT_GUIDE.md`: Step-by-step Supabase connection pooling and Vercel production setup.
+  - `docs/DOMAIN_SSL_GUIDE.md`: Custom domain DNS, Let's Encrypt TLS 1.3, and security headers guide.
+  - `docs/SMOKE_TESTING_REPORT.md`: Responsive viewport audit across Desktop, iPhone 14, and Pixel 7.
+  - `docs/PRODUCTION_PROVISIONING.md`: Clean seed routines, credential management, and zero-pollution guarantees.
+  - `docs/FINAL_AUDIT_REPORT.md`: Comprehensive quality gates sign-off for the v1.0.0 production release.
+
+### Changed
+
+- Bumped official application release version to `1.0.0` in `package.json`, `package-lock.json`, `/api/health`, export service, and settings page.
+- Updated Prisma seed script (`prisma/seed.ts`) to detect clean mode via `SEED_MODE=clean`, `--clean`, or `NODE_ENV=production`, ensuring zero mock titles are inserted in production environments.
+
+---
+
 ## [1.0.0-rc.1] - 2026-10-16
 
 ### Added

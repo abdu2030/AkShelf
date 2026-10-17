@@ -1,7 +1,7 @@
 # AkShelf Backup & Disaster Recovery Procedures 🛡️
 
 **Application**: AkShelf (My Watch Tracker)  
-**Edition**: v1.0.0-rc.1 / October 2026
+**Edition**: v1.0.0 / October 2026
 
 ---
 
@@ -24,7 +24,7 @@ The JSON backup represents a complete snapshot of your entire account:
 ```json
 {
   "app": "AkShelf",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0",
   "schemaVersion": 1,
   "exportedAt": "2026-10-17T12:00:00.000Z",
   "user": {

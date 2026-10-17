@@ -10,7 +10,7 @@ export async function GET() {
   const payload = {
     status: isHealthy ? "ok" : "degraded",
     app: "AkShelf",
-    version: "1.0.0-rc.1",
+    version: "1.0.0",
     timestamp: new Date().toISOString(),
     uptimeSeconds: Math.floor(process.uptime()),
     services: {

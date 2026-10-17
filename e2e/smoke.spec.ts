@@ -8,7 +8,7 @@ test.describe("Production Smoke Test Suite across Viewports & Devices (Day 52)",
     const data = await response.json();
     expect(data.status).toBe("ok");
     expect(data.app).toBe("AkShelf");
-    expect(data.version).toBe("1.0.0-rc.1");
+    expect(data.version).toBe("1.0.0");
     expect(data.services.database.status).toBe("connected");
   });
 

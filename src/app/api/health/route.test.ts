@@ -23,7 +23,7 @@ describe("Health Check API (/api/health)", () => {
     const body = await response.json();
     expect(body.status).toBe("ok");
     expect(body.app).toBe("AkShelf");
-    expect(body.version).toBe("1.0.0-rc.1");
+    expect(body.version).toBe("1.0.0");
     expect(body.services.database.status).toBe("connected");
   });
 
