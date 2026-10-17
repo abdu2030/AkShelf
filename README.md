@@ -135,19 +135,36 @@ AkShelf enforces a strict separation between external entertainment metadata and
 
 ## 📜 Available npm Scripts
 
-| Script                 | Command              | Purpose                                     |
-| :--------------------- | :------------------- | :------------------------------------------ |
-| `npm run dev`          | `next dev`           | Starts local Next.js development server     |
-| `npm run build`        | `next build`         | Compiles optimized production build         |
-| `npm run start`        | `next start`         | Runs the production build locally           |
-| `npm run lint`         | `eslint .`           | Runs ESLint across the codebase             |
-| `npm run typecheck`    | `tsc --noEmit`       | Validates TypeScript types                  |
-| `npm run format`       | `prettier --write .` | Formats codebase using Prettier             |
-| `npm run format:check` | `prettier --check .` | Verifies codebase formatting in CI          |
-| `npm test`             | `vitest run`         | Runs unit tests                             |
-| `npm run test:e2e`     | `playwright test`    | Runs Playwright browser tests (from Week 7) |
-| `npm run db:migrate`   | `prisma migrate dev` | Runs Prisma development migrations          |
-| `npm run db:seed`      | `prisma db seed`     | Seeds the database with demo fixtures       |
+| Script                 | Command                              | Purpose                                      |
+| :--------------------- | :----------------------------------- | :------------------------------------------- |
+| `npm run dev`          | `next dev`                           | Starts local Next.js development server      |
+| `npm run build`        | `next build`                         | Compiles optimized production build          |
+| `npm run start`        | `next start`                         | Runs the production build locally            |
+| `npm run lint`         | `eslint .`                           | Runs ESLint across the codebase              |
+| `npm run typecheck`    | `tsc --noEmit`                       | Validates TypeScript types                   |
+| `npm run format`       | `prettier --write .`                 | Formats codebase using Prettier              |
+| `npm run format:check` | `prettier --check .`                 | Verifies codebase formatting in CI           |
+| `npm test`             | `vitest run`                         | Runs unit & integration test suites          |
+| `npm run test:e2e`     | `playwright test --project=chromium` | Runs Playwright browser E2E tests            |
+| `npm run test:smoke`   | `playwright test e2e/smoke.spec.ts`  | Runs cross-device responsive smoke tests     |
+| `npm run db:migrate`   | `prisma migrate dev`                 | Runs Prisma development migrations           |
+| `npm run db:seed`      | `prisma db seed`                     | Seeds database with mock fixtures            |
+| `npm run db:clean`     | `tsx scripts/wipe-dummy-data.ts`     | Wipes mock data, leaving owner account clean |
+| `npm run db:export`    | `tsx scripts/export-data.ts`         | Dumps timestamped JSON & CSV offline backups |
+| `npm run deploy:check` | `tsx scripts/verify-deployment.ts`   | Validates production env, pool latency & DB  |
+
+---
+
+## 📚 Documentation & Operational Guides
+
+Detailed architectural specifications, operator manuals, and disaster recovery procedures:
+
+- **[System Architecture Guide](docs/ARCHITECTURE.md)**: Network topology, serverless connection pooling, data model, and mutation lifecycles.
+- **[User Manual & Operator Guide](docs/USER_MANUAL.md)**: Complete guide to searching, tracking, decimal ratings, episode checklists, and library filters.
+- **[Backup & Disaster Recovery Procedures](docs/BACKUP_AND_RECOVERY.md)**: JSON snapshots, CSV exports, transactional restore, and database reset routines.
+- **[Production Deployment Guide](docs/DEPLOYMENT_GUIDE.md)**: Step-by-step Supabase connection pooling and Vercel production setup.
+- **[Custom Domain & SSL/TLS Guide](docs/DOMAIN_SSL_GUIDE.md)**: DNS setup, Let's Encrypt TLS 1.3 certificates, and CSP/HSTS headers.
+- **[Cross-Device Smoke Testing Report](docs/SMOKE_TESTING_REPORT.md)**: Responsive viewport audits across Desktop, iPhone 14, and Pixel 7.
 
 ---
 
