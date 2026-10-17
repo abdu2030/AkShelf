@@ -18,6 +18,7 @@
     "db:check": "tsx --env-file=.env.local scripts/test-db.ts",
     "db:clean": "tsx --env-file=.env.local scripts/wipe-dummy-data.ts",
     "db:export": "tsx --env-file=.env.local scripts/export-data.ts",
+    "deploy:check": "tsx --env-file=.env.local scripts/verify-deployment.ts",
     "prepare": "husky"
   },
   "dependencies": {
