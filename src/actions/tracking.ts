@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { withDbRetry } from "@/lib/db/retry";
 import { ensureSeasonRecord, persistTitleSeasons } from "@/lib/season/storage";
 import { persistSeasonEpisodes } from "@/lib/episode/storage";
 import { metadataService } from "@/lib/metadata/service";
@@ -345,130 +346,201 @@ export async function batchSeasonProgressAction(
   }
 
   try {
-    await prisma.$transaction(async (tx) => {
-      // 1. Ensure Title exists
-      const title = await tx.title.upsert({
-        where: {
-          externalSource_externalId: {
-            externalSource: titleExternalSource,
-            externalId: titleExternalId,
-          },
-        },
-        update: {},
-        create: {
-          externalSource: titleExternalSource,
-          externalId: titleExternalId,
-          title: titleName || `${titleExternalSource}:${titleExternalId}`,
-          type: mediaType || "TV",
-        },
-      });
-
-      // 2. Ensure Season exists
-      const season = await tx.season.upsert({
-        where: {
-          titleId_seasonNumber: {
-            titleId: title.id,
-            seasonNumber,
-          },
-        },
-        update: {},
-        create: {
-          titleId: title.id,
-          seasonNumber,
-          name: `Season ${seasonNumber}`,
-          episodeCount: episodeNumbers.length,
-        },
-      });
-
-      // 3. Upsert all episodes in this season
-      const episodeIds: string[] = [];
-      for (const epNum of episodeNumbers) {
-        const ep = await tx.episode.upsert({
-          where: {
-            seasonId_episodeNumber: {
-              seasonId: season.id,
-              episodeNumber: epNum,
-            },
-          },
-          update: {},
-          create: {
-            seasonId: season.id,
-            episodeNumber: epNum,
-            name: `Episode ${epNum}`,
-          },
-        });
-        episodeIds.push(ep.id);
-      }
-
-      // 4. Batch update UserEpisode records
-      if (watched) {
-        for (const epId of episodeIds) {
-          await tx.userEpisode.upsert({
-            where: {
-              userId_episodeId: {
-                userId,
-                episodeId: epId,
+    const titleRecord = await withDbRetry(
+      () =>
+        prisma.$transaction(
+          async (tx) => {
+            // 1. Ensure Title exists
+            const title = await tx.title.upsert({
+              where: {
+                externalSource_externalId: {
+                  externalSource: titleExternalSource,
+                  externalId: titleExternalId,
+                },
               },
-            },
-            update: {
-              watchedAt: new Date(),
-            },
-            create: {
-              userId,
-              episodeId: epId,
-              watchedAt: new Date(),
-            },
-          });
-        }
+              update: {},
+              create: {
+                externalSource: titleExternalSource,
+                externalId: titleExternalId,
+                title: titleName || `${titleExternalSource}:${titleExternalId}`,
+                type: mediaType || "TV",
+              },
+            });
 
-        await tx.userTitle.upsert({
-          where: {
-            userId_titleId: {
-              userId,
-              titleId: title.id,
-            },
-          },
-          update: {
-            status: "WATCHING",
-            updatedAt: new Date(),
-          },
-          create: {
-            userId,
-            titleId: title.id,
-            status: "WATCHING",
-            startedAt: new Date(),
-          },
-        });
+            // 2. Ensure Season exists
+            const season = await tx.season.upsert({
+              where: {
+                titleId_seasonNumber: {
+                  titleId: title.id,
+                  seasonNumber,
+                },
+              },
+              update: {
+                episodeCount: Math.max(episodeNumbers.length, 1),
+              },
+              create: {
+                titleId: title.id,
+                seasonNumber,
+                name: `Season ${seasonNumber}`,
+                episodeCount: episodeNumbers.length,
+              },
+            });
 
-        await tx.watchHistory.create({
-          data: {
-            userId,
-            titleId: title.id,
-            action: `SEASON_${seasonNumber}_WATCHED`,
-            occurredAt: new Date(),
-          },
-        });
-      } else {
-        await tx.userEpisode.deleteMany({
-          where: {
-            userId,
-            episodeId: { in: episodeIds },
-          },
-        });
+            // 3. Upsert episodes: bulk create missing episodes if findMany & createMany exist, else fallback to upsert
+            const episodeIds: string[] = [];
+            if (
+              typeof tx.episode?.createMany === "function" &&
+              typeof tx.episode?.findMany === "function"
+            ) {
+              const existingEpisodes = await tx.episode.findMany({
+                where: {
+                  seasonId: season.id,
+                  episodeNumber: { in: episodeNumbers },
+                },
+                select: { id: true, episodeNumber: true },
+              });
 
-        await tx.watchHistory.create({
-          data: {
-            userId,
-            titleId: title.id,
-            action: `SEASON_${seasonNumber}_UNWATCHED`,
-            occurredAt: new Date(),
+              const existingNumberSet = new Set(existingEpisodes.map((e) => e.episodeNumber));
+              const missingNumbers = episodeNumbers.filter((n) => !existingNumberSet.has(n));
+
+              if (missingNumbers.length > 0) {
+                await tx.episode.createMany({
+                  data: missingNumbers.map((epNum) => ({
+                    seasonId: season.id,
+                    episodeNumber: epNum,
+                    name: `Episode ${epNum}`,
+                  })),
+                  skipDuplicates: true,
+                });
+              }
+
+              const allEpisodes = await tx.episode.findMany({
+                where: {
+                  seasonId: season.id,
+                  episodeNumber: { in: episodeNumbers },
+                },
+                select: { id: true },
+              });
+              episodeIds.push(...allEpisodes.map((e) => e.id));
+            } else {
+              for (const epNum of episodeNumbers) {
+                const ep = await tx.episode.upsert({
+                  where: {
+                    seasonId_episodeNumber: {
+                      seasonId: season.id,
+                      episodeNumber: epNum,
+                    },
+                  },
+                  update: {},
+                  create: {
+                    seasonId: season.id,
+                    episodeNumber: epNum,
+                    name: `Episode ${epNum}`,
+                  },
+                });
+                episodeIds.push(ep.id);
+              }
+            }
+
+            // 4. Batch update UserEpisode records in bulk
+            if (watched) {
+              if (typeof tx.userEpisode?.createMany === "function") {
+                await tx.userEpisode.deleteMany({
+                  where: {
+                    userId,
+                    episodeId: { in: episodeIds },
+                  },
+                });
+
+                await tx.userEpisode.createMany({
+                  data: episodeIds.map((epId) => ({
+                    userId,
+                    episodeId: epId,
+                    watchedAt: new Date(),
+                  })),
+                  skipDuplicates: true,
+                });
+              } else {
+                for (const epId of episodeIds) {
+                  await tx.userEpisode.upsert({
+                    where: {
+                      userId_episodeId: {
+                        userId,
+                        episodeId: epId,
+                      },
+                    },
+                    update: {
+                      watchedAt: new Date(),
+                    },
+                    create: {
+                      userId,
+                      episodeId: epId,
+                      watchedAt: new Date(),
+                    },
+                  });
+                }
+              }
+
+              await tx.userTitle.upsert({
+                where: {
+                  userId_titleId: {
+                    userId,
+                    titleId: title.id,
+                  },
+                },
+                update: {
+                  status: "WATCHING",
+                  updatedAt: new Date(),
+                },
+                create: {
+                  userId,
+                  titleId: title.id,
+                  status: "WATCHING",
+                  startedAt: new Date(),
+                },
+              });
+
+              await tx.watchHistory.create({
+                data: {
+                  userId,
+                  titleId: title.id,
+                  action: `SEASON_${seasonNumber}_WATCHED`,
+                  occurredAt: new Date(),
+                },
+              });
+            } else {
+              await tx.userEpisode.deleteMany({
+                where: {
+                  userId,
+                  episodeId: { in: episodeIds },
+                },
+              });
+
+              await tx.watchHistory.create({
+                data: {
+                  userId,
+                  titleId: title.id,
+                  action: `SEASON_${seasonNumber}_UNWATCHED`,
+                  occurredAt: new Date(),
+                },
+              });
+            }
+
+            return title;
           },
-        });
-      }
-    });
+          {
+            maxWait: 10000,
+            timeout: 30000,
+          },
+        ),
+      { label: "batchSeasonProgressAction" },
+    );
 
     revalidatePath(`/title/${titleExternalSource}:${titleExternalId}`);
     revalidatePath(`/title/demo-${titleExternalSource}-${titleExternalId}`);
+    if (titleRecord?.id) {
+      revalidatePath(`/title/db-${titleRecord.id}`);
+    }
     revalidatePath("/");
     revalidatePath("/library");
 
