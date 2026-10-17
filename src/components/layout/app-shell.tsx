@@ -11,13 +11,13 @@ import {
   History,
   Settings,
   LogOut,
-  Film,
   Sun,
   Moon,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { useTheme } from "./theme-provider";
 import { logoutAction } from "@/actions/auth";
+import { Logo, LogoMark } from "@/components/ui/logo";
 
 interface NavItem {
   label: string;
@@ -57,16 +57,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* 1. Desktop Sidebar (lg and up: >= 1024px) */}
       <aside className="hidden lg:flex fixed top-3 bottom-3 left-3 w-60 z-20 flex-col glass-2 rounded-[20px] p-4 select-none">
         {/* Brand Header */}
-        <div className="flex items-center gap-3 px-2 py-3 mb-4">
-          <div className="h-9 w-9 rounded-xl bg-accent-fill flex items-center justify-center text-white shadow-md">
-            <Film className="h-5 w-5" aria-hidden="true" />
-          </div>
-          <div>
-            <span className="font-display font-bold text-lg text-ink tracking-tight">AkShelf</span>
-            <span className="block text-[11px] text-ink-muted -mt-0.5 font-semibold tracking-wide">
-              Watch Tracker
-            </span>
-          </div>
+        <div className="px-2 py-3 mb-4">
+          <Logo size={36} />
         </div>
 
         {/* Navigation List */}
@@ -138,8 +130,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* 2. Tablet Rail (md: 768px - 1023px) */}
       <aside className="hidden md:flex lg:hidden fixed top-3 bottom-3 left-3 w-[72px] z-20 flex-col items-center glass-2 rounded-[20px] py-4 select-none">
-        <div className="h-10 w-10 rounded-xl bg-accent-fill flex items-center justify-center text-white shadow-md mb-6">
-          <Film className="h-5 w-5" aria-hidden="true" />
+        <div className="mb-6">
+          <LogoMark size={38} />
         </div>
 
         <nav aria-label="Main" className="flex-1 flex flex-col items-center gap-2">
@@ -204,9 +196,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* 3. Mobile Header (below md: < 768px) with Settings Gear icon */}
       <header className="md:hidden sticky top-0 z-20 w-full glass-2 border-b border-white/10 dark:border-white/12 px-4 h-14 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-lg bg-accent-fill flex items-center justify-center text-white">
-            <Film className="h-4 w-4" aria-hidden="true" />
-          </div>
+          <LogoMark size={28} />
           <span className="font-display font-bold text-base text-ink">AkShelf</span>
         </Link>
 

@@ -2,9 +2,10 @@
 
 import { useActionState, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Film, Eye, EyeOff, AlertTriangle } from "lucide-react";
+import { Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { loginAction } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
+import { LogoMark } from "@/components/ui/logo";
 
 function LoginForm() {
   const [state, formAction, isPending] = useActionState(loginAction, undefined);
@@ -16,8 +17,8 @@ function LoginForm() {
   return (
     <main className="w-full max-w-[400px] glass-3 rounded-[28px] p-8 shadow-2xl flex flex-col items-center">
       {/* AkShelf Mark */}
-      <div className="h-12 w-12 rounded-2xl bg-accent-fill flex items-center justify-center text-white shadow-lg mb-6">
-        <Film className="h-6 w-6" aria-hidden="true" />
+      <div className="mb-6">
+        <LogoMark size={52} />
       </div>
 
       {/* Header */}
