@@ -26,6 +26,24 @@ export default defineConfig({
       },
       dependencies: ["setup"],
     },
+    {
+      name: "mobile-safari",
+      use: {
+        ...devices["iPhone 14"],
+        defaultBrowserType: "chromium",
+        storageState: "playwright/.auth/user.json",
+      },
+      dependencies: ["setup"],
+    },
+    {
+      name: "mobile-chrome",
+      use: {
+        ...devices["Pixel 7"],
+        defaultBrowserType: "chromium",
+        storageState: "playwright/.auth/user.json",
+      },
+      dependencies: ["setup"],
+    },
   ],
   webServer: {
     command: "npx next start -H 127.0.0.1 -p 3000",
