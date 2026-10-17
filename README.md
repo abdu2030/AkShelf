@@ -135,23 +135,25 @@ AkShelf enforces a strict separation between external entertainment metadata and
 
 ## 📜 Available npm Scripts
 
-| Script                 | Command                              | Purpose                                      |
-| :--------------------- | :----------------------------------- | :------------------------------------------- |
-| `npm run dev`          | `next dev`                           | Starts local Next.js development server      |
-| `npm run build`        | `next build`                         | Compiles optimized production build          |
-| `npm run start`        | `next start`                         | Runs the production build locally            |
-| `npm run lint`         | `eslint .`                           | Runs ESLint across the codebase              |
-| `npm run typecheck`    | `tsc --noEmit`                       | Validates TypeScript types                   |
-| `npm run format`       | `prettier --write .`                 | Formats codebase using Prettier              |
-| `npm run format:check` | `prettier --check .`                 | Verifies codebase formatting in CI           |
-| `npm test`             | `vitest run`                         | Runs unit & integration test suites          |
-| `npm run test:e2e`     | `playwright test --project=chromium` | Runs Playwright browser E2E tests            |
-| `npm run test:smoke`   | `playwright test e2e/smoke.spec.ts`  | Runs cross-device responsive smoke tests     |
-| `npm run db:migrate`   | `prisma migrate dev`                 | Runs Prisma development migrations           |
-| `npm run db:seed`      | `prisma db seed`                     | Seeds database with mock fixtures            |
-| `npm run db:clean`     | `tsx scripts/wipe-dummy-data.ts`     | Wipes mock data, leaving owner account clean |
-| `npm run db:export`    | `tsx scripts/export-data.ts`         | Dumps timestamped JSON & CSV offline backups |
-| `npm run deploy:check` | `tsx scripts/verify-deployment.ts`   | Validates production env, pool latency & DB  |
+| Script                  | Command                              | Purpose                                         |
+| :---------------------- | :----------------------------------- | :---------------------------------------------- |
+| `npm run dev`           | `next dev`                           | Starts local Next.js development server         |
+| `npm run build`         | `next build`                         | Compiles optimized production build             |
+| `npm run start`         | `next start`                         | Runs the production build locally               |
+| `npm run lint`          | `eslint .`                           | Runs ESLint across the codebase                 |
+| `npm run typecheck`     | `tsc --noEmit`                       | Validates TypeScript types                      |
+| `npm run format`        | `prettier --write .`                 | Formats codebase using Prettier                 |
+| `npm run format:check`  | `prettier --check .`                 | Verifies codebase formatting in CI              |
+| `npm test`              | `vitest run`                         | Runs unit & integration test suites             |
+| `npm run test:e2e`      | `playwright test --project=chromium` | Runs Playwright browser E2E tests               |
+| `npm run test:smoke`    | `playwright test e2e/smoke.spec.ts`  | Runs cross-device responsive smoke tests        |
+| `npm run db:migrate`    | `prisma migrate dev`                 | Runs Prisma development migrations              |
+| `npm run db:seed`       | `prisma db seed`                     | Seeds database with mock fixtures               |
+| `npm run db:seed:clean` | `prisma db seed -- --clean`          | Seeds clean production owner without dummy data |
+| `npm run db:provision`  | `tsx scripts/provision-owner.ts`     | Provisions owner account & audits clean DB      |
+| `npm run db:clean`      | `tsx scripts/wipe-dummy-data.ts`     | Wipes mock data, leaving owner account clean    |
+| `npm run db:export`     | `tsx scripts/export-data.ts`         | Dumps timestamped JSON & CSV offline backups    |
+| `npm run deploy:check`  | `tsx scripts/verify-deployment.ts`   | Validates production env, pool latency & DB     |
 
 ---
 
@@ -161,6 +163,7 @@ Detailed architectural specifications, operator manuals, and disaster recovery p
 
 - **[System Architecture Guide](docs/ARCHITECTURE.md)**: Network topology, serverless connection pooling, data model, and mutation lifecycles.
 - **[User Manual & Operator Guide](docs/USER_MANUAL.md)**: Complete guide to searching, tracking, decimal ratings, episode checklists, and library filters.
+- **[Production Provisioning Guide](docs/PRODUCTION_PROVISIONING.md)**: Clean seed routines, owner credential provisioning, and zero-pollution audit.
 - **[Backup & Disaster Recovery Procedures](docs/BACKUP_AND_RECOVERY.md)**: JSON snapshots, CSV exports, transactional restore, and database reset routines.
 - **[Production Deployment Guide](docs/DEPLOYMENT_GUIDE.md)**: Step-by-step Supabase connection pooling and Vercel production setup.
 - **[Custom Domain & SSL/TLS Guide](docs/DOMAIN_SSL_GUIDE.md)**: DNS setup, Let's Encrypt TLS 1.3 certificates, and CSP/HSTS headers.
@@ -226,6 +229,13 @@ Detailed architectural specifications, operator manuals, and disaster recovery p
   - [x] **Day 48**: Data safety pass: SQLite / PostgreSQL export to JSON / CSV, verify restore and schema consistency.
   - [x] **Day 49**: Week 7 review, security checklist, and release candidate `v1.0.0-rc.1` ([Review Document](docs/WEEK_7_REVIEW.md)).
 - [ ] **Week 8: Deployment, Documentation & v1.0 Launch (`v1.0.0`)**
+  - [x] **Day 50**: Production Deployment Config & Supabase Connection Pooling ([Guide](docs/DEPLOYMENT_GUIDE.md)).
+  - [x] **Day 51**: Security Headers & Custom Domain Setup ([Guide](docs/DOMAIN_SSL_GUIDE.md)).
+  - [x] **Day 52**: Cross-Device & Multi-Viewport Smoke Testing ([Report](docs/SMOKE_TESTING_REPORT.md)).
+  - [x] **Day 53**: Production Documentation Pass (Architecture, User Manual, Recovery Manual).
+  - [x] **Day 54**: Clean Seed and Initial Owner Account Provisioning for Production ([Guide](docs/PRODUCTION_PROVISIONING.md)).
+  - [ ] **Day 55**: Final end-to-end audit, changelog finalization, and tag `v1.0.0`.
+  - [ ] **Day 56**: Official v1.0 Launch and Project Retrospective.
 
 ---
 
