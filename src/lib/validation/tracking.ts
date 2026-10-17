@@ -99,6 +99,11 @@ export const updateTitleStatusSchema = z.object({
   rating: z.number().min(0).max(10).optional().nullable(),
   startedAt: dateStringSchema,
   watchedAt: dateStringSchema,
+  year: z.number().int().optional().nullable(),
+  overview: z.string().optional().nullable(),
+  posterUrl: z.string().optional().nullable(),
+  backdropUrl: z.string().optional().nullable(),
+  genres: z.array(z.string()).optional(),
   seasons: z.array(seasonSummaryInputSchema).optional(),
 });
 
@@ -114,6 +119,11 @@ export const updateTitleRatingSchema = z.object({
     .nullable(),
   titleName: z.string().optional(),
   mediaType: z.enum(["MOVIE", "TV", "ANIME"]).optional(),
+  year: z.number().int().optional().nullable(),
+  overview: z.string().optional().nullable(),
+  posterUrl: z.string().optional().nullable(),
+  backdropUrl: z.string().optional().nullable(),
+  genres: z.array(z.string()).optional(),
 });
 
 export type UpdateTitleRatingInput = z.infer<typeof updateTitleRatingSchema>;
@@ -125,6 +135,11 @@ export const updateTitleDatesSchema = z.object({
   watchedAt: dateStringSchema,
   titleName: z.string().optional(),
   mediaType: z.enum(["MOVIE", "TV", "ANIME"]).optional(),
+  year: z.number().int().optional().nullable(),
+  overview: z.string().optional().nullable(),
+  posterUrl: z.string().optional().nullable(),
+  backdropUrl: z.string().optional().nullable(),
+  genres: z.array(z.string()).optional(),
 });
 
 export type UpdateTitleDatesInput = z.infer<typeof updateTitleDatesSchema>;

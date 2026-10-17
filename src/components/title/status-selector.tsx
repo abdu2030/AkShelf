@@ -12,6 +12,10 @@ export interface StatusSelectorProps {
   titleExternalId?: string;
   titleName?: string;
   mediaType?: "MOVIE" | "TV" | "ANIME";
+  posterUrl?: string | null;
+  backdropUrl?: string | null;
+  year?: number | null;
+  overview?: string | null;
   onStatusChange?: (newStatus: WatchStatusType | null) => void;
   className?: string;
 }
@@ -30,6 +34,10 @@ export function StatusSelector({
   titleExternalId,
   titleName,
   mediaType,
+  posterUrl,
+  backdropUrl,
+  year,
+  overview,
   onStatusChange,
   className,
 }: StatusSelectorProps) {
@@ -86,6 +94,10 @@ export function StatusSelector({
           status: newStatus,
           titleName,
           mediaType,
+          posterUrl,
+          backdropUrl,
+          year,
+          overview,
         });
 
         if (!result.success) {

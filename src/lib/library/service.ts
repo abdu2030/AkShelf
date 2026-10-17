@@ -3,6 +3,7 @@ import { demoLibraryItems } from "@/lib/data/demo-titles";
 import { MediaCardProps } from "@/components/title/media-card";
 import { WatchStatusType } from "@/components/ui/status-badge";
 import { MediaType } from "@/lib/metadata/types";
+import { metadataService } from "@/lib/metadata";
 
 export interface GetLibraryItemsOptions {
   userId?: string | null;
@@ -44,6 +45,45 @@ export async function getLibraryItems(
     if (userTitles.length === 0) {
       return [];
     }
+
+    // Auto-heal missing posters and basic metadata for library titles
+    await Promise.all(
+      userTitles.map(async (ut) => {
+        const title = ut.title;
+        if (!title.posterUrl && title.externalSource && title.externalId) {
+          try {
+            const meta = await metadataService.getTitleDetails(
+              title.externalSource as "tmdb" | "anilist",
+              title.externalId,
+            );
+            if (meta?.posterUrl) {
+              title.posterUrl = meta.posterUrl;
+              if (!title.year && meta.year) title.year = meta.year;
+              if (!title.overview && meta.overview) title.overview = meta.overview;
+              if (!title.backdropUrl && meta.backdropUrl) title.backdropUrl = meta.backdropUrl;
+              if ((!title.genres || title.genres.length === 0) && meta.genres?.length) {
+                title.genres = meta.genres;
+              }
+
+              if (prisma.title?.update) {
+                await prisma.title.update({
+                  where: { id: title.id },
+                  data: {
+                    posterUrl: meta.posterUrl,
+                    backdropUrl: meta.backdropUrl || null,
+                    year: meta.year || title.year,
+                    overview: meta.overview || title.overview,
+                    genres: meta.genres || title.genres,
+                  },
+                });
+              }
+            }
+          } catch {
+            // Graceful fallback
+          }
+        }
+      }),
+    );
 
     const userEpisodes = await prisma.userEpisode.findMany({
       where: { userId },
