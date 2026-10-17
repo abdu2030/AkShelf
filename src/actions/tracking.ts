@@ -518,6 +518,8 @@ export async function updateTitleStatusAction(
     seasons,
   } = parsed.data;
 
+  let { posterUrl, backdropUrl, year, overview, genres } = parsed.data;
+
   const session = await auth();
   const userId = session?.user?.id;
 
@@ -529,9 +531,27 @@ export async function updateTitleStatusAction(
     };
   }
 
+  // Auto-enrich poster and metadata if not explicitly provided
+  if (!posterUrl && titleExternalSource && titleExternalId) {
+    try {
+      const meta = await metadataService.getTitleDetails(titleExternalSource, titleExternalId);
+      if (meta) {
+        if (!posterUrl) posterUrl = meta.posterUrl || null;
+        if (!backdropUrl) backdropUrl = meta.backdropUrl || null;
+        if (year === undefined || year === null) year = meta.year || null;
+        if (!overview) overview = meta.overview || null;
+        if (!genres || genres.length === 0) genres = meta.genres || [];
+      }
+    } catch {
+      // Graceful fallback if external provider is offline
+    }
+  }
+
   try {
+    let resolvedDbTitleId: string | null = null;
+
     await prisma.$transaction(async (tx) => {
-      // 1. Ensure Title exists in database
+      // 1. Ensure Title exists in database with enriched metadata
       const title = await tx.title.upsert({
         where: {
           externalSource_externalId: {
@@ -539,14 +559,29 @@ export async function updateTitleStatusAction(
             externalId: titleExternalId,
           },
         },
-        update: {},
+        update: {
+          ...(titleName ? { title: titleName } : {}),
+          ...(mediaType ? { type: mediaType } : {}),
+          ...(year !== undefined && year !== null ? { year } : {}),
+          ...(posterUrl ? { posterUrl } : {}),
+          ...(backdropUrl ? { backdropUrl } : {}),
+          ...(overview ? { overview } : {}),
+          ...(genres && genres.length > 0 ? { genres } : {}),
+        },
         create: {
           externalSource: titleExternalSource,
           externalId: titleExternalId,
           title: titleName || `${titleExternalSource}:${titleExternalId}`,
           type: mediaType || "TV",
+          year: year || null,
+          posterUrl: posterUrl || null,
+          backdropUrl: backdropUrl || null,
+          overview: overview || null,
+          genres: genres || [],
         },
       });
+
+      resolvedDbTitleId = title.id;
 
       // 1.5. Persist season summaries for episodic TV/anime titles (Day 30)
       if (status !== null && seasons && seasons.length > 0) {
@@ -654,6 +689,10 @@ export async function updateTitleStatusAction(
 
     revalidatePath(`/title/${titleExternalSource}:${titleExternalId}`);
     revalidatePath(`/title/demo-${titleExternalSource}-${titleExternalId}`);
+    if (resolvedDbTitleId) {
+      revalidatePath(`/title/db-${resolvedDbTitleId}`);
+      revalidatePath(`/title/${resolvedDbTitleId}`);
+    }
     revalidatePath("/");
     revalidatePath("/library");
     revalidatePath("/watchlist");
@@ -691,7 +730,18 @@ export async function updateTitleRatingAction(
     };
   }
 
-  const { titleExternalSource, titleExternalId, rating, titleName, mediaType } = parsed.data;
+  const {
+    titleExternalSource,
+    titleExternalId,
+    rating,
+    titleName,
+    mediaType,
+    posterUrl,
+    backdropUrl,
+    year,
+    overview,
+    genres,
+  } = parsed.data;
 
   const session = await auth();
   const userId = session?.user?.id;
@@ -705,6 +755,8 @@ export async function updateTitleRatingAction(
   }
 
   try {
+    let resolvedDbTitleId: string | null = null;
+
     await prisma.$transaction(async (tx) => {
       // 1. Ensure Title exists in database
       const title = await tx.title.upsert({
@@ -714,14 +766,29 @@ export async function updateTitleRatingAction(
             externalId: titleExternalId,
           },
         },
-        update: {},
+        update: {
+          ...(titleName ? { title: titleName } : {}),
+          ...(mediaType ? { type: mediaType } : {}),
+          ...(year !== undefined && year !== null ? { year } : {}),
+          ...(posterUrl ? { posterUrl } : {}),
+          ...(backdropUrl ? { backdropUrl } : {}),
+          ...(overview ? { overview } : {}),
+          ...(genres && genres.length > 0 ? { genres } : {}),
+        },
         create: {
           externalSource: titleExternalSource,
           externalId: titleExternalId,
           title: titleName || `${titleExternalSource}:${titleExternalId}`,
           type: mediaType || "TV",
+          year: year || null,
+          posterUrl: posterUrl || null,
+          backdropUrl: backdropUrl || null,
+          overview: overview || null,
+          genres: genres || [],
         },
       });
+
+      resolvedDbTitleId = title.id;
 
       const now = new Date();
 
@@ -782,6 +849,10 @@ export async function updateTitleRatingAction(
 
     revalidatePath(`/title/${titleExternalSource}:${titleExternalId}`);
     revalidatePath(`/title/demo-${titleExternalSource}-${titleExternalId}`);
+    if (resolvedDbTitleId) {
+      revalidatePath(`/title/db-${resolvedDbTitleId}`);
+      revalidatePath(`/title/${resolvedDbTitleId}`);
+    }
     revalidatePath("/");
     revalidatePath("/library");
     revalidatePath("/watchlist");
@@ -818,8 +889,19 @@ export async function updateTitleDatesAction(
     };
   }
 
-  const { titleExternalSource, titleExternalId, startedAt, watchedAt, titleName, mediaType } =
-    parsed.data;
+  const {
+    titleExternalSource,
+    titleExternalId,
+    startedAt,
+    watchedAt,
+    titleName,
+    mediaType,
+    posterUrl,
+    backdropUrl,
+    year,
+    overview,
+    genres,
+  } = parsed.data;
 
   const session = await auth();
   const userId = session?.user?.id;
@@ -837,6 +919,8 @@ export async function updateTitleDatesAction(
   }
 
   try {
+    let resolvedDbTitleId: string | null = null;
+
     await prisma.$transaction(async (tx) => {
       // 1. Ensure Title exists in database
       const title = await tx.title.upsert({
@@ -846,14 +930,29 @@ export async function updateTitleDatesAction(
             externalId: titleExternalId,
           },
         },
-        update: {},
+        update: {
+          ...(titleName ? { title: titleName } : {}),
+          ...(mediaType ? { type: mediaType } : {}),
+          ...(year !== undefined && year !== null ? { year } : {}),
+          ...(posterUrl ? { posterUrl } : {}),
+          ...(backdropUrl ? { backdropUrl } : {}),
+          ...(overview ? { overview } : {}),
+          ...(genres && genres.length > 0 ? { genres } : {}),
+        },
         create: {
           externalSource: titleExternalSource,
           externalId: titleExternalId,
           title: titleName || `${titleExternalSource}:${titleExternalId}`,
           type: mediaType || "TV",
+          year: year || null,
+          posterUrl: posterUrl || null,
+          backdropUrl: backdropUrl || null,
+          overview: overview || null,
+          genres: genres || [],
         },
       });
+
+      resolvedDbTitleId = title.id;
 
       const now = new Date();
 
@@ -890,6 +989,10 @@ export async function updateTitleDatesAction(
 
     revalidatePath(`/title/${titleExternalSource}:${titleExternalId}`);
     revalidatePath(`/title/demo-${titleExternalSource}-${titleExternalId}`);
+    if (resolvedDbTitleId) {
+      revalidatePath(`/title/db-${resolvedDbTitleId}`);
+      revalidatePath(`/title/${resolvedDbTitleId}`);
+    }
     revalidatePath("/");
     revalidatePath("/library");
     revalidatePath("/watchlist");

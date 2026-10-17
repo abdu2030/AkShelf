@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, Sparkles, Star } from "lucide-react";
+import { ArrowLeft, Sparkles, Star } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { WatchStatusType } from "@/components/ui/status-badge";
 import { MediaType } from "@/components/title/media-card";
@@ -15,7 +15,21 @@ import { StatusSelector } from "@/components/title/status-selector";
 import { RatingControl } from "@/components/title/rating-control";
 import { DateTracker } from "@/components/title/date-tracker";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import type { Prisma } from "@prisma/client";
 import { getTitleProgressFromDb } from "@/lib/progress";
+import { MovieWatchSection, MovieQuickCheckButton } from "@/components/title/movie-watch-section";
+
+type DbTitleRecord = Prisma.TitleGetPayload<{
+  include: {
+    seasons: {
+      include: {
+        episodes: true;
+      };
+    };
+    userTitles: true;
+  };
+}>;
 
 interface TitleDetailPageProps {
   params: Promise<{ id: string }>;
@@ -99,8 +113,11 @@ function findDemoTitleById(decodedId: string): DemoTitleDefinition | null {
   return demoTitles.find((t) => t.title.toLowerCase() === decodedId.toLowerCase()) || null;
 }
 
-// Unified resolver for demo titles, external IDs, and search navigation
-async function resolveTitleDetails(id: string): Promise<ResolvedTitleData | null> {
+// Unified resolver for demo titles, database titles, external IDs, and search navigation
+async function resolveTitleDetails(
+  id: string,
+  userId?: string | null,
+): Promise<ResolvedTitleData | null> {
   const decodedId = decodeURIComponent(id).trim();
 
   // 1. Check in demo titles first (fast local shelf data)
@@ -139,11 +156,40 @@ async function resolveTitleDetails(id: string): Promise<ResolvedTitleData | null
     };
   }
 
-  // 2. Parse external provider key (e.g. "tmdb:27205", "tmdb-27205", "anilist:16498")
+  // 2. Check if ID refers to a database record (e.g. "db-cmvc5p3zc0000lqyos10oe8ov" or a cuid)
+  let dbTitle: DbTitleRecord | null = null;
+  const isDbPrefixed = decodedId.startsWith("db-");
+  const rawDbId = decodedId.replace(/^db-/, "");
+
+  if (isDbPrefixed || /^[a-z0-9]{20,32}$/i.test(decodedId)) {
+    try {
+      dbTitle = await prisma.title.findUnique({
+        where: { id: rawDbId },
+        include: {
+          seasons: {
+            orderBy: { seasonNumber: "asc" },
+            include: {
+              episodes: {
+                orderBy: { episodeNumber: "asc" },
+              },
+            },
+          },
+          userTitles: userId ? { where: { userId } } : true,
+        },
+      });
+    } catch (err) {
+      console.warn("[TitleDetailPage] Failed to query database title by id:", err);
+    }
+  }
+
+  // 3. Parse external provider key (e.g. "tmdb:27205", "tmdb-27205", "anilist:16498")
   let source: "tmdb" | "anilist" | null = null;
   let externalId: string | null = null;
 
-  if (decodedId.startsWith("tmdb:") || decodedId.startsWith("tmdb-")) {
+  if (dbTitle) {
+    source = dbTitle.externalSource as "tmdb" | "anilist";
+    externalId = dbTitle.externalId;
+  } else if (decodedId.startsWith("tmdb:") || decodedId.startsWith("tmdb-")) {
     source = "tmdb";
     externalId = decodedId.replace(/^tmdb[:-]/, "");
   } else if (decodedId.startsWith("anilist:") || decodedId.startsWith("anilist-")) {
@@ -151,27 +197,82 @@ async function resolveTitleDetails(id: string): Promise<ResolvedTitleData | null
     externalId = decodedId.replace(/^anilist[:-]/, "");
   }
 
+  // If we have source & externalId, query DB by externalSource_externalId if not already fetched
+  if (source && externalId && !dbTitle) {
+    try {
+      dbTitle = await prisma.title.findUnique({
+        where: {
+          externalSource_externalId: {
+            externalSource: source,
+            externalId,
+          },
+        },
+        include: {
+          seasons: {
+            orderBy: { seasonNumber: "asc" },
+            include: {
+              episodes: {
+                orderBy: { episodeNumber: "asc" },
+              },
+            },
+          },
+          userTitles: userId ? { where: { userId } } : true,
+        },
+      });
+    } catch {
+      // Graceful fallback
+    }
+  }
+
+  // Extract real user title data from DB if available
+  const userTitle = dbTitle?.userTitles?.[0];
+  const userStatus = (userTitle?.status as WatchStatusType) || null;
+  const userRating = userTitle?.rating ?? null;
+  const startedAt = userTitle?.startedAt ? userTitle.startedAt.toISOString() : null;
+  const watchedAt = userTitle?.watchedAt ? userTitle.watchedAt.toISOString() : null;
+
   if (source && externalId) {
     try {
       const mediaResult = await metadataService.getTitleDetails(source, externalId);
       if (mediaResult) {
+        // Auto-heal missing DB poster/metadata if DB title exists
+        if (
+          dbTitle &&
+          (!dbTitle.posterUrl || !dbTitle.backdropUrl || !dbTitle.overview || !dbTitle.year)
+        ) {
+          try {
+            await prisma.title.update({
+              where: { id: dbTitle.id },
+              data: {
+                posterUrl: mediaResult.posterUrl || dbTitle.posterUrl,
+                backdropUrl: mediaResult.backdropUrl || dbTitle.backdropUrl,
+                year: mediaResult.year || dbTitle.year,
+                overview: mediaResult.overview || dbTitle.overview,
+                genres: mediaResult.genres?.length ? mediaResult.genres : dbTitle.genres,
+              },
+            });
+          } catch {
+            // Ignore DB update error
+          }
+        }
+
         const shelfMatch = demoTitles.find(
           (t) => t.externalSource === source && t.externalId === externalId,
         );
 
         return {
-          id: mediaResult.id,
+          id: dbTitle ? `db-${dbTitle.id}` : mediaResult.id,
           externalSource: mediaResult.externalSource,
           externalId: mediaResult.externalId,
           title: mediaResult.title,
           originalTitle: mediaResult.originalTitle || null,
           type: mediaResult.type,
-          year: mediaResult.year || null,
+          year: mediaResult.year || dbTitle?.year || null,
           releaseDate: mediaResult.releaseDate || null,
-          overview: mediaResult.overview || null,
-          posterUrl: mediaResult.posterUrl || null,
-          backdropUrl: mediaResult.backdropUrl || null,
-          genres: mediaResult.genres,
+          overview: mediaResult.overview || dbTitle?.overview || null,
+          posterUrl: mediaResult.posterUrl || dbTitle?.posterUrl || null,
+          backdropUrl: mediaResult.backdropUrl || dbTitle?.backdropUrl || null,
+          genres: mediaResult.genres.length > 0 ? mediaResult.genres : dbTitle?.genres || [],
           runtime: mediaResult.runtime || null,
           statusText: mediaResult.status || null,
           voteAverage: mediaResult.voteAverage || null,
@@ -181,10 +282,10 @@ async function resolveTitleDetails(id: string): Promise<ResolvedTitleData | null
           trailerUrl: mediaResult.trailerUrl || null,
           cast: mediaResult.cast || [],
           totalEpisodes: mediaResult.totalEpisodes || null,
-          userStatus: shelfMatch?.status || null,
-          userRating: shelfMatch?.rating || null,
-          startedAt: shelfMatch?.startedAt || null,
-          watchedAt: shelfMatch?.watchedAt || null,
+          userStatus: userStatus || shelfMatch?.status || null,
+          userRating: userRating != null ? userRating : shelfMatch?.rating || null,
+          startedAt: startedAt || shelfMatch?.startedAt || null,
+          watchedAt: watchedAt || shelfMatch?.watchedAt || null,
           season: shelfMatch?.season || null,
           episode: shelfMatch?.episode || null,
           currentEpisode: shelfMatch?.currentEpisode || null,
@@ -216,12 +317,45 @@ async function resolveTitleDetails(id: string): Promise<ResolvedTitleData | null
     }
   }
 
+  // 4. Fallback if external metadata fetch failed or rate-limited: hydrate purely from dbTitle!
+  if (dbTitle) {
+    return {
+      id: `db-${dbTitle.id}`,
+      externalSource: dbTitle.externalSource as "tmdb" | "anilist",
+      externalId: dbTitle.externalId,
+      title: dbTitle.title,
+      type: dbTitle.type as MediaType,
+      year: dbTitle.year,
+      overview: dbTitle.overview,
+      posterUrl: dbTitle.posterUrl,
+      backdropUrl: dbTitle.backdropUrl,
+      genres: dbTitle.genres,
+      userStatus,
+      userRating,
+      startedAt,
+      watchedAt,
+      seasons: dbTitle.seasons.map((s) => ({
+        seasonNumber: s.seasonNumber,
+        name: s.name ?? `Season ${s.seasonNumber}`,
+        episodeCount: s.episodeCount,
+        episodes: s.episodes.map((ep) => ({
+          episodeNumber: ep.episodeNumber,
+          name: ep.name ?? `Episode ${ep.episodeNumber}`,
+          airDate: ep.airDate,
+          runtime: ep.runtime,
+        })),
+      })),
+    };
+  }
+
   return null;
 }
 
 export default async function TitleDetailPage({ params }: TitleDetailPageProps) {
   const { id } = await params;
-  const titleData = await resolveTitleDetails(id);
+  const session = await auth();
+  const userId = session?.user?.id;
+  const titleData = await resolveTitleDetails(id, userId);
 
   if (!titleData) {
     return (
@@ -246,9 +380,12 @@ export default async function TitleDetailPage({ params }: TitleDetailPageProps) 
     );
   }
 
-  // Derive authenticated user ID and real episode progress from database (Day 34)
-  const session = await auth();
-  const userId = session?.user?.id;
+  const isMovie =
+    titleData.type === "MOVIE" ||
+    (titleData.type === "ANIME" &&
+      (!titleData.seasons ||
+        titleData.seasons.length === 0 ||
+        (titleData.seasons.length === 1 && titleData.seasons[0].episodeCount <= 1)));
 
   const dbProgress = userId
     ? await getTitleProgressFromDb({
@@ -317,7 +454,25 @@ export default async function TitleDetailPage({ params }: TitleDetailPageProps) 
                 titleExternalId={titleData.externalId}
                 titleName={titleData.title}
                 mediaType={titleData.type}
+                posterUrl={titleData.posterUrl}
+                backdropUrl={titleData.backdropUrl}
+                year={titleData.year}
+                overview={titleData.overview}
               />
+
+              {isMovie && (
+                <MovieQuickCheckButton
+                  titleExternalSource={titleData.externalSource}
+                  titleExternalId={titleData.externalId}
+                  titleName={titleData.title}
+                  mediaType={titleData.type}
+                  year={titleData.year}
+                  posterUrl={titleData.posterUrl}
+                  backdropUrl={titleData.backdropUrl}
+                  overview={titleData.overview}
+                  currentStatus={titleData.userStatus}
+                />
+              )}
 
               {titleData.userRating != null && titleData.userRating > 0 && (
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-500 dark:text-amber-400 border border-amber-500/20">
@@ -388,8 +543,22 @@ export default async function TitleDetailPage({ params }: TitleDetailPageProps) 
           trailerUrl={titleData.trailerUrl}
         />
 
-        {/* 5. Seasons & Episodes Breakdown (for TV and Anime - Day 34) */}
-        {(titleData.type === "TV" || titleData.type === "ANIME") && (
+        {/* 5. Watch Tracking Section: Seasons & Episodes (for TV/Series) or Dedicated Movie Watch Section (for Movies/Anime Movies) */}
+        {isMovie ? (
+          <MovieWatchSection
+            titleExternalSource={titleData.externalSource}
+            titleExternalId={titleData.externalId}
+            titleName={titleData.title}
+            mediaType={titleData.type}
+            year={titleData.year}
+            runtime={titleData.runtime}
+            posterUrl={titleData.posterUrl}
+            backdropUrl={titleData.backdropUrl}
+            overview={titleData.overview}
+            currentStatus={titleData.userStatus}
+            watchedAt={titleData.watchedAt}
+          />
+        ) : (
           <SeasonEpisodesSection
             seasons={titleData.seasons || []}
             userCurrentSeason={dbProgress?.defaultSeasonNumber ?? titleData.season}
@@ -402,15 +571,6 @@ export default async function TitleDetailPage({ params }: TitleDetailPageProps) 
             mediaType={titleData.type}
           />
         )}
-
-        {/* 6. Roadmap Status Indicator */}
-        <div className="rounded-xl border border-accent/20 bg-accent/5 p-4 flex items-center gap-3 text-xs sm:text-sm text-ink-soft">
-          <CheckCircle2 className="w-5 h-5 text-accent shrink-0" aria-hidden="true" />
-          <span>
-            <strong>Week 5 Milestones:</strong> Granular episode progress calculation, 6-second Undo
-            toasts, and automatic next-up continuation active for <strong>Days 31–34</strong>.
-          </span>
-        </div>
       </div>
     </AppShell>
   );

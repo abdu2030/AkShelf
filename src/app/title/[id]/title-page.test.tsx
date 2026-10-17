@@ -12,6 +12,16 @@ vi.mock("@/lib/auth", () => ({
   auth: vi.fn().mockResolvedValue(null),
 }));
 
+vi.mock("@/lib/db", () => ({
+  prisma: {
+    title: {
+      findUnique: vi.fn().mockResolvedValue(null),
+      update: vi.fn().mockResolvedValue({}),
+    },
+  },
+}));
+
+import { prisma } from "@/lib/db";
 import TitleDetailPage from "./page";
 
 describe("TitleDetailPage Component", () => {
@@ -89,5 +99,39 @@ describe("TitleDetailPage Component", () => {
 
     expect(html).toContain("Title Not Found");
     expect(html).toContain("Back to Library");
+  });
+
+  it("resolves and renders database title by db- prefix with movie watch section", async () => {
+    vi.mocked(prisma.title.findUnique).mockResolvedValueOnce({
+      id: "cmvc5p3zc0000lqyos10oe8ov",
+      externalSource: "tmdb",
+      externalId: "13223",
+      title: "Gran Torino",
+      type: "MOVIE",
+      year: 2008,
+      overview: "Disgruntled Korean War veteran Walt Kowalski sets out to reform his neighbor.",
+      posterUrl: "https://image.tmdb.org/t/p/w500/zUybYvxWdAJy5hhYovsXtHSWI1l.jpg",
+      backdropUrl: null,
+      genres: ["Drama"],
+      seasons: [],
+      userTitles: [
+        {
+          id: "ut-1",
+          status: "WATCHED",
+          rating: 8.5,
+          startedAt: null,
+          watchedAt: new Date("2026-10-17T00:00:00.000Z"),
+        },
+      ],
+    } as unknown as never);
+
+    const page = await TitleDetailPage({
+      params: Promise.resolve({ id: "db-cmvc5p3zc0000lqyos10oe8ov" }),
+    });
+    const html = renderToStaticMarkup(page);
+
+    expect(html).toContain("Gran Torino");
+    expect(html).toContain("Feature Film Watch Progress");
+    expect(html).toContain("Mark Unwatched");
   });
 });

@@ -507,7 +507,7 @@ export default function DevComponentsGalleryPage() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <h2 className="text-lg font-bold font-display text-ink">
-                11. Library Empty States & Quick-Action Flows (Spec 8.5 & Day 12)
+                11. Library Empty States & Quick-Action Flows
               </h2>
               <p className="text-xs text-ink-muted">
                 Context-aware empty states with dynamic messaging, contextual icons, and
