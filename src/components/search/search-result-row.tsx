@@ -58,11 +58,11 @@ export function SearchResultRow({
   let badgeDetail: string | undefined = undefined;
   if (item.status === "WATCHED" && item.rating) {
     badgeDetail = `${item.rating}/10`;
-  } else if (item.status === "WATCHING") {
+  } else if (item.status === "WATCHING" && item.type !== "MOVIE") {
     const epNum = item.episode ?? item.currentEpisode;
-    if (item.season && epNum) {
+    if (item.season && epNum && epNum > 0) {
       badgeDetail = `S${item.season} E${epNum}`;
-    } else if (epNum) {
+    } else if (epNum && epNum > 0) {
       badgeDetail = `Ep ${epNum}`;
     }
   }

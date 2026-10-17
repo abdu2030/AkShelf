@@ -490,16 +490,17 @@ export default async function TitleDetailPage({ params }: TitleDetailPageProps) 
                 </span>
               )}
 
-              {dbProgress ? (
-                <span className="text-xs text-ink-muted font-mono font-medium">
-                  Progress: {dbProgress.watchedEpisodes} / {dbProgress.totalEpisodes} eps (
-                  {dbProgress.percentage}%)
-                </span>
-              ) : titleData.currentEpisode != null && titleData.currentEpisode > 0 ? (
-                <span className="text-xs text-ink-muted font-mono font-medium">
-                  Progress: S{titleData.season || 1} E{titleData.currentEpisode}
-                </span>
-              ) : null}
+              {!isMovie &&
+                (dbProgress ? (
+                  <span className="text-xs text-ink-muted font-mono font-medium">
+                    Progress: {dbProgress.watchedEpisodes} / {dbProgress.totalEpisodes} eps (
+                    {dbProgress.percentage}%)
+                  </span>
+                ) : titleData.currentEpisode != null && titleData.currentEpisode > 0 ? (
+                  <span className="text-xs text-ink-muted font-mono font-medium">
+                    Progress: S{titleData.season || 1} E{titleData.currentEpisode}
+                  </span>
+                ) : null)}
             </div>
 
             <div className="text-xs text-ink-muted">

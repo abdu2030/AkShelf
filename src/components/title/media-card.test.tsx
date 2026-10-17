@@ -168,6 +168,26 @@ describe("MediaCard", () => {
     expect(html).toContain('href="/custom/title-12"');
   });
 
+  it("does not render episode position or progress bar for movies in WATCHING status", () => {
+    const html = renderToStaticMarkup(
+      <MediaCard
+        id="title-movie"
+        title="Gran Turismo"
+        mediaType="MOVIE"
+        status="WATCHING"
+        currentEpisode={0}
+        totalEpisodes={null}
+      />,
+    );
+
+    expect(html).toContain("Gran Turismo");
+    expect(html).toContain("Movie");
+    expect(html).toContain("Watching");
+    expect(html).not.toContain("Ep 0");
+    expect(html).not.toContain("Watching •");
+    expect(html).not.toContain('data-testid="watching-progress-bar"');
+  });
+
   it("renders MediaCardSkeleton with proper poster aspect ratio and placeholder items", () => {
     const html = renderToStaticMarkup(<MediaCardSkeleton />);
 

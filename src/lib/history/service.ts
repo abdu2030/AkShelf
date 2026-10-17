@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { withDbRetry } from "@/lib/db/retry";
 import { demoTitles } from "@/lib/data/demo-titles";
 import { HistoryItem } from "./types";
 import { formatHistoryActionSentence, formatHistoryTime } from "./format";
@@ -268,6 +269,35 @@ export async function getWatchHistory(
       items: demoItems.slice(offset, offset + limit),
       totalCount: demoItems.length,
       hasMore: offset + limit < demoItems.length,
+    };
+  }
+}
+
+/**
+ * Permanently deletes all watch history log entries for a given user.
+ * Preserves user titles, ratings, and episode progress.
+ */
+export async function clearWatchHistory(
+  userId: string,
+): Promise<{ success: boolean; count: number }> {
+  try {
+    const result = await withDbRetry(
+      () =>
+        prisma.watchHistory.deleteMany({
+          where: { userId },
+        }),
+      { label: "clearWatchHistory" },
+    );
+
+    return {
+      success: true,
+      count: result.count,
+    };
+  } catch (err) {
+    console.error("[clearWatchHistory] Error clearing watch history:", err);
+    return {
+      success: false,
+      count: 0,
     };
   }
 }

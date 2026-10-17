@@ -852,19 +852,22 @@ export const demoTitles: DemoTitleDefinition[] = [
 /**
  * Normalized MediaCardProps array for direct consumption by library views.
  */
-export const demoLibraryItems: MediaCardProps[] = demoTitles.map((item) => ({
-  id: `demo-${item.externalSource}-${item.externalId}`,
-  title: item.title,
-  mediaType: item.type,
-  year: item.year,
-  posterUrl: item.posterUrl,
-  status: item.status,
-  rating: item.rating,
-  season: item.season,
-  episode: item.episode,
-  currentEpisode: item.currentEpisode,
-  totalEpisodes: item.totalEpisodes,
-  addedAt: item.addedAt,
-  watchedAt: item.watchedAt,
-  updatedAt: item.watchedAt ?? item.startedAt ?? item.addedAt,
-}));
+export const demoLibraryItems: MediaCardProps[] = demoTitles.map((item) => {
+  const isMovie = item.type === "MOVIE";
+  return {
+    id: `demo-${item.externalSource}-${item.externalId}`,
+    title: item.title,
+    mediaType: item.type,
+    year: item.year,
+    posterUrl: item.posterUrl,
+    status: item.status,
+    rating: item.rating,
+    season: isMovie ? undefined : item.season,
+    episode: isMovie ? undefined : item.episode,
+    currentEpisode: isMovie ? undefined : item.currentEpisode,
+    totalEpisodes: isMovie ? undefined : item.totalEpisodes,
+    addedAt: item.addedAt,
+    watchedAt: item.watchedAt,
+    updatedAt: item.watchedAt ?? item.startedAt ?? item.addedAt,
+  };
+});

@@ -95,18 +95,21 @@ export async function GET(request: NextRequest) {
       for (const ut of userTitles) {
         const title = ut.title;
         const key = `${title.externalSource}:${title.externalId}`;
+        const isMovie = title.type === "MOVIE";
 
         let watchedCount = 0;
         let nextUpSeason: number | null = null;
         let nextUpEpisode: number | null = null;
 
-        for (const season of title.seasons) {
-          for (const ep of season.episodes) {
-            if (watchedEpisodeSet.has(ep.id)) {
-              watchedCount++;
-            } else if (nextUpSeason === null) {
-              nextUpSeason = season.seasonNumber;
-              nextUpEpisode = ep.episodeNumber;
+        if (!isMovie) {
+          for (const season of title.seasons) {
+            for (const ep of season.episodes) {
+              if (watchedEpisodeSet.has(ep.id)) {
+                watchedCount++;
+              } else if (nextUpSeason === null) {
+                nextUpSeason = season.seasonNumber;
+                nextUpEpisode = ep.episodeNumber;
+              }
             }
           }
         }
@@ -114,9 +117,9 @@ export async function GET(request: NextRequest) {
         shelfLookup.set(key, {
           status: ut.status as WatchStatusType,
           rating: ut.rating,
-          season: nextUpSeason,
-          episode: nextUpEpisode,
-          currentEpisode: watchedCount,
+          season: isMovie ? null : nextUpSeason,
+          episode: isMovie ? null : nextUpEpisode,
+          currentEpisode: isMovie ? null : watchedCount,
         });
 
         // Check if title matches query and media type
@@ -139,14 +142,16 @@ export async function GET(request: NextRequest) {
             backdropUrl: title.backdropUrl,
             genres: title.genres,
             voteAverage: null,
-            totalEpisodes: title.seasons.reduce((acc, s) => acc + s.episodeCount, 0) || null,
-            totalSeasons: title.seasons.length || null,
+            totalEpisodes: isMovie
+              ? null
+              : title.seasons.reduce((acc, s) => acc + s.episodeCount, 0) || null,
+            totalSeasons: isMovie ? null : title.seasons.length || null,
             isOnShelf: true,
             status: ut.status as WatchStatusType,
             rating: ut.rating,
-            season: nextUpSeason,
-            episode: nextUpEpisode,
-            currentEpisode: watchedCount,
+            season: isMovie ? null : nextUpSeason,
+            episode: isMovie ? null : nextUpEpisode,
+            currentEpisode: isMovie ? null : watchedCount,
           });
         }
       }

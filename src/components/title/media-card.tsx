@@ -114,22 +114,30 @@ export function MediaCard({
   const resolvedHref = href || `/title/${id}`;
 
   const typeLabel = formatMediaType(resolvedType);
+  const isMovie = resolvedType === "MOVIE";
 
-  // Calculate progress percentage for WATCHING titles
+  // Calculate progress percentage for WATCHING titles (movies do not have episode progress)
   const isWatching = resolvedStatus === "WATCHING";
-  const resolvedCurEp =
-    currentEpisode ?? progress?.currentEpisode ?? episode ?? progress?.episode ?? 0;
-  const resolvedTotEp = totalEpisodes ?? progress?.totalEpisodes ?? 0;
+  const resolvedCurEp = isMovie
+    ? 0
+    : (currentEpisode ?? progress?.currentEpisode ?? episode ?? progress?.episode ?? 0);
+  const resolvedTotEp = isMovie ? 0 : (totalEpisodes ?? progress?.totalEpisodes ?? 0);
 
-  const progressPercent =
-    progress?.percentage !== undefined && progress?.percentage !== null
+  const progressPercent = isMovie
+    ? 0
+    : progress?.percentage !== undefined && progress?.percentage !== null
       ? progress.percentage
       : calculateProgressPercentage(resolvedCurEp, resolvedTotEp);
 
-  // Format episode detail for Caption Line 2
-  const resolvedSeasonNum = season ?? progress?.season;
-  const resolvedEpNum = episode ?? progress?.episode ?? currentEpisode ?? progress?.currentEpisode;
-  const episodePos = formatEpisodePosition(resolvedSeasonNum, resolvedEpNum);
+  // Format episode detail for Caption Line 2 (omitted for movies or when no episode exists)
+  const resolvedSeasonNum = isMovie ? null : (season ?? progress?.season);
+  const resolvedEpNum = isMovie
+    ? null
+    : (episode ??
+      progress?.episode ??
+      (currentEpisode && currentEpisode > 0 ? currentEpisode : null) ??
+      progress?.currentEpisode);
+  const episodePos = isMovie ? "" : formatEpisodePosition(resolvedSeasonNum, resolvedEpNum);
 
   const statusLabel = resolvedStatus ? statusConfig[resolvedStatus].label : null;
   const statusCaption =
@@ -230,8 +238,8 @@ export function MediaCard({
           </div>
         ) : null}
 
-        {/* 4. Bottom edge: 4px progress bar for WATCHING titles */}
-        {isWatching ? (
+        {/* 4. Bottom edge: 4px progress bar for WATCHING series (not movies) */}
+        {isWatching && !isMovie ? (
           <div
             role="progressbar"
             data-testid="watching-progress-bar"

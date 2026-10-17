@@ -53,4 +53,20 @@ describe("HistoryList Component", () => {
 
     expect(html).toContain("Show earlier activity");
   });
+
+  it("renders 'Clear history' button when items are present", () => {
+    const html = renderToStaticMarkup(
+      <HistoryList initialItems={mockItems} totalCount={1} initialHasMore={false} />,
+    );
+
+    expect(html).toContain("Clear history");
+  });
+
+  it("does not render 'Clear history' button when items list is empty", () => {
+    const html = renderToStaticMarkup(
+      <HistoryList initialItems={[]} totalCount={0} initialHasMore={false} />,
+    );
+
+    expect(html).not.toContain("Clear history");
+  });
 });
