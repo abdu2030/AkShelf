@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { withDbRetry } from "@/lib/db/retry";
 import { demoTitles } from "@/lib/data/demo-titles";
 import { computeSeriesProgress, ProgressSeasonItem } from "@/lib/progress/service";
 
@@ -119,11 +120,15 @@ export async function getDashboardStats(params: {
   }
 
   try {
-    const statusGroups = await prisma.userTitle.groupBy({
-      by: ["status"],
-      where: { userId },
-      _count: { status: true },
-    });
+    const statusGroups = await withDbRetry(
+      () =>
+        prisma.userTitle.groupBy({
+          by: ["status"],
+          where: { userId },
+          _count: { status: true },
+        }),
+      { label: "getDashboardStats" },
+    );
 
     let totalTracked = 0;
     let watched = 0;
@@ -164,7 +169,10 @@ export async function getDashboardStats(params: {
       dropped,
     };
   } catch (error) {
-    console.error("[DashboardService] Failed to fetch live dashboard stats from DB:", error);
+    console.warn(
+      "[DashboardService] Failed to fetch live dashboard stats from DB, falling back to 0s:",
+      error instanceof Error ? error.message : error,
+    );
     return {
       totalTracked: 0,
       watched: 0,
@@ -263,31 +271,35 @@ export async function getContinueWatching(params: {
   }
 
   try {
-    const userTitles = await prisma.userTitle.findMany({
-      where: {
-        userId,
-        status: "WATCHING",
-        title: {
-          type: { in: ["TV", "ANIME"] },
-        },
-      },
-      orderBy: { updatedAt: "desc" },
-      take: limit,
-      include: {
-        title: {
+    const userTitles = await withDbRetry(
+      () =>
+        prisma.userTitle.findMany({
+          where: {
+            userId,
+            status: "WATCHING",
+            title: {
+              type: { in: ["TV", "ANIME"] },
+            },
+          },
+          orderBy: { updatedAt: "desc" },
+          take: limit,
           include: {
-            seasons: {
-              orderBy: { seasonNumber: "asc" },
+            title: {
               include: {
-                episodes: {
-                  orderBy: { episodeNumber: "asc" },
+                seasons: {
+                  orderBy: { seasonNumber: "asc" },
+                  include: {
+                    episodes: {
+                      orderBy: { episodeNumber: "asc" },
+                    },
+                  },
                 },
               },
             },
           },
-        },
-      },
-    });
+        }),
+      { label: "getContinueWatching:titles" },
+    );
 
     if (userTitles.length === 0) {
       return [];
@@ -300,13 +312,17 @@ export async function getContinueWatching(params: {
 
     let watchedEpisodeIdSet = new Set<string>();
     if (allEpisodeIds.length > 0) {
-      const userEpisodes = await prisma.userEpisode.findMany({
-        where: {
-          userId,
-          episodeId: { in: allEpisodeIds },
-        },
-        select: { episodeId: true },
-      });
+      const userEpisodes = await withDbRetry(
+        () =>
+          prisma.userEpisode.findMany({
+            where: {
+              userId,
+              episodeId: { in: allEpisodeIds },
+            },
+            select: { episodeId: true },
+          }),
+        { label: "getContinueWatching:episodes" },
+      );
       watchedEpisodeIdSet = new Set(userEpisodes.map((ue) => ue.episodeId));
     }
 
@@ -376,7 +392,10 @@ export async function getContinueWatching(params: {
       };
     });
   } catch (error) {
-    console.error("[DashboardService] Failed to fetch continue watching titles from DB:", error);
+    console.warn(
+      "[DashboardService] Failed to fetch continue watching titles from DB, falling back to empty:",
+      error instanceof Error ? error.message : error,
+    );
     return [];
   }
 }
@@ -416,17 +435,21 @@ export async function getRecentlyWatched(params: {
   }
 
   try {
-    const userTitles = await prisma.userTitle.findMany({
-      where: {
-        userId,
-        status: "WATCHED",
-      },
-      orderBy: [{ watchedAt: "desc" }, { updatedAt: "desc" }],
-      take: limit,
-      include: {
-        title: true,
-      },
-    });
+    const userTitles = await withDbRetry(
+      () =>
+        prisma.userTitle.findMany({
+          where: {
+            userId,
+            status: "WATCHED",
+          },
+          orderBy: [{ watchedAt: "desc" }, { updatedAt: "desc" }],
+          take: limit,
+          include: {
+            title: true,
+          },
+        }),
+      { label: "getRecentlyWatched" },
+    );
 
     return userTitles.map((ut) => ({
       id: ut.title.id,
@@ -442,7 +465,10 @@ export async function getRecentlyWatched(params: {
       watchedAt: ut.watchedAt?.toISOString() || ut.updatedAt.toISOString(),
     }));
   } catch (error) {
-    console.error("[DashboardService] Failed to fetch recently watched titles from DB:", error);
+    console.warn(
+      "[DashboardService] Failed to fetch recently watched titles from DB, falling back to empty:",
+      error instanceof Error ? error.message : error,
+    );
     return [];
   }
 }
@@ -511,25 +537,29 @@ export async function getDashboardAnalytics(params: {
   }
 
   try {
-    const [movieCount, tvCount, animeCount, ratingAgg, episodeCount] = await Promise.all([
-      prisma.userTitle.count({
-        where: { userId, title: { type: "MOVIE" } },
-      }),
-      prisma.userTitle.count({
-        where: { userId, title: { type: "TV" } },
-      }),
-      prisma.userTitle.count({
-        where: { userId, title: { type: "ANIME" } },
-      }),
-      prisma.userTitle.aggregate({
-        where: { userId, rating: { not: null } },
-        _avg: { rating: true },
-        _count: { rating: true },
-      }),
-      prisma.userEpisode.count({
-        where: { userId },
-      }),
-    ]);
+    const [movieCount, tvCount, animeCount, ratingAgg, episodeCount] = await withDbRetry(
+      () =>
+        Promise.all([
+          prisma.userTitle.count({
+            where: { userId, title: { type: "MOVIE" } },
+          }),
+          prisma.userTitle.count({
+            where: { userId, title: { type: "TV" } },
+          }),
+          prisma.userTitle.count({
+            where: { userId, title: { type: "ANIME" } },
+          }),
+          prisma.userTitle.aggregate({
+            where: { userId, rating: { not: null } },
+            _avg: { rating: true },
+            _count: { rating: true },
+          }),
+          prisma.userEpisode.count({
+            where: { userId },
+          }),
+        ]),
+      { label: "getDashboardAnalytics" },
+    );
 
     const rawAvg = ratingAgg._avg.rating;
     const averageRating =
@@ -546,7 +576,10 @@ export async function getDashboardAnalytics(params: {
       totalWatchedEpisodes: episodeCount,
     };
   } catch (error) {
-    console.error("[DashboardService] Failed to fetch dashboard analytics from DB:", error);
+    console.warn(
+      "[DashboardService] Failed to fetch dashboard analytics from DB, falling back to 0s:",
+      error instanceof Error ? error.message : error,
+    );
     return {
       countsByType: { movies: 0, tv: 0, anime: 0 },
       averageRating: null,

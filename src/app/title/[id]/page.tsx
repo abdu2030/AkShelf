@@ -16,6 +16,7 @@ import { RatingControl } from "@/components/title/rating-control";
 import { DateTracker } from "@/components/title/date-tracker";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { withDbRetry } from "@/lib/db/retry";
 import type { Prisma } from "@prisma/client";
 import { getTitleProgressFromDb } from "@/lib/progress";
 import { MovieWatchSection, MovieQuickCheckButton } from "@/components/title/movie-watch-section";
@@ -163,20 +164,24 @@ async function resolveTitleDetails(
 
   if (isDbPrefixed || /^[a-z0-9]{20,32}$/i.test(decodedId)) {
     try {
-      dbTitle = await prisma.title.findUnique({
-        where: { id: rawDbId },
-        include: {
-          seasons: {
-            orderBy: { seasonNumber: "asc" },
+      dbTitle = await withDbRetry(
+        () =>
+          prisma.title.findUnique({
+            where: { id: rawDbId },
             include: {
-              episodes: {
-                orderBy: { episodeNumber: "asc" },
+              seasons: {
+                orderBy: { seasonNumber: "asc" },
+                include: {
+                  episodes: {
+                    orderBy: { episodeNumber: "asc" },
+                  },
+                },
               },
+              userTitles: userId ? { where: { userId } } : true,
             },
-          },
-          userTitles: userId ? { where: { userId } } : true,
-        },
-      });
+          }),
+        { label: "resolveTitleDetails:byId" },
+      );
     } catch (err) {
       console.warn("[TitleDetailPage] Failed to query database title by id:", err);
     }
@@ -200,25 +205,29 @@ async function resolveTitleDetails(
   // If we have source & externalId, query DB by externalSource_externalId if not already fetched
   if (source && externalId && !dbTitle) {
     try {
-      dbTitle = await prisma.title.findUnique({
-        where: {
-          externalSource_externalId: {
-            externalSource: source,
-            externalId,
-          },
-        },
-        include: {
-          seasons: {
-            orderBy: { seasonNumber: "asc" },
-            include: {
-              episodes: {
-                orderBy: { episodeNumber: "asc" },
+      dbTitle = await withDbRetry(
+        () =>
+          prisma.title.findUnique({
+            where: {
+              externalSource_externalId: {
+                externalSource: source,
+                externalId,
               },
             },
-          },
-          userTitles: userId ? { where: { userId } } : true,
-        },
-      });
+            include: {
+              seasons: {
+                orderBy: { seasonNumber: "asc" },
+                include: {
+                  episodes: {
+                    orderBy: { episodeNumber: "asc" },
+                  },
+                },
+              },
+              userTitles: userId ? { where: { userId } } : true,
+            },
+          }),
+        { label: "resolveTitleDetails:byExternal" },
+      );
     } catch {
       // Graceful fallback
     }

@@ -264,7 +264,9 @@ export function SeasonEpisodesSection({
             }));
             setActiveToast({
               type: "error",
-              message: "Could not save. Your change was not recorded.",
+              message: res.error
+                ? `Could not save: ${res.error}`
+                : "Could not save. Your change was not recorded.",
               actionLabel: "Try again",
               onAction: () => handleToggle(epNumber),
             });
@@ -319,7 +321,7 @@ export function SeasonEpisodesSection({
             },
           });
         })
-        .catch(() => {
+        .catch((err) => {
           // Revert optimistic state on network failure
           setWatchedMap((prev) => ({
             ...prev,
@@ -327,7 +329,10 @@ export function SeasonEpisodesSection({
           }));
           setActiveToast({
             type: "error",
-            message: "Could not save. Your change was not recorded.",
+            message:
+              err instanceof Error
+                ? `Could not save: ${err.message}`
+                : "Could not save. Your change was not recorded.",
             actionLabel: "Try again",
             onAction: () => handleToggle(epNumber),
           });
@@ -382,7 +387,9 @@ export function SeasonEpisodesSection({
             setWatchedMap(previousMap);
             setActiveToast({
               type: "error",
-              message: "Could not save. Your change was not recorded.",
+              message: res.error
+                ? `Could not save: ${res.error}`
+                : "Could not save. Your change was not recorded.",
               actionLabel: "Try again",
               onAction: handleMarkSeasonWatched,
             });
@@ -407,11 +414,14 @@ export function SeasonEpisodesSection({
             },
           });
         })
-        .catch(() => {
+        .catch((err) => {
           setWatchedMap(previousMap);
           setActiveToast({
             type: "error",
-            message: "Could not save. Your change was not recorded.",
+            message:
+              err instanceof Error
+                ? `Could not save: ${err.message}`
+                : "Could not save. Your change was not recorded.",
             actionLabel: "Try again",
             onAction: handleMarkSeasonWatched,
           });
@@ -455,7 +465,9 @@ export function SeasonEpisodesSection({
             setWatchedMap(previousMap);
             setActiveToast({
               type: "error",
-              message: "Could not save. Your change was not recorded.",
+              message: res.error
+                ? `Could not save: ${res.error}`
+                : "Could not save. Your change was not recorded.",
               actionLabel: "Try again",
               onAction: handleMarkSeasonUnwatched,
             });
@@ -480,11 +492,14 @@ export function SeasonEpisodesSection({
             },
           });
         })
-        .catch(() => {
+        .catch((err) => {
           setWatchedMap(previousMap);
           setActiveToast({
             type: "error",
-            message: "Could not save. Your change was not recorded.",
+            message:
+              err instanceof Error
+                ? `Could not save: ${err.message}`
+                : "Could not save. Your change was not recorded.",
             actionLabel: "Try again",
             onAction: handleMarkSeasonUnwatched,
           });
@@ -528,7 +543,9 @@ export function SeasonEpisodesSection({
             setWatchedMap(previousMap);
             setActiveToast({
               type: "error",
-              message: "Could not save. Your change was not recorded.",
+              message: res.error
+                ? `Could not save: ${res.error}`
+                : "Could not save. Your change was not recorded.",
               actionLabel: "Try again",
               onAction: () => handleMarkUpToWatched(epNumber),
             });
@@ -555,11 +572,14 @@ export function SeasonEpisodesSection({
             },
           });
         })
-        .catch(() => {
+        .catch((err) => {
           setWatchedMap(previousMap);
           setActiveToast({
             type: "error",
-            message: "Could not save. Your change was not recorded.",
+            message:
+              err instanceof Error
+                ? `Could not save: ${err.message}`
+                : "Could not save. Your change was not recorded.",
             actionLabel: "Try again",
             onAction: () => handleMarkUpToWatched(epNumber),
           });

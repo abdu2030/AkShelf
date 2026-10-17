@@ -114,27 +114,32 @@ export function Toast({
         className,
       )}
     >
-      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+      <div className="flex items-start gap-2.5 min-w-0 flex-1">
         {type === "success" && (
           <CheckCircle2
-            className="w-4 h-4 shrink-0 text-emerald-400 stroke-[2.2]"
+            className="w-4 h-4 shrink-0 text-emerald-400 stroke-[2.2] mt-0.5"
             aria-hidden="true"
           />
         )}
         {type === "info" && (
-          <Info className="w-4 h-4 shrink-0 text-sky-400 stroke-[2.2]" aria-hidden="true" />
+          <Info className="w-4 h-4 shrink-0 text-sky-400 stroke-[2.2] mt-0.5" aria-hidden="true" />
         )}
         {type === "warning" && (
           <AlertTriangle
-            className="w-4 h-4 shrink-0 text-amber-400 stroke-[2.2]"
+            className="w-4 h-4 shrink-0 text-amber-400 stroke-[2.2] mt-0.5"
             aria-hidden="true"
           />
         )}
         {type === "error" && (
-          <AlertCircle className="w-4 h-4 shrink-0 text-red-400 stroke-[2.2]" aria-hidden="true" />
+          <AlertCircle
+            className="w-4 h-4 shrink-0 text-red-400 stroke-[2.2] mt-0.5"
+            aria-hidden="true"
+          />
         )}
 
-        <p className="text-sm font-medium text-ink truncate leading-tight">{message}</p>
+        <p className="text-sm font-medium text-ink break-words line-clamp-3 leading-snug">
+          {message}
+        </p>
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
