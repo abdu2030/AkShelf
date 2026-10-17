@@ -25,6 +25,6 @@ describe("HistoryPage", () => {
     expect(html).toContain("Movies");
     expect(html).toContain("TV");
     expect(html).toContain("Anime");
-    expect(html).toContain("Week 4 Milestones");
+    expect(html).not.toContain("Milestones");
   });
 });
