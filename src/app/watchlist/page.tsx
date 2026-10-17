@@ -1,19 +1,19 @@
-import { AppShell } from "@/components/layout/app-shell";
-import { PageHeader } from "@/components/layout/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Bookmark } from "lucide-react";
+import { auth } from "@/lib/auth";
+import { getLibraryItems } from "@/lib/library";
+import { WatchlistView } from "@/components/watchlist";
 
-export default function WatchlistPage() {
-  return (
-    <AppShell>
-      <PageHeader title="Watchlist" subtitle="Titles you plan to watch next." />
-      <EmptyState
-        icon={<Bookmark />}
-        headline="Your watchlist is empty"
-        body="When you find something for later, add it from search."
-        actionLabel="Search titles"
-        actionHref="/search"
-      />
-    </AppShell>
-  );
+export const dynamic = "force-dynamic";
+
+export default async function WatchlistPage() {
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    session = null;
+  }
+  const userId = session?.user?.id;
+  const allItems = await getLibraryItems({ userId });
+  const watchlistItems = allItems.filter((item) => item.status === "PLAN_TO_WATCH");
+
+  return <WatchlistView initialItems={watchlistItems} />;
 }
