@@ -60,6 +60,7 @@ export async function getLibraryItems(
             const meta = await metadataService.getTitleDetails(
               title.externalSource as "tmdb" | "anilist",
               title.externalId,
+              title.type as MediaType,
             );
             if (meta?.posterUrl) {
               title.posterUrl = meta.posterUrl;

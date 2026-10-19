@@ -318,5 +318,72 @@ describe("MetadataService", () => {
       expect(episodes[0].name).toBe("Pilot");
       expect(episodes[1].name).toBe("Episode 2");
     });
+
+    it("correctly disambiguates overlapping TMDB numeric IDs using mediaType parameter", async () => {
+      vi.mocked(mockTmdb.getMovieDetails).mockResolvedValue({
+        id: 5920,
+        title: "Le Mans",
+        original_title: "Le Mans",
+        overview: "A race car driver competes in 24 Hours of Le Mans.",
+        release_date: "1971-06-23",
+        poster_path: "/lemans.jpg",
+        backdrop_path: "/lemans_back.jpg",
+        vote_average: 6.8,
+        vote_count: 240,
+        runtime: 106,
+        status: "Released",
+        genres: [{ id: 28, name: "Action" }],
+      } as unknown as Awaited<ReturnType<typeof mockTmdb.getMovieDetails>>);
+
+      vi.mocked(mockTmdb.getTvDetails).mockResolvedValue({
+        id: 5920,
+        name: "The Mentalist",
+        original_name: "The Mentalist",
+        overview: "Patrick Jane is an independent consultant for the CBI.",
+        first_air_date: "2008-09-23",
+        poster_path: "/mentalist.jpg",
+        backdrop_path: "/mentalist_back.jpg",
+        vote_average: 8.3,
+        vote_count: 3600,
+        status: "Ended",
+        number_of_seasons: 7,
+        number_of_episodes: 151,
+        genres: [
+          { id: 18, name: "Drama" },
+          { id: 80, name: "Crime" },
+        ],
+        seasons: [
+          {
+            season_number: 1,
+            name: "Season 1",
+            episode_count: 23,
+            overview: "",
+            poster_path: "",
+            air_date: "",
+          },
+          {
+            season_number: 2,
+            name: "Season 2",
+            episode_count: 23,
+            overview: "",
+            poster_path: "",
+            air_date: "",
+          },
+        ],
+      } as unknown as Awaited<ReturnType<typeof mockTmdb.getTvDetails>>);
+
+      // When type is TV, it MUST fetch TV details (The Mentalist), not the Movie (Le Mans)
+      const tvResult = await service.getTitleDetails("tmdb", 5920, "TV");
+      expect(tvResult.type).toBe("TV");
+      expect(tvResult.title).toBe("The Mentalist");
+      expect(tvResult.totalSeasons).toBe(7);
+      expect(mockTmdb.getTvDetails).toHaveBeenCalledWith(5920);
+
+      // When type is MOVIE, it MUST fetch Movie details (Le Mans)
+      const movieResult = await service.getTitleDetails("tmdb", "5920", "MOVIE");
+      expect(movieResult.type).toBe("MOVIE");
+      expect(movieResult.title).toBe("Le Mans");
+      expect(mockTmdb.getMovieDetails).toHaveBeenCalledWith(5920);
+    });
   });
 });

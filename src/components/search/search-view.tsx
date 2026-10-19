@@ -153,7 +153,9 @@ export function SearchView({ initialQuery = "", className }: SearchViewProps) {
       if (e.key === "Enter" && highlightedIndex >= 0 && flatResults[highlightedIndex]) {
         e.preventDefault();
         const target = flatResults[highlightedIndex];
-        router.push(`/title/${target.id}`);
+        router.push(
+          target.type ? `/title/${target.id}?type=${target.type}` : `/title/${target.id}`,
+        );
         return;
       }
     },
@@ -216,7 +218,7 @@ export function SearchView({ initialQuery = "", className }: SearchViewProps) {
     e.preventDefault();
     e.stopPropagation();
     // For Day 17, navigating to the title triggers the save/track flow
-    router.push(`/title/${item.id}`);
+    router.push(item.type ? `/title/${item.id}?type=${item.type}` : `/title/${item.id}`);
   };
 
   return (

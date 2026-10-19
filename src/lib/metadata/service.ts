@@ -234,7 +234,18 @@ export class MetadataService {
       if (type === "TV") {
         return this.getTvDetails(id);
       }
-      return this.getMovieDetails(id);
+      if (type === "MOVIE") {
+        return this.getMovieDetails(id);
+      }
+      try {
+        return await this.getMovieDetails(id);
+      } catch (movieErr) {
+        try {
+          return await this.getTvDetails(id);
+        } catch {
+          throw movieErr;
+        }
+      }
     }
 
     throw new Error(`Unsupported external metadata provider: ${source}`);

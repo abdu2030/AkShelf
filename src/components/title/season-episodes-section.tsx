@@ -11,6 +11,7 @@ import { Toast } from "@/components/ui/toast";
 import { computeSeriesProgress } from "@/lib/progress";
 import {
   batchSeasonProgressAction,
+  batchSeriesProgressAction,
   fetchSeasonEpisodesAction,
   toggleEpisodeProgressAction,
 } from "@/actions/tracking";
@@ -124,14 +125,14 @@ export function SeasonEpisodesSection({
   // "The current season opens by default; if the user is mid-series it opens on the season of the next unwatched episode."
   const defaultSeasonNumber = useMemo(() => {
     if (!seasonsState || seasonsState.length === 0) return 1;
-    if (seriesProgress.nextUp) {
-      return seriesProgress.nextUp.seasonNumber;
-    }
     if (
       userCurrentSeason != null &&
       seasonsState.some((s) => s.seasonNumber === userCurrentSeason)
     ) {
       return userCurrentSeason;
+    }
+    if (seriesProgress.nextUp) {
+      return seriesProgress.nextUp.seasonNumber;
     }
     return seasonsState[0].seasonNumber;
   }, [seasonsState, userCurrentSeason, seriesProgress.nextUp]);
@@ -594,6 +595,181 @@ export function SeasonEpisodesSection({
     }
   };
 
+  // Batch mark entire series as watched
+  const handleMarkSeriesWatched = () => {
+    const previousMap = { ...watchedMap };
+
+    setWatchedMap((prev) => {
+      const next = { ...prev };
+      for (const season of seasonsState) {
+        if (season.episodes && season.episodes.length > 0) {
+          for (const ep of season.episodes) {
+            next[`${season.seasonNumber}:${ep.episodeNumber}`] = true;
+          }
+        } else {
+          const count = season.episodeCount || 1;
+          for (let i = 1; i <= count; i++) {
+            next[`${season.seasonNumber}:${i}`] = true;
+          }
+        }
+      }
+      return next;
+    });
+
+    onMarkSeriesWatched?.();
+
+    if (titleExternalSource && titleExternalId) {
+      batchSeriesProgressAction({
+        titleExternalSource,
+        titleExternalId,
+        watched: true,
+        titleName,
+        mediaType,
+        seasons: seasonsState.map((s) => ({
+          seasonNumber: s.seasonNumber,
+          episodeCount: s.episodeCount || s.episodes?.length || 1,
+          episodes: s.episodes?.map((e) => ({
+            episodeNumber: e.episodeNumber,
+            name: e.name,
+            airDate: e.airDate ?? null,
+            runtime: e.runtime ?? null,
+          })),
+        })),
+      })
+        .then((res) => {
+          if (!res.success) {
+            setWatchedMap(previousMap);
+            setActiveToast({
+              type: "error",
+              message: res.error
+                ? `Could not save: ${res.error}`
+                : "Could not save. Your change was not recorded.",
+              actionLabel: "Try again",
+              onAction: handleMarkSeriesWatched,
+            });
+            return;
+          }
+
+          setActiveToast({
+            type: "success",
+            message: "Marked entire series as watched.",
+            actionLabel: "Undo",
+            onAction: () => {
+              setWatchedMap(previousMap);
+              batchSeriesProgressAction({
+                titleExternalSource,
+                titleExternalId,
+                watched: false,
+                titleName,
+                mediaType,
+              }).catch(console.error);
+            },
+          });
+        })
+        .catch((err) => {
+          setWatchedMap(previousMap);
+          setActiveToast({
+            type: "error",
+            message:
+              err instanceof Error
+                ? `Could not save: ${err.message}`
+                : "Could not save. Your change was not recorded.",
+            actionLabel: "Try again",
+            onAction: handleMarkSeriesWatched,
+          });
+        });
+    } else {
+      setActiveToast({
+        type: "success",
+        message: "Marked entire series as watched.",
+        actionLabel: "Undo",
+        onAction: () => setWatchedMap(previousMap),
+      });
+    }
+  };
+
+  // Batch mark entire series as unwatched
+  const handleMarkSeriesUnwatched = () => {
+    const previousMap = { ...watchedMap };
+
+    setWatchedMap((prev) => {
+      const next = { ...prev };
+      for (const key of Object.keys(next)) {
+        next[key] = false;
+      }
+      return next;
+    });
+
+    if (titleExternalSource && titleExternalId) {
+      batchSeriesProgressAction({
+        titleExternalSource,
+        titleExternalId,
+        watched: false,
+        titleName,
+        mediaType,
+      })
+        .then((res) => {
+          if (!res.success) {
+            setWatchedMap(previousMap);
+            setActiveToast({
+              type: "error",
+              message: res.error
+                ? `Could not save: ${res.error}`
+                : "Could not save. Your change was not recorded.",
+              actionLabel: "Try again",
+              onAction: handleMarkSeriesUnwatched,
+            });
+            return;
+          }
+
+          setActiveToast({
+            type: "success",
+            message: "Marked series as unwatched.",
+            actionLabel: "Undo",
+            onAction: () => {
+              setWatchedMap(previousMap);
+              batchSeriesProgressAction({
+                titleExternalSource,
+                titleExternalId,
+                watched: true,
+                titleName,
+                mediaType,
+                seasons: seasonsState.map((s) => ({
+                  seasonNumber: s.seasonNumber,
+                  episodeCount: s.episodeCount || s.episodes?.length || 1,
+                  episodes: s.episodes?.map((e) => ({
+                    episodeNumber: e.episodeNumber,
+                    name: e.name,
+                    airDate: e.airDate ?? null,
+                    runtime: e.runtime ?? null,
+                  })),
+                })),
+              }).catch(console.error);
+            },
+          });
+        })
+        .catch((err) => {
+          setWatchedMap(previousMap);
+          setActiveToast({
+            type: "error",
+            message:
+              err instanceof Error
+                ? `Could not save: ${err.message}`
+                : "Could not save. Your change was not recorded.",
+            actionLabel: "Try again",
+            onAction: handleMarkSeriesUnwatched,
+          });
+        });
+    } else {
+      setActiveToast({
+        type: "success",
+        message: "Marked series as unwatched.",
+        actionLabel: "Undo",
+        onAction: () => setWatchedMap(previousMap),
+      });
+    }
+  };
+
   if (!seasonsState || seasonsState.length === 0) {
     return (
       <section
@@ -719,12 +895,12 @@ export function SeasonEpisodesSection({
           </div>
 
           {/* Batch overflow buttons (section 9.15) */}
-          <div className="flex items-center gap-2 pt-1 sm:pt-0">
+          <div className="flex flex-wrap items-center gap-2 pt-1 sm:pt-0">
             {activeSeasonWatchedCount < (activeSeason?.episodeCount || 1) ? (
               <button
                 type="button"
                 onClick={handleMarkSeasonWatched}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium glass-2 text-ink-soft hover:text-ink border border-white/10 hover:border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors cursor-pointer select-none"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium glass-2 text-ink-soft hover:text-ink border border-white/10 hover:border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors cursor-pointer select-none"
               >
                 <CheckCheck className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
                 Mark Season Watched
@@ -733,10 +909,30 @@ export function SeasonEpisodesSection({
               <button
                 type="button"
                 onClick={handleMarkSeasonUnwatched}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium glass-2 text-ink-soft hover:text-ink border border-white/10 hover:border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors cursor-pointer select-none"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium glass-2 text-ink-soft hover:text-ink border border-white/10 hover:border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors cursor-pointer select-none"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-ink-muted" aria-hidden="true" />
                 Reset Season
+              </button>
+            )}
+
+            {seriesProgress.isCompleted ? (
+              <button
+                type="button"
+                onClick={handleMarkSeriesUnwatched}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium glass-2 text-ink-soft hover:text-ink border border-white/10 hover:border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors cursor-pointer select-none"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />
+                Reset Series
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleMarkSeriesWatched}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-accent/15 text-accent hover:bg-accent/25 border border-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors cursor-pointer select-none"
+              >
+                <CheckCheck className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
+                Mark Series Watched
               </button>
             )}
           </div>

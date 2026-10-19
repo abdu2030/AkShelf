@@ -51,8 +51,8 @@ export function SearchResultRow({
   const [imageError, setImageError] = React.useState(false);
   const typeLabel = formatMediaTypeLabel(item.type);
 
-  // Direct link target to title details page
-  const titleHref = `/title/${item.id}`;
+  // Direct link target to title details page (with type query hint)
+  const titleHref = `/title/${item.id}${item.type ? `?type=${item.type}` : ""}`;
 
   // Format badge detail: score for Watched ("9.5/10"), episode position for Watching ("S2 E4")
   let badgeDetail: string | undefined = undefined;

@@ -34,6 +34,7 @@ type DbTitleRecord = Prisma.TitleGetPayload<{
 
 interface TitleDetailPageProps {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ type?: string }>;
 }
 
 interface ResolvedTitleData {
@@ -118,46 +119,78 @@ function findDemoTitleById(decodedId: string): DemoTitleDefinition | null {
 async function resolveTitleDetails(
   id: string,
   userId?: string | null,
+  hintType?: MediaType,
 ): Promise<ResolvedTitleData | null> {
   const decodedId = decodeURIComponent(id).trim();
 
-  // 1. Check in demo titles first (fast local shelf data)
-  const demo = findDemoTitleById(decodedId);
-  if (demo) {
-    return {
-      id: `demo-${demo.externalSource}-${demo.externalId}`,
-      externalSource: demo.externalSource,
-      externalId: demo.externalId,
-      title: demo.title,
-      originalTitle: demo.originalTitle || null,
-      type: demo.type,
-      year: demo.year,
-      releaseDate: demo.releaseDate || null,
-      overview: demo.overview,
-      posterUrl: demo.posterUrl,
-      backdropUrl: demo.backdropUrl || null,
-      genres: demo.genres,
-      runtime: demo.runtime || null,
-      statusText: demo.statusText || null,
-      voteAverage: demo.voteAverage || null,
-      voteCount: demo.voteCount || null,
-      director: demo.director || null,
-      studios: demo.studios || null,
-      trailerUrl: demo.trailerUrl || null,
-      cast: demo.cast || [],
-      totalEpisodes: demo.totalEpisodes || (demo.seasons ? demo.seasons[0]?.episodeCount : 1),
-      userStatus: demo.status,
-      userRating: demo.rating,
-      startedAt: demo.startedAt || null,
-      watchedAt: demo.watchedAt || null,
-      season: demo.season,
-      episode: demo.episode,
-      currentEpisode: demo.currentEpisode,
-      seasons: demo.seasons,
-    };
+  // 1. Direct match for demo-prefixed IDs (e.g. "demo-anilist-16498", "demo-tmdb-27205")
+  if (decodedId.startsWith("demo-")) {
+    const demo = findDemoTitleById(decodedId);
+    if (demo) {
+      return {
+        id: `demo-${demo.externalSource}-${demo.externalId}`,
+        externalSource: demo.externalSource,
+        externalId: demo.externalId,
+        title: demo.title,
+        originalTitle: demo.originalTitle || null,
+        type: demo.type,
+        year: demo.year,
+        releaseDate: demo.releaseDate || null,
+        overview: demo.overview,
+        posterUrl: demo.posterUrl,
+        backdropUrl: demo.backdropUrl || null,
+        genres: demo.genres,
+        runtime: demo.runtime || null,
+        statusText: demo.statusText || null,
+        voteAverage: demo.voteAverage || null,
+        voteCount: demo.voteCount || null,
+        director: demo.director || null,
+        studios: demo.studios || null,
+        trailerUrl: demo.trailerUrl || null,
+        cast: demo.cast || [],
+        totalEpisodes: demo.totalEpisodes || (demo.seasons ? demo.seasons[0]?.episodeCount : 1),
+        userStatus: demo.status,
+        userRating: demo.rating,
+        startedAt: demo.startedAt || null,
+        watchedAt: demo.watchedAt || null,
+        season: demo.season,
+        episode: demo.episode,
+        currentEpisode: demo.currentEpisode,
+        seasons: demo.seasons,
+      };
+    }
   }
 
-  // 2. Check if ID refers to a database record (e.g. "db-cmvc5p3zc0000lqyos10oe8ov" or a cuid)
+  // Helper to extract composite source, type, and external ID
+  // e.g. "tmdb-tv:5920", "tmdb:tv:5920", "tmdb-movie:5920", "tmdb:5920", "anilist:16498"
+  let parsedSource: "tmdb" | "anilist" | null = null;
+  let parsedExternalId: string | null = null;
+  let inferredType: MediaType | undefined = hintType;
+
+  const typedMatch = decodedId.match(/^(?:demo-)?(tmdb|anilist)[:\-](tv|movie)[:\-](.+)$/i);
+  if (typedMatch) {
+    parsedSource = typedMatch[1].toLowerCase() as "tmdb" | "anilist";
+    inferredType = typedMatch[2].toUpperCase() as MediaType;
+    parsedExternalId = typedMatch[3];
+  } else {
+    const simpleMatch = decodedId.match(/^(?:demo-)?(tmdb|anilist)[:\-](.+)$/i);
+    if (simpleMatch) {
+      parsedSource = simpleMatch[1].toLowerCase() as "tmdb" | "anilist";
+      parsedExternalId = simpleMatch[2];
+    }
+  }
+
+  // Check demo titles
+  const demo = findDemoTitleById(decodedId);
+  if (demo && !parsedSource) {
+    parsedSource = demo.externalSource;
+    parsedExternalId = demo.externalId;
+    if (!inferredType) {
+      inferredType = demo.type;
+    }
+  }
+
+  // Check if ID refers to a database record (e.g. "db-cmvc5p3zc0000lqyos10oe8ov" or a cuid)
   let dbTitle: DbTitleRecord | null = null;
   const isDbPrefixed = decodedId.startsWith("db-");
   const rawDbId = decodedId.replace(/^db-/, "");
@@ -187,20 +220,10 @@ async function resolveTitleDetails(
     }
   }
 
-  // 3. Parse external provider key (e.g. "tmdb:27205", "tmdb-27205", "anilist:16498")
-  let source: "tmdb" | "anilist" | null = null;
-  let externalId: string | null = null;
-
-  if (dbTitle) {
-    source = dbTitle.externalSource as "tmdb" | "anilist";
-    externalId = dbTitle.externalId;
-  } else if (decodedId.startsWith("tmdb:") || decodedId.startsWith("tmdb-")) {
-    source = "tmdb";
-    externalId = decodedId.replace(/^tmdb[:-]/, "");
-  } else if (decodedId.startsWith("anilist:") || decodedId.startsWith("anilist-")) {
-    source = "anilist";
-    externalId = decodedId.replace(/^anilist[:-]/, "");
-  }
+  const source = (dbTitle?.externalSource as "tmdb" | "anilist") || parsedSource;
+  const externalId = dbTitle?.externalId || parsedExternalId;
+  const effectiveType: MediaType | undefined =
+    hintType || (dbTitle?.type as MediaType) || inferredType || (demo?.type as MediaType);
 
   // If we have source & externalId, query DB by externalSource_externalId if not already fetched
   if (source && externalId && !dbTitle) {
@@ -242,7 +265,7 @@ async function resolveTitleDetails(
 
   if (source && externalId) {
     try {
-      const mediaResult = await metadataService.getTitleDetails(source, externalId);
+      const mediaResult = await metadataService.getTitleDetails(source, externalId, effectiveType);
       if (mediaResult) {
         // Auto-heal missing DB poster/metadata if DB title exists
         if (
@@ -327,6 +350,42 @@ async function resolveTitleDetails(
   }
 
   // 4. Fallback if external metadata fetch failed or rate-limited: hydrate purely from dbTitle!
+  // Fallback to demo title if external metadata failed or offline
+  if (demo) {
+    return {
+      id: `demo-${demo.externalSource}-${demo.externalId}`,
+      externalSource: demo.externalSource,
+      externalId: demo.externalId,
+      title: demo.title,
+      originalTitle: demo.originalTitle || null,
+      type: demo.type,
+      year: demo.year,
+      releaseDate: demo.releaseDate || null,
+      overview: demo.overview,
+      posterUrl: demo.posterUrl,
+      backdropUrl: demo.backdropUrl || null,
+      genres: demo.genres,
+      runtime: demo.runtime || null,
+      statusText: demo.statusText || null,
+      voteAverage: demo.voteAverage || null,
+      voteCount: demo.voteCount || null,
+      director: demo.director || null,
+      studios: demo.studios || null,
+      trailerUrl: demo.trailerUrl || null,
+      cast: demo.cast || [],
+      totalEpisodes: demo.totalEpisodes || (demo.seasons ? demo.seasons[0]?.episodeCount : 1),
+      userStatus: userStatus || demo.status,
+      userRating: userRating != null ? userRating : demo.rating,
+      startedAt: startedAt || demo.startedAt || null,
+      watchedAt: watchedAt || demo.watchedAt || null,
+      season: demo.season,
+      episode: demo.episode,
+      currentEpisode: demo.currentEpisode,
+      seasons: demo.seasons,
+    };
+  }
+
+  // 4. Fallback if external metadata fetch failed or rate-limited: hydrate purely from dbTitle!
   if (dbTitle) {
     return {
       id: `db-${dbTitle.id}`,
@@ -360,11 +419,13 @@ async function resolveTitleDetails(
   return null;
 }
 
-export default async function TitleDetailPage({ params }: TitleDetailPageProps) {
+export default async function TitleDetailPage({ params, searchParams }: TitleDetailPageProps) {
   const { id } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const hintType = (resolvedSearchParams?.type?.toUpperCase() as MediaType) || undefined;
   const session = await auth();
   const userId = session?.user?.id;
-  const titleData = await resolveTitleDetails(id, userId);
+  const titleData = await resolveTitleDetails(id, userId, hintType);
 
   if (!titleData) {
     return (

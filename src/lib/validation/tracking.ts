@@ -31,6 +31,25 @@ export const batchSeasonSchema = z.object({
 
 export type BatchSeasonInput = z.infer<typeof batchSeasonSchema>;
 
+export const batchSeriesSchema = z.object({
+  titleExternalSource: z.enum(["tmdb", "anilist"]),
+  titleExternalId: z.string().min(1, "titleExternalId is required"),
+  watched: z.boolean(),
+  titleName: z.string().optional(),
+  mediaType: z.enum(["MOVIE", "TV", "ANIME"]).optional(),
+  seasons: z
+    .array(
+      z.object({
+        seasonNumber: z.number().int().min(0),
+        episodeCount: z.number().int().min(0),
+        episodeNumbers: z.array(z.number().int().min(1)).optional(),
+      }),
+    )
+    .optional(),
+});
+
+export type BatchSeriesInput = z.infer<typeof batchSeriesSchema>;
+
 export const seasonSummaryInputSchema = z.object({
   seasonNumber: z.number().int().min(0),
   name: z.string().optional().nullable(),

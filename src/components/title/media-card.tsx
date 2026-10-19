@@ -111,7 +111,7 @@ export function MediaCard({
   const resolvedYear = year !== undefined ? year : releaseYear;
   const resolvedStatus = status !== undefined ? status : watchStatus;
   const resolvedRating = rating !== undefined ? rating : userRating;
-  const resolvedHref = href || `/title/${id}`;
+  const resolvedHref = href || `/title/${id}${resolvedType ? `?type=${resolvedType}` : ""}`;
 
   const typeLabel = formatMediaType(resolvedType);
   const isMovie = resolvedType === "MOVIE";

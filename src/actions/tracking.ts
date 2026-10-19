@@ -10,6 +10,7 @@ import { metadataService } from "@/lib/metadata/service";
 import { safeLogger, sanitizeErrorMessage } from "@/lib/security/sanitizer";
 import {
   batchSeasonSchema,
+  batchSeriesSchema,
   fetchSeasonEpisodesSchema,
   syncSeasonEpisodesSchema,
   syncTitleSeasonsSchema,
@@ -18,6 +19,7 @@ import {
   updateTitleRatingSchema,
   updateTitleStatusSchema,
   BatchSeasonInput,
+  BatchSeriesInput,
   FetchSeasonEpisodesInput,
   SyncSeasonEpisodesInput,
   SyncTitleSeasonsInput,
@@ -606,7 +608,11 @@ export async function updateTitleStatusAction(
   // Auto-enrich poster and metadata if not explicitly provided
   if (!posterUrl && titleExternalSource && titleExternalId) {
     try {
-      const meta = await metadataService.getTitleDetails(titleExternalSource, titleExternalId);
+      const meta = await metadataService.getTitleDetails(
+        titleExternalSource,
+        titleExternalId,
+        mediaType,
+      );
       if (meta) {
         if (!posterUrl) posterUrl = meta.posterUrl || null;
         if (!backdropUrl) backdropUrl = meta.backdropUrl || null;
@@ -1396,6 +1402,249 @@ export async function fetchSeasonEpisodesAction(
       success: false,
       error: sanitizeErrorMessage(
         error instanceof Error ? error.message : "Failed to fetch season episodes",
+      ),
+    };
+  }
+}
+
+/**
+ * Server action to mark or unmark an entire TV/anime series as watched in bulk.
+ * Updates all seasons and episodes atomically and sets UserTitle status to WATCHED (or PLAN_TO_WATCH).
+ */
+export async function batchSeriesProgressAction(
+  rawInput: BatchSeriesInput,
+): Promise<TrackingActionResult> {
+  const parsed = batchSeriesSchema.safeParse(rawInput);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: "Invalid batch series input: " + parsed.error.issues.map((i) => i.message).join(", "),
+    };
+  }
+
+  const { titleExternalSource, titleExternalId, watched, titleName, mediaType, seasons } =
+    parsed.data;
+
+  const session = await auth();
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    return {
+      success: true,
+      watched,
+      isDemo: true,
+      status: watched ? "WATCHED" : "PLAN_TO_WATCH",
+    };
+  }
+
+  try {
+    let resolvedDbTitleId: string | null = null;
+    let totalEpisodesCount = 0;
+
+    await prisma.$transaction(
+      async (tx) => {
+        const title = await tx.title.upsert({
+          where: {
+            externalSource_externalId: {
+              externalSource: titleExternalSource,
+              externalId: titleExternalId,
+            },
+          },
+          update: {
+            ...(titleName ? { title: titleName } : {}),
+            ...(mediaType ? { type: mediaType } : {}),
+          },
+          create: {
+            externalSource: titleExternalSource,
+            externalId: titleExternalId,
+            title: titleName || `${titleExternalSource}:${titleExternalId}`,
+            type: mediaType || "TV",
+          },
+        });
+
+        resolvedDbTitleId = title.id;
+
+        const targetSeasons = seasons && seasons.length > 0 ? seasons : [];
+        const allEpisodeIds: string[] = [];
+
+        for (const s of targetSeasons) {
+          const season = await tx.season.upsert({
+            where: {
+              titleId_seasonNumber: {
+                titleId: title.id,
+                seasonNumber: s.seasonNumber,
+              },
+            },
+            update: {
+              episodeCount: s.episodeCount,
+            },
+            create: {
+              titleId: title.id,
+              seasonNumber: s.seasonNumber,
+              name: `Season ${s.seasonNumber}`,
+              episodeCount: s.episodeCount,
+            },
+          });
+
+          const epNumbers =
+            s.episodeNumbers && s.episodeNumbers.length > 0
+              ? s.episodeNumbers
+              : Array.from({ length: s.episodeCount }, (_, i) => i + 1);
+
+          if (epNumbers.length > 0) {
+            for (const epNum of epNumbers) {
+              const ep = await tx.episode.upsert({
+                where: {
+                  seasonId_episodeNumber: {
+                    seasonId: season.id,
+                    episodeNumber: epNum,
+                  },
+                },
+                update: {},
+                create: {
+                  seasonId: season.id,
+                  episodeNumber: epNum,
+                  name: `Episode ${epNum}`,
+                },
+              });
+              allEpisodeIds.push(ep.id);
+            }
+          }
+        }
+
+        // Also include any episodes already persisted for this title
+        const existingEpisodes = await tx.episode.findMany({
+          where: {
+            season: {
+              titleId: title.id,
+            },
+          },
+          select: { id: true },
+        });
+
+        const combinedEpisodeIdSet = new Set([
+          ...allEpisodeIds,
+          ...existingEpisodes.map((e) => e.id),
+        ]);
+        const combinedEpisodeIds = Array.from(combinedEpisodeIdSet);
+        totalEpisodesCount = combinedEpisodeIds.length;
+
+        const now = new Date();
+
+        if (watched) {
+          if (combinedEpisodeIds.length > 0) {
+            await tx.userEpisode.deleteMany({
+              where: {
+                userId,
+                episodeId: { in: combinedEpisodeIds },
+              },
+            });
+
+            await tx.userEpisode.createMany({
+              data: combinedEpisodeIds.map((epId) => ({
+                userId,
+                episodeId: epId,
+                watchedAt: now,
+              })),
+              skipDuplicates: true,
+            });
+          }
+
+          await tx.userTitle.upsert({
+            where: {
+              userId_titleId: {
+                userId,
+                titleId: title.id,
+              },
+            },
+            update: {
+              status: "WATCHED",
+              watchedAt: now,
+              updatedAt: now,
+            },
+            create: {
+              userId,
+              titleId: title.id,
+              status: "WATCHED",
+              watchedAt: now,
+              startedAt: now,
+            },
+          });
+
+          await tx.watchHistory.create({
+            data: {
+              userId,
+              titleId: title.id,
+              action: "SERIES_WATCHED",
+              occurredAt: now,
+            },
+          });
+        } else {
+          if (combinedEpisodeIds.length > 0) {
+            await tx.userEpisode.deleteMany({
+              where: {
+                userId,
+                episodeId: { in: combinedEpisodeIds },
+              },
+            });
+          }
+
+          await tx.userTitle.upsert({
+            where: {
+              userId_titleId: {
+                userId,
+                titleId: title.id,
+              },
+            },
+            update: {
+              status: "PLAN_TO_WATCH",
+              watchedAt: null,
+              startedAt: null,
+              updatedAt: now,
+            },
+            create: {
+              userId,
+              titleId: title.id,
+              status: "PLAN_TO_WATCH",
+            },
+          });
+
+          await tx.watchHistory.create({
+            data: {
+              userId,
+              titleId: title.id,
+              action: "SERIES_UNWATCHED",
+              occurredAt: now,
+            },
+          });
+        }
+      },
+      { maxWait: 10000, timeout: 30000 },
+    );
+
+    revalidatePath(`/title/${titleExternalSource}:${titleExternalId}`);
+    revalidatePath(`/title/demo-${titleExternalSource}-${titleExternalId}`);
+    if (resolvedDbTitleId) {
+      revalidatePath(`/title/db-${resolvedDbTitleId}`);
+      revalidatePath(`/title/${resolvedDbTitleId}`);
+    }
+    revalidatePath("/");
+    revalidatePath("/library");
+    revalidatePath("/watchlist");
+    revalidatePath("/history");
+
+    return {
+      success: true,
+      watched,
+      count: totalEpisodesCount,
+      status: watched ? "WATCHED" : "PLAN_TO_WATCH",
+    };
+  } catch (error) {
+    safeLogger.error("[TrackingAction] Failed to batch update series:", error);
+    return {
+      success: false,
+      error: sanitizeErrorMessage(
+        error instanceof Error ? error.message : "Database batch series mutation failed",
       ),
     };
   }
