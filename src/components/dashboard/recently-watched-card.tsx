@@ -13,8 +13,17 @@ export interface RecentlyWatchedCardProps {
 }
 
 export function RecentlyWatchedCard({ item, className }: RecentlyWatchedCardProps) {
-  const { externalSource, externalId, title, type, posterUrl, year, rating, watchedAt } = item;
-  const href = `/title/${externalSource}-${externalId}`;
+  const { id, externalSource, externalId, title, type, posterUrl, year, rating, watchedAt } = item;
+
+  // Prefer direct database record route if available (e.g. "db-cuid..."), else fallback to provider slug
+  const isDbId = Boolean(id && !id.startsWith("demo-") && !id.startsWith("rw-"));
+  const targetId = isDbId
+    ? id.startsWith("db-")
+      ? id
+      : `db-${id}`
+    : `${externalSource}-${externalId}`;
+
+  const href = `/title/${targetId}${type ? `?type=${type}` : ""}`;
 
   const formattedDate = watchedAt
     ? new Date(watchedAt).toLocaleDateString(undefined, {

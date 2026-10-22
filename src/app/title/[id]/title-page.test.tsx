@@ -134,4 +134,67 @@ describe("TitleDetailPage Component", () => {
     expect(html).toContain("Feature Film Watch Progress");
     expect(html).toContain("Mark Unwatched");
   });
+
+  it("resolves external slug tmdb-1411 as TV when database contains Person of Interest TV record", async () => {
+    vi.mocked(prisma.title.findUnique).mockResolvedValueOnce({
+      id: "cmvc5p3zc0000lqyos10oe8poi",
+      externalSource: "tmdb",
+      externalId: "1411",
+      title: "Person of Interest",
+      type: "TV",
+      year: 2011,
+      overview: "An ex-CIA agent and a mysterious billionaire prevent violent crimes.",
+      posterUrl: "https://image.tmdb.org/t/p/w500/poi.jpg",
+      backdropUrl: null,
+      genres: ["Action", "Drama", "Sci-Fi"],
+      seasons: [
+        {
+          id: "s-1",
+          seasonNumber: 1,
+          name: "Season 1",
+          episodeCount: 23,
+          episodes: [
+            { id: "ep-1", episodeNumber: 1, name: "Pilot", airDate: "2011-09-22", runtime: 43 },
+          ],
+        },
+        {
+          id: "s-2",
+          seasonNumber: 2,
+          name: "Season 2",
+          episodeCount: 22,
+          episodes: [
+            {
+              id: "ep-2",
+              episodeNumber: 1,
+              name: "The Contingency",
+              airDate: "2012-09-27",
+              runtime: 43,
+            },
+          ],
+        },
+      ],
+      userTitles: [
+        {
+          id: "ut-2",
+          status: "WATCHING",
+          rating: 9.0,
+          startedAt: new Date("2026-10-10T00:00:00.000Z"),
+          watchedAt: null,
+        },
+      ],
+    } as unknown as never);
+
+    const page = await TitleDetailPage({
+      params: Promise.resolve({ id: "tmdb-1411" }),
+      searchParams: Promise.resolve({ season: "2" }),
+    });
+    const html = renderToStaticMarkup(page);
+
+    expect(html).toContain("Person of Interest");
+    expect(html).toContain("TV Show");
+    expect(html).toContain("S1");
+    expect(html).toContain("S2");
+    expect(html).toContain("The Contingency");
+    expect(html).not.toContain("Feature Film Watch Progress");
+  });
 });

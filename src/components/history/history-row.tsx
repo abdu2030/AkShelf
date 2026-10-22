@@ -13,7 +13,8 @@ export interface HistoryRowProps {
 }
 
 export function HistoryRow({ item, className }: HistoryRowProps) {
-  const titleHref = `/title/${item.titleExternalSource}:${item.titleExternalId}`;
+  const typeParam = item.mediaType ? `?type=${item.mediaType}` : "";
+  const titleHref = `/title/${item.titleExternalSource}:${item.titleExternalId}${typeParam}`;
 
   return (
     <div

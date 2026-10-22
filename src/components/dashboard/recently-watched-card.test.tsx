@@ -28,7 +28,23 @@ describe("RecentlyWatchedCard Component", () => {
     expect(html).toContain("Watched");
     expect(html).toContain("9.5");
     expect(html).toContain('data-testid="recently-watched-card-27205"');
-    expect(html).toContain('href="/title/tmdb-27205"');
+    expect(html).toContain('href="/title/tmdb-27205?type=MOVIE"');
+  });
+
+  it("links directly to database title id when item has database primary key", () => {
+    const dbItem: RecentlyWatchedItem = {
+      ...sampleItem,
+      id: "clx12345678901234567890",
+      externalSource: "tmdb",
+      externalId: "1411",
+      title: "Person of Interest",
+      type: "TV",
+    };
+
+    const html = renderToStaticMarkup(<RecentlyWatchedCard item={dbItem} />);
+
+    expect(html).toContain("Person of Interest");
+    expect(html).toContain('href="/title/db-clx12345678901234567890?type=TV"');
   });
 
   it("renders correctly without rating when not rated", () => {

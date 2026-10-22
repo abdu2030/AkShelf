@@ -34,7 +34,7 @@ type DbTitleRecord = Prisma.TitleGetPayload<{
 
 interface TitleDetailPageProps {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ type?: string }>;
+  searchParams?: Promise<{ type?: string; season?: string }>;
 }
 
 interface ResolvedTitleData {
@@ -120,6 +120,7 @@ async function resolveTitleDetails(
   id: string,
   userId?: string | null,
   hintType?: MediaType,
+  hintSeason?: number,
 ): Promise<ResolvedTitleData | null> {
   const decodedId = decodeURIComponent(id).trim();
 
@@ -222,8 +223,6 @@ async function resolveTitleDetails(
 
   const source = (dbTitle?.externalSource as "tmdb" | "anilist") || parsedSource;
   const externalId = dbTitle?.externalId || parsedExternalId;
-  const effectiveType: MediaType | undefined =
-    hintType || (dbTitle?.type as MediaType) || inferredType || (demo?.type as MediaType);
 
   // If we have source & externalId, query DB by externalSource_externalId if not already fetched
   if (source && externalId && !dbTitle) {
@@ -256,6 +255,10 @@ async function resolveTitleDetails(
     }
   }
 
+  // Calculate effectiveType AFTER dbTitle has been resolved to guarantee TV vs Movie disambiguation
+  const effectiveType: MediaType | undefined =
+    hintType || (dbTitle?.type as MediaType) || inferredType || (demo?.type as MediaType);
+
   // Extract real user title data from DB if available
   const userTitle = dbTitle?.userTitles?.[0];
   const userStatus = (userTitle?.status as WatchStatusType) || null;
@@ -267,9 +270,10 @@ async function resolveTitleDetails(
     try {
       const mediaResult = await metadataService.getTitleDetails(source, externalId, effectiveType);
       if (mediaResult) {
-        // Auto-heal missing DB poster/metadata if DB title exists
+        // Auto-heal missing DB poster/metadata if DB title exists and types match
         if (
           dbTitle &&
+          mediaResult.type === dbTitle.type &&
           (!dbTitle.posterUrl || !dbTitle.backdropUrl || !dbTitle.overview || !dbTitle.year)
         ) {
           try {
@@ -296,9 +300,12 @@ async function resolveTitleDetails(
           id: dbTitle ? `db-${dbTitle.id}` : mediaResult.id,
           externalSource: mediaResult.externalSource,
           externalId: mediaResult.externalId,
-          title: mediaResult.title,
+          title:
+            dbTitle && dbTitle.type === mediaResult.type
+              ? mediaResult.title
+              : dbTitle?.title || mediaResult.title,
           originalTitle: mediaResult.originalTitle || null,
-          type: mediaResult.type,
+          type: (dbTitle?.type as MediaType) || mediaResult.type,
           year: mediaResult.year || dbTitle?.year || null,
           releaseDate: mediaResult.releaseDate || null,
           overview: mediaResult.overview || dbTitle?.overview || null,
@@ -323,8 +330,16 @@ async function resolveTitleDetails(
           currentEpisode: shelfMatch?.currentEpisode || null,
           seasons: await (async () => {
             let seasons = mediaResult.seasons;
-            if (source === "tmdb" && mediaResult.type === "TV" && seasons && seasons.length > 0) {
-              const targetSeasonNum = shelfMatch?.season || seasons[0].seasonNumber;
+            if (
+              source === "tmdb" &&
+              (effectiveType === "TV" || mediaResult.type === "TV") &&
+              seasons &&
+              seasons.length > 0
+            ) {
+              const targetSeasonNum =
+                hintSeason && seasons.some((s) => s.seasonNumber === hintSeason)
+                  ? hintSeason
+                  : shelfMatch?.season || seasons[0].seasonNumber;
               try {
                 const seasonDetails = await metadataService.getTvSeason(
                   externalId,
@@ -337,6 +352,34 @@ async function resolveTitleDetails(
                 // Keep season summaries if season details unavailable
               }
             }
+
+            // If dbTitle already has persisted episodes for any season, merge them in so user doesn't have to re-fetch
+            if (dbTitle?.seasons && dbTitle.seasons.length > 0 && seasons) {
+              seasons = seasons.map((s) => {
+                const dbSeason = dbTitle!.seasons.find(
+                  (dbs) => dbs.seasonNumber === s.seasonNumber,
+                );
+                if (
+                  dbSeason &&
+                  dbSeason.episodes &&
+                  dbSeason.episodes.length > 0 &&
+                  (!s.episodes || s.episodes.length === 0)
+                ) {
+                  return {
+                    ...s,
+                    name: s.name || dbSeason.name || `Season ${s.seasonNumber}`,
+                    episodes: dbSeason.episodes.map((ep) => ({
+                      episodeNumber: ep.episodeNumber,
+                      name: ep.name ?? `Episode ${ep.episodeNumber}`,
+                      airDate: ep.airDate,
+                      runtime: ep.runtime,
+                    })),
+                  };
+                }
+                return s;
+              });
+            }
+
             return seasons;
           })(),
         };
@@ -423,9 +466,13 @@ export default async function TitleDetailPage({ params, searchParams }: TitleDet
   const { id } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const hintType = (resolvedSearchParams?.type?.toUpperCase() as MediaType) || undefined;
+  const parsedSeason = resolvedSearchParams?.season
+    ? parseInt(resolvedSearchParams.season, 10)
+    : undefined;
+  const hintSeason = !isNaN(Number(parsedSeason)) ? Number(parsedSeason) : undefined;
   const session = await auth();
   const userId = session?.user?.id;
-  const titleData = await resolveTitleDetails(id, userId, hintType);
+  const titleData = await resolveTitleDetails(id, userId, hintType, hintSeason);
 
   if (!titleData) {
     return (
@@ -632,7 +679,7 @@ export default async function TitleDetailPage({ params, searchParams }: TitleDet
         ) : (
           <SeasonEpisodesSection
             seasons={titleData.seasons || []}
-            userCurrentSeason={dbProgress?.defaultSeasonNumber ?? titleData.season}
+            userCurrentSeason={hintSeason ?? dbProgress?.defaultSeasonNumber ?? titleData.season}
             userCurrentEpisode={
               dbProgress?.nextUp?.episodeNumber ?? titleData.currentEpisode ?? titleData.episode
             }

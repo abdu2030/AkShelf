@@ -29,6 +29,6 @@ describe("HistoryRow Component", () => {
     expect(html).toContain("Watched");
     expect(html).toContain("9.5/10");
     expect(html).toContain("7:42 PM");
-    expect(html).toContain('href="/title/tmdb:27205"');
+    expect(html).toContain('href="/title/tmdb:27205?type=MOVIE"');
   });
 });

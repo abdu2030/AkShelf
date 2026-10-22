@@ -13,6 +13,7 @@ export interface ContinueWatchingCardProps {
 
 export function ContinueWatchingCard({ item, className }: ContinueWatchingCardProps) {
   const {
+    id,
     externalSource,
     externalId,
     title,
@@ -25,9 +26,18 @@ export function ContinueWatchingCard({ item, className }: ContinueWatchingCardPr
     isCompleted,
   } = item;
 
-  const titleHref = `/title/${externalSource}-${externalId}`;
+  // Prefer direct database record route if available (e.g. "db-cuid..."), else fallback to provider slug
+  const isDbId = Boolean(id && !id.startsWith("demo-") && !id.startsWith("cw-"));
+  const targetId = isDbId
+    ? id.startsWith("db-")
+      ? id
+      : `db-${id}`
+    : `${externalSource}-${externalId}`;
+
+  const typeParam = type ? `type=${type}` : "";
+  const titleHref = `/title/${targetId}${typeParam ? `?${typeParam}` : ""}`;
   const continueHref = nextUp
-    ? `/title/${externalSource}-${externalId}?season=${nextUp.seasonNumber}`
+    ? `/title/${targetId}?season=${nextUp.seasonNumber}${typeParam ? `&${typeParam}` : ""}`
     : titleHref;
 
   const isAnime = type === "ANIME";
