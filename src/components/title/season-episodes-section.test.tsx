@@ -118,4 +118,32 @@ describe("SeasonEpisodesSection Component", () => {
     expect(html).toContain("8 / 8 (100%)");
     expect(html).toContain("All Episodes Watched");
   });
+
+  it("persists watched episodes from initialWatchedMap without resetting on re-mount", () => {
+    const watchedDbMap: Record<string, boolean> = {
+      "1:1": true,
+      "1:2": true,
+      "1:3": true,
+      "1:4": true,
+      "1:5": true,
+    };
+
+    const html = renderToStaticMarkup(
+      <SeasonEpisodesSection
+        seasons={mockSeasons}
+        initialWatchedMap={watchedDbMap}
+        userCurrentSeason={1}
+      />,
+    );
+
+    // Season 1 is 100% complete
+    expect(html).toContain("5 / 5 episodes - 100%");
+    expect(html).toContain("5 / 8 (63%)");
+    expect(html).toContain("Reset Season");
+    expect(html).toContain("Continue S2 E1");
+
+    // All Season 1 episodes reflect watched state
+    expect(html).toContain('aria-label="Mark Episode 1 as unwatched"');
+    expect(html).toContain('aria-label="Mark Episode 5 as unwatched"');
+  });
 });

@@ -305,6 +305,49 @@ describe("Tracking Server Actions", () => {
       expect(result.watched).toBe(true);
       expect(revalidatePath).toHaveBeenCalled();
     });
+
+    it("marks title status as WATCHED when allSeasonsWatched is true", async () => {
+      mockAuth.mockResolvedValueOnce({
+        user: { id: "user-123" },
+        expires: "2099-01-01",
+      });
+
+      const userTitleUpsertMock = vi.fn().mockResolvedValue({ id: "ut" });
+
+      vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => {
+        const tx = {
+          title: { upsert: vi.fn().mockResolvedValue({ id: "title-1" }) },
+          season: { upsert: vi.fn().mockResolvedValue({ id: "season-1" }) },
+          episode: {
+            upsert: vi.fn().mockImplementation(({ where }) => ({
+              id: `ep-${where.seasonId_episodeNumber.episodeNumber}`,
+            })),
+          },
+          userEpisode: { upsert: vi.fn().mockResolvedValue({ id: "ue" }), deleteMany: vi.fn() },
+          userTitle: { upsert: userTitleUpsertMock },
+          watchHistory: { create: vi.fn().mockResolvedValue({ id: "wh" }) },
+        };
+        return callback(tx as unknown as Parameters<Parameters<typeof prisma.$transaction>[0]>[0]);
+      });
+
+      const result = await batchSeasonProgressAction({
+        titleExternalSource: "tmdb",
+        titleExternalId: "1399",
+        seasonNumber: 1,
+        watched: true,
+        episodeNumbers: [1, 2, 3],
+        titleName: "Chernobyl",
+        allSeasonsWatched: true,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.status).toBe("WATCHED");
+      expect(userTitleUpsertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          update: expect.objectContaining({ status: "WATCHED" }),
+        }),
+      );
+    });
   });
 
   describe("updateTitleStatusAction", () => {

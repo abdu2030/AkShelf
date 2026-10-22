@@ -332,6 +332,7 @@ export async function batchSeasonProgressAction(
     episodeNumbers,
     titleName,
     mediaType,
+    allSeasonsWatched,
   } = parsed.data;
 
   const session = await auth();
@@ -344,11 +345,15 @@ export async function batchSeasonProgressAction(
       seasonNumber,
       count: episodeNumbers.length,
       isDemo: true,
+      status: allSeasonsWatched ? "WATCHED" : watched ? "WATCHING" : "PLAN_TO_WATCH",
     };
   }
 
   try {
-    const titleRecord = await withDbRetry(
+    let resolvedDbTitleId: string | null = null;
+    let resolvedStatus: string = watched ? "WATCHING" : "PLAN_TO_WATCH";
+
+    await withDbRetry(
       () =>
         prisma.$transaction(
           async (tx) => {
@@ -368,6 +373,8 @@ export async function batchSeasonProgressAction(
                 type: mediaType || "TV",
               },
             });
+
+            resolvedDbTitleId = title.id;
 
             // 2. Ensure Season exists
             const season = await tx.season.upsert({
@@ -445,6 +452,8 @@ export async function batchSeasonProgressAction(
             }
 
             // 4. Batch update UserEpisode records in bulk
+            const now = new Date();
+
             if (watched) {
               if (typeof tx.userEpisode?.createMany === "function") {
                 await tx.userEpisode.deleteMany({
@@ -458,7 +467,7 @@ export async function batchSeasonProgressAction(
                   data: episodeIds.map((epId) => ({
                     userId,
                     episodeId: epId,
-                    watchedAt: new Date(),
+                    watchedAt: now,
                   })),
                   skipDuplicates: true,
                 });
@@ -472,16 +481,60 @@ export async function batchSeasonProgressAction(
                       },
                     },
                     update: {
-                      watchedAt: new Date(),
+                      watchedAt: now,
                     },
                     create: {
                       userId,
                       episodeId: epId,
-                      watchedAt: new Date(),
+                      watchedAt: now,
                     },
                   });
                 }
               }
+
+              // Determine target UserTitle status (WATCHED if series completed or marked watched)
+              let targetStatus: "WATCHED" | "WATCHING" = "WATCHING";
+
+              if (allSeasonsWatched === true) {
+                targetStatus = "WATCHED";
+              } else if (
+                typeof tx.episode?.count === "function" &&
+                typeof tx.userEpisode?.count === "function"
+              ) {
+                try {
+                  const totalTitleEpisodes = await tx.episode.count({
+                    where: { season: { titleId: title.id } },
+                  });
+                  const watchedTitleEpisodes = await tx.userEpisode.count({
+                    where: {
+                      userId,
+                      episode: { season: { titleId: title.id } },
+                    },
+                  });
+                  if (totalTitleEpisodes > 0 && watchedTitleEpisodes >= totalTitleEpisodes) {
+                    targetStatus = "WATCHED";
+                  }
+                } catch {
+                  // Fallback
+                }
+              }
+
+              // Retain WATCHED if the title was already marked as WATCHED by user
+              if (typeof tx.userTitle?.findUnique === "function") {
+                try {
+                  const existingUt = await tx.userTitle.findUnique({
+                    where: { userId_titleId: { userId, titleId: title.id } },
+                    select: { status: true },
+                  });
+                  if (existingUt?.status === "WATCHED") {
+                    targetStatus = "WATCHED";
+                  }
+                } catch {
+                  // Ignore
+                }
+              }
+
+              resolvedStatus = targetStatus;
 
               await tx.userTitle.upsert({
                 where: {
@@ -491,14 +544,16 @@ export async function batchSeasonProgressAction(
                   },
                 },
                 update: {
-                  status: "WATCHING",
-                  updatedAt: new Date(),
+                  status: targetStatus,
+                  ...(targetStatus === "WATCHED" ? { watchedAt: now } : {}),
+                  updatedAt: now,
                 },
                 create: {
                   userId,
                   titleId: title.id,
-                  status: "WATCHING",
-                  startedAt: new Date(),
+                  status: targetStatus,
+                  startedAt: now,
+                  ...(targetStatus === "WATCHED" ? { watchedAt: now } : {}),
                 },
               });
 
@@ -507,7 +562,7 @@ export async function batchSeasonProgressAction(
                   userId,
                   titleId: title.id,
                   action: `SEASON_${seasonNumber}_WATCHED`,
-                  occurredAt: new Date(),
+                  occurredAt: now,
                 },
               });
             } else {
@@ -518,12 +573,50 @@ export async function batchSeasonProgressAction(
                 },
               });
 
+              let revertStatus: "PLAN_TO_WATCH" | "WATCHING" = "WATCHING";
+              if (typeof tx.userEpisode?.count === "function") {
+                try {
+                  const remainingCount = await tx.userEpisode.count({
+                    where: {
+                      userId,
+                      episode: { season: { titleId: title.id } },
+                    },
+                  });
+                  if (remainingCount === 0) {
+                    revertStatus = "PLAN_TO_WATCH";
+                  }
+                } catch {
+                  // Ignore
+                }
+              }
+
+              resolvedStatus = revertStatus;
+
+              await tx.userTitle.upsert({
+                where: {
+                  userId_titleId: {
+                    userId,
+                    titleId: title.id,
+                  },
+                },
+                update: {
+                  status: revertStatus,
+                  watchedAt: null,
+                  updatedAt: now,
+                },
+                create: {
+                  userId,
+                  titleId: title.id,
+                  status: revertStatus,
+                },
+              });
+
               await tx.watchHistory.create({
                 data: {
                   userId,
                   titleId: title.id,
                   action: `SEASON_${seasonNumber}_UNWATCHED`,
-                  occurredAt: new Date(),
+                  occurredAt: now,
                 },
               });
             }
@@ -539,18 +632,23 @@ export async function batchSeasonProgressAction(
     );
 
     revalidatePath(`/title/${titleExternalSource}:${titleExternalId}`);
+    revalidatePath(`/title/${titleExternalSource}-${titleExternalId}`);
     revalidatePath(`/title/demo-${titleExternalSource}-${titleExternalId}`);
-    if (titleRecord?.id) {
-      revalidatePath(`/title/db-${titleRecord.id}`);
+    if (resolvedDbTitleId) {
+      revalidatePath(`/title/db-${resolvedDbTitleId}`);
+      revalidatePath(`/title/${resolvedDbTitleId}`);
     }
     revalidatePath("/");
     revalidatePath("/library");
+    revalidatePath("/watchlist");
+    revalidatePath("/history");
 
     return {
       success: true,
       watched,
       seasonNumber,
       count: episodeNumbers.length,
+      status: resolvedStatus,
     };
   } catch (error) {
     safeLogger.error("[TrackingAction] Failed to batch update season:", error);

@@ -507,10 +507,16 @@ export default async function TitleDetailPage({ params, searchParams }: TitleDet
   const dbProgress = userId
     ? await getTitleProgressFromDb({
         userId,
+        titleId: titleData.id,
         externalSource: titleData.externalSource,
         externalId: titleData.externalId,
       })
     : null;
+
+  // If all episodes across series are watched, ensure userStatus displays as WATCHED
+  if (dbProgress?.isCompleted && titleData.userStatus !== "WATCHED") {
+    titleData.userStatus = "WATCHED";
+  }
 
   return (
     <AppShell>
@@ -679,6 +685,7 @@ export default async function TitleDetailPage({ params, searchParams }: TitleDet
         ) : (
           <SeasonEpisodesSection
             seasons={titleData.seasons || []}
+            initialWatchedMap={dbProgress?.watchedMap}
             userCurrentSeason={hintSeason ?? dbProgress?.defaultSeasonNumber ?? titleData.season}
             userCurrentEpisode={
               dbProgress?.nextUp?.episodeNumber ?? titleData.currentEpisode ?? titleData.episode

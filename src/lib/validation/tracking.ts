@@ -27,6 +27,7 @@ export const batchSeasonSchema = z.object({
     .min(1, "At least one episode number is required"),
   titleName: z.string().optional(),
   mediaType: z.enum(["MOVIE", "TV", "ANIME"]).optional(),
+  allSeasonsWatched: z.boolean().optional(),
 });
 
 export type BatchSeasonInput = z.infer<typeof batchSeasonSchema>;

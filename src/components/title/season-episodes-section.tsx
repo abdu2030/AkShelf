@@ -35,6 +35,7 @@ export interface SeasonItem {
 
 export interface SeasonEpisodesSectionProps {
   seasons: SeasonItem[];
+  initialWatchedMap?: Record<string, boolean>;
   userCurrentSeason?: number | null;
   userCurrentEpisode?: number | null;
   titleExternalSource?: "tmdb" | "anilist";
@@ -56,6 +57,7 @@ export interface SeasonEpisodesSectionProps {
  */
 export function SeasonEpisodesSection({
   seasons,
+  initialWatchedMap,
   userCurrentSeason,
   userCurrentEpisode,
   titleExternalSource,
@@ -95,6 +97,10 @@ export function SeasonEpisodesSection({
   // Local state for tracking watched episodes (optimistic UI)
   // Maps `${seasonNumber}:${episodeNumber}` -> boolean
   const [watchedMap, setWatchedMap] = useState<Record<string, boolean>>(() => {
+    if (initialWatchedMap && Object.keys(initialWatchedMap).length > 0) {
+      return { ...initialWatchedMap };
+    }
+
     const initial: Record<string, boolean> = {};
     const currSeason = userCurrentSeason ?? 1;
     const currEp = userCurrentEpisode ?? 0;
@@ -115,6 +121,18 @@ export function SeasonEpisodesSection({
     }
     return initial;
   });
+
+  // Adjust state when initialWatchedMap prop changes (official React pattern without useEffect)
+  const [prevInitialWatchedMap, setPrevInitialWatchedMap] = useState(initialWatchedMap);
+  if (initialWatchedMap !== prevInitialWatchedMap) {
+    setPrevInitialWatchedMap(initialWatchedMap);
+    if (initialWatchedMap && Object.keys(initialWatchedMap).length > 0) {
+      setWatchedMap((prev) => ({
+        ...prev,
+        ...initialWatchedMap,
+      }));
+    }
+  }
 
   // Calculate comprehensive series progress, next-up episode, and per-season progress (Day 34)
   const seriesProgress = useMemo(() => {
@@ -361,19 +379,32 @@ export function SeasonEpisodesSection({
 
   // Batch mark active season as watched
   const handleMarkSeasonWatched = () => {
-    if (!activeSeason?.episodes) return;
+    if (!activeSeason) return;
     const previousMap = { ...watchedMap };
 
-    setWatchedMap((prev) => {
-      const next = { ...prev };
-      for (const ep of activeSeason.episodes!) {
-        next[`${activeSeason.seasonNumber}:${ep.episodeNumber}`] = true;
+    const episodeNumbers =
+      activeSeason.episodes && activeSeason.episodes.length > 0
+        ? activeSeason.episodes.map((ep) => ep.episodeNumber)
+        : Array.from({ length: activeSeason.episodeCount || 1 }, (_, i) => i + 1);
+
+    const nextMap = { ...previousMap };
+    for (const epNum of episodeNumbers) {
+      nextMap[`${activeSeason.seasonNumber}:${epNum}`] = true;
+    }
+    setWatchedMap(nextMap);
+
+    // Check if with this season watched, all seasons across the series are watched
+    const allSeasonsCompleted = seasonsState.every((s) => {
+      if (s.seasonNumber === activeSeason.seasonNumber) return true;
+      const count = s.episodeCount || s.episodes?.length || 1;
+      let watchedCount = 0;
+      for (let i = 1; i <= count; i++) {
+        if (nextMap[`${s.seasonNumber}:${i}`]) watchedCount++;
       }
-      return next;
+      return watchedCount >= count;
     });
 
     if (titleExternalSource && titleExternalId) {
-      const episodeNumbers = activeSeason.episodes.map((ep) => ep.episodeNumber);
       batchSeasonProgressAction({
         titleExternalSource,
         titleExternalId,
@@ -382,6 +413,7 @@ export function SeasonEpisodesSection({
         episodeNumbers,
         titleName,
         mediaType,
+        allSeasonsWatched: allSeasonsCompleted,
       })
         .then((res) => {
           if (!res.success) {
@@ -439,19 +471,23 @@ export function SeasonEpisodesSection({
 
   // Batch mark active season as unwatched
   const handleMarkSeasonUnwatched = () => {
-    if (!activeSeason?.episodes) return;
+    if (!activeSeason) return;
     const previousMap = { ...watchedMap };
+
+    const episodeNumbers =
+      activeSeason.episodes && activeSeason.episodes.length > 0
+        ? activeSeason.episodes.map((ep) => ep.episodeNumber)
+        : Array.from({ length: activeSeason.episodeCount || 1 }, (_, i) => i + 1);
 
     setWatchedMap((prev) => {
       const next = { ...prev };
-      for (const ep of activeSeason.episodes!) {
-        next[`${activeSeason.seasonNumber}:${ep.episodeNumber}`] = false;
+      for (const epNum of episodeNumbers) {
+        next[`${activeSeason.seasonNumber}:${epNum}`] = false;
       }
       return next;
     });
 
     if (titleExternalSource && titleExternalId) {
-      const episodeNumbers = activeSeason.episodes.map((ep) => ep.episodeNumber);
       batchSeasonProgressAction({
         titleExternalSource,
         titleExternalId,

@@ -154,30 +154,56 @@ export function computeSeriesProgress(
  */
 export async function getTitleProgressFromDb(params: {
   userId: string;
+  titleId?: string;
   externalSource: "tmdb" | "anilist";
   externalId: string;
 }): Promise<SeriesProgressResult | null> {
-  const { userId, externalSource, externalId } = params;
+  const { userId, titleId, externalSource, externalId } = params;
 
   try {
-    const titleRecord = await prisma.title.findUnique({
-      where: {
-        externalSource_externalId: {
-          externalSource,
-          externalId,
-        },
-      },
-      include: {
-        seasons: {
-          orderBy: { seasonNumber: "asc" },
+    const rawDbId = titleId ? titleId.replace(/^db-/, "") : null;
+    let titleRecord = null;
+
+    if (rawDbId) {
+      try {
+        titleRecord = await prisma.title.findUnique({
+          where: { id: rawDbId },
           include: {
-            episodes: {
-              orderBy: { episodeNumber: "asc" },
+            seasons: {
+              orderBy: { seasonNumber: "asc" },
+              include: {
+                episodes: {
+                  orderBy: { episodeNumber: "asc" },
+                },
+              },
+            },
+          },
+        });
+      } catch {
+        // Fallback to externalSource_externalId
+      }
+    }
+
+    if (!titleRecord) {
+      titleRecord = await prisma.title.findUnique({
+        where: {
+          externalSource_externalId: {
+            externalSource,
+            externalId,
+          },
+        },
+        include: {
+          seasons: {
+            orderBy: { seasonNumber: "asc" },
+            include: {
+              episodes: {
+                orderBy: { episodeNumber: "asc" },
+              },
             },
           },
         },
-      },
-    });
+      });
+    }
 
     if (!titleRecord || titleRecord.seasons.length === 0) {
       return null;
