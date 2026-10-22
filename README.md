@@ -1,253 +1,315 @@
 # AkShelf 🎬📺✨
 
-> **Personal Movie, TV Show & Anime Tracker**  
-> A private, distraction-free personal entertainment notebook built to answer one question with zero friction: _"Did I watch this?"_
+> **Your Personal Entertainment Notebook**  
+> A private, distraction-free tracker for Movies, TV Shows, and Anime built to answer one question with zero friction: _"Did I watch this?"_
 
 [![CI](https://github.com/abdu2030/AkShelf/actions/workflows/ci.yml/badge.svg)](https://github.com/abdu2030/AkShelf/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Week%207-Complete%20v1.0.0--rc.1-success)](#roadmap-status)
+[![Version](https://img.shields.io/badge/Version-v1.0.0-emerald.svg)](https://github.com/abdu2030/AkShelf/releases)
+[![Next.js](https://img.shields.io/badge/Next.js-16.4-black.svg?logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg?logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38B2AC.svg?logo=tailwind-css)](https://tailwindcss.com/)
+[![Prisma](https://img.shields.io/badge/Prisma-6.x-2D3748.svg?logo=prisma)](https://www.prisma.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791.svg?logo=postgresql)](https://www.postgresql.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 
 ---
 
-## 🎯 The Problem & Product Vision
+## 🌟 Overview
 
-Over time, you watch hundreds of movies, TV shows, and anime series, but later forget whether you've already seen something, when you watched it, what you thought of it, or what episode you left off on.
+Most tracking services are bloated with social feeds, follower counts, community arguments, and fragmented accounts—one app for movies (Letterboxd), another for TV shows (Trakt), and another for anime (MyAnimeList).
 
-AkShelf is designed as a **personal entertainment notebook** with the speed of a modern catalog site:
+**AkShelf** brings everything into one unified, private personal dashboard:
 
-$$\text{Search Title} \longrightarrow \text{Open Title} \longrightarrow \text{Mark Watched / Track Progress} \longrightarrow \text{Rate} \longrightarrow \text{Done}$$
+- **Search any title** across global film, television, and anime databases in real time.
+- **Answer instantly**: When searching, existing library titles show immediate status badges (`Watched • 9.5/10` or `Watching • S2 E4`) before you even click.
+- **Total privacy & ownership**: Your data lives in your own database. No public profiles, no feeds, and no social algorithms.
+- **Lightning speed**: Track an episode, mark a season as watched, or rate a movie in a single click.
 
-### Key Highlights
-
-- **Instant Memory ("Did I watch this?")**: When searching, any title already in your library immediately displays a badge (e.g., `Watched - 9/10` or `Watching - S2 E4`) without needing to open the title page.
-- **Fast Capture**: Track watch status and rate in 1–2 clicks.
-- **Separation of Concerns**: Entertainment metadata is fetched from TMDB and AniList, while your personal ratings and history live securely in your private PostgreSQL database.
-- **Single-User Ownership**: No social network overhead, no public profiles, no feeds.
-
----
-
-## ✨ Features (MVP) & Scope Guardrails
-
-### Included in V1 (MVP)
-
-- **Single-User Authentication**: Private login for the owner via Auth.js.
-- **Unified Search**: Search movies/TV shows via TMDB and anime via AniList.
-- **Title Details**: Posters, backdrops, release metadata, overviews, and season/episode breakdowns.
-- **Watch Statuses**: `Watched`, `Watching`, `Plan to Watch`, `On Hold`, `Dropped`.
-- **Personal Ratings**: Clean 1–10 rating scale.
-- **Episode Progress**: Granular episode checklist and "Continue Watching" tracking for TV and anime.
-- **Personal Library & Watchlist**: Filterable library by media type and watch status.
-- **Chronological History & Basic Stats**: Audit trail of tracked actions.
-- **Data Backup**: Export full personal data to JSON / CSV.
-
-### Intentionally Excluded from V1
-
-- ❌ Public user registration and multi-user administration
-- ❌ Followers, likes, comments, and public activity feeds
-- ❌ AI/ML recommendation engines and Elasticsearch
-- ❌ Community ratings and rating moderation
-- ❌ In-app chat, notifications, and native mobile apps
+```
+Unified Search ───► Instant Status Badge ───► Track / Episode Checklist ───► Done!
+```
 
 ---
 
-## 🛠️ Technology Stack
+## ✨ Features
 
-| Layer                 | Technology                                | Reason                                                                            |
-| :-------------------- | :---------------------------------------- | :-------------------------------------------------------------------------------- |
-| **Frontend**          | Next.js (App Router) + React + TypeScript | Unified application for pages, server rendering, client UI, and server logic.     |
-| **Styling**           | Tailwind CSS                              | Fast, utility-first styling without maintaining massive stylesheets.              |
-| **Components**        | shadcn/ui                                 | Accessible, customizable UI building blocks.                                      |
-| **Application Logic** | Next.js Server Actions + Route Handlers   | Keep the MVP in one cohesive codebase instead of splitting backend too early.     |
-| **Database**          | PostgreSQL (Supabase)                     | Relational data model for users, titles, seasons, episodes, ratings, and history. |
-| **ORM**               | Prisma                                    | Type-safe queries, schema management, and migrations.                             |
-| **Authentication**    | Auth.js (NextAuth)                        | Simple, secure private login for the owner.                                       |
-| **Validation**        | Zod                                       | Schema validation for server actions and inputs before database mutations.        |
-| **Movie/TV Data**     | TMDB API                                  | External catalog data for movies, TV series, cast, and posters.                   |
-| **Anime Data**        | AniList API (GraphQL)                     | Anime-specific airing info, studios, and episode metadata.                        |
-| **Testing**           | Vitest + Playwright                       | Unit/integration testing and end-to-end browser workflows.                        |
-| **Deployment**        | Vercel                                    | Seamless edge deployment and preview environments.                                |
+### 🔍 Unified Multi-Source Search
 
----
+- Search across millions of **Movies & TV Series** via **The Movie Database (TMDB)** and **Anime** via the **AniList GraphQL API** from a single search bar.
+- Automatic debouncing and token-bucket rate limiting for fluid, responsive search.
+- Disambiguation logic that seamlessly distinguishes between TV shows and movies sharing identical external IDs.
 
-## 🏛️ Architecture Overview
+### 🏷️ Instant Status Badges
 
-AkShelf enforces a strict separation between external entertainment metadata and internal personal data:
+- Search results immediately display your personal library status:
+  - 🟢 **Watched** with your score (e.g. `9.5/10`)
+  - 🟣 **Watching** with current episode position (e.g. `S2 E4`)
+  - 🟡 **Plan to Watch**
+  - ⚪ **On Hold** / 🔴 **Dropped**
 
-- **External APIs (TMDB, AniList)**: Source of truth for titles, posters, descriptions, and episode counts.
-- **PostgreSQL Database**: Source of truth for personal actions (status, ratings, episode progress, history).
-- **Provider Layer**: UI components never call TMDB or AniList directly; all external responses are normalized into a unified `MediaResult` internal type.
+### 📺 Granular TV & Anime Episode Tracking
 
----
+- Full season switcher tabs (`S1`, `S2`, `S3`...) with watched counts per season.
+- Interactive episode checklists with air dates, runtimes, and episode titles.
+- **"Continue Next Up"** button: Automatically calculates and jumps directly to your next unwatched episode across seasons.
+- **Batch Season Actions**: Mark an entire season as watched (or reset) with one click, backed by a 6-second undo toast.
+- **Episode Progress Retention**: Watched episodes persist accurately in your database and never reset on navigation.
 
-## 🚀 Getting Started
+### 🎬 Dedicated Feature Film Tracking
 
-### Prerequisites
+- Movies feature a streamlined one-click **"Mark as Watched"** button and quick date pickers (`startedAt`, `watchedAt`).
 
-- **Node.js**: v20+ (v24 LTS recommended, pinned via `.nvmrc`)
-- **npm**: v10+
-- **Git**
+### ⭐ Personal 1–10 Rating Scale
 
-### Installation
+- Expressive decimal rating system (e.g. `8.5`, `9.0`, `10`) saved securely to your personal record.
 
-1. **Clone the repository**:
+### 📊 Dashboard & Analytics
 
-   ```bash
-   git clone https://github.com/abdu2030/AkShelf.git
-   cd AkShelf
-   ```
+- **Live Stats**: Instant counts of titles on your shelf (`Total Tracked`, `Watching`, `Watched`, `Plan to Watch`).
+- **Continue Watching Shelf**: Quick-resume cards for in-progress series with episode progress bars.
+- **Recently Watched**: Chronological feed of your latest completed films and series.
+- **Viewing Analytics**: Breakdown by media type, average personal rating, and total episodes watched.
 
-2. **Install dependencies**:
+### 📜 Chronological Watch History
 
-   ```bash
-   npm install
-   ```
+- Dedicated `/history` page logging every action: title additions, status changes, ratings, and episode completions with timestamps.
 
-3. **Configure environment variables**:
+### 💾 100% Data Ownership & Export
 
-   ```bash
-   cp .env.example .env.local
-   ```
+- One-click export of your complete library and history to both **JSON** and **CSV** formats directly from Settings.
+- Zero vendor lock-in.
 
-   Edit `.env.local` with your values (see table below).
+### 🎨 Dark Aesthetic & Responsive Design
 
-4. **Run the development server**:
-   ```bash
-   npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
+- Modern obsidian glassmorphism UI with smooth animations.
+- Fully responsive across desktop, tablet, and mobile devices (iPhone 14, Pixel 7, iPad, desktop monitors).
 
 ---
 
-## 🔐 Environment Variables
+## 🛠️ Tech Stack
 
-| Variable              | Description                                               | Where to get it                                                               |
-| :-------------------- | :-------------------------------------------------------- | :---------------------------------------------------------------------------- |
-| `DATABASE_URL`        | PostgreSQL connection string (pooled)                     | Supabase Project Settings &gt; Database                                       |
-| `DIRECT_URL`          | PostgreSQL direct connection string for Prisma migrations | Supabase Project Settings &gt; Database                                       |
-| `AUTH_SECRET`         | Secret key for session encryption in Auth.js              | Generate via `npx auth secret`                                                |
-| `OWNER_EMAIL`         | Single-owner login email address                          | Set your private login email                                                  |
-| `OWNER_PASSWORD_HASH` | Bcrypt hash of owner password                             | Generate via `node -e "console.log(require('bcryptjs').hashSync('pwd', 10))"` |
-| `TMDB_API_KEY`        | TMDB API Read Access Token or API Key                     | [The Movie Database API](https://www.themoviedb.org/settings/api)             |
-
-> ⚠️ **Never commit `.env.local` or real API keys to version control.** Commit only `.env.example`.
-
----
-
-## 📜 Available npm Scripts
-
-| Script                  | Command                              | Purpose                                         |
-| :---------------------- | :----------------------------------- | :---------------------------------------------- |
-| `npm run dev`           | `next dev`                           | Starts local Next.js development server         |
-| `npm run build`         | `next build`                         | Compiles optimized production build             |
-| `npm run start`         | `next start`                         | Runs the production build locally               |
-| `npm run lint`          | `eslint .`                           | Runs ESLint across the codebase                 |
-| `npm run typecheck`     | `tsc --noEmit`                       | Validates TypeScript types                      |
-| `npm run format`        | `prettier --write .`                 | Formats codebase using Prettier                 |
-| `npm run format:check`  | `prettier --check .`                 | Verifies codebase formatting in CI              |
-| `npm test`              | `vitest run`                         | Runs unit & integration test suites             |
-| `npm run test:e2e`      | `playwright test --project=chromium` | Runs Playwright browser E2E tests               |
-| `npm run test:smoke`    | `playwright test e2e/smoke.spec.ts`  | Runs cross-device responsive smoke tests        |
-| `npm run db:migrate`    | `prisma migrate dev`                 | Runs Prisma development migrations              |
-| `npm run db:seed`       | `prisma db seed`                     | Seeds database with mock fixtures               |
-| `npm run db:seed:clean` | `prisma db seed -- --clean`          | Seeds clean production owner without dummy data |
-| `npm run db:provision`  | `tsx scripts/provision-owner.ts`     | Provisions owner account & audits clean DB      |
-| `npm run db:clean`      | `tsx scripts/wipe-dummy-data.ts`     | Wipes mock data, leaving owner account clean    |
-| `npm run db:export`     | `tsx scripts/export-data.ts`         | Dumps timestamped JSON & CSV offline backups    |
-| `npm run deploy:check`  | `tsx scripts/verify-deployment.ts`   | Validates production env, pool latency & DB     |
+| Layer              | Technology                                                                    | Details                                                  |
+| :----------------- | :---------------------------------------------------------------------------- | :------------------------------------------------------- |
+| **Framework**      | [Next.js 16](https://nextjs.org/) (App Router + Turbopack)                    | Server Components, Server Actions, Route Handlers        |
+| **Language**       | [TypeScript 5](https://www.typescriptlang.org/)                               | Strict type-safety across models, APIs, and UI           |
+| **Styling**        | [Tailwind CSS 3.4](https://tailwindcss.com/)                                  | Custom dark glassmorphic design system                   |
+| **Database**       | [PostgreSQL](https://www.postgresql.org/) / [Supabase](https://supabase.com/) | Relational database with connection pooling              |
+| **ORM**            | [Prisma 6](https://www.prisma.io/)                                            | Type-safe database queries and automated migrations      |
+| **Authentication** | [Auth.js (NextAuth v5)](https://authjs.dev/)                                  | Secure single-owner session authentication               |
+| **Validation**     | [Zod 3](https://zod.dev/)                                                     | Strict runtime input validation for all actions          |
+| **Metadata APIs**  | [TMDB API](https://www.themoviedb.org/) + [AniList API](https://anilist.co/)  | Movie, TV, and Anime external metadata                   |
+| **Icons**          | [Lucide React](https://lucide.dev/)                                           | Clean, accessible SVG icons                              |
+| **Testing**        | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/)         | 590+ unit/integration tests and end-to-end browser tests |
 
 ---
 
-## 📚 Documentation & Operational Guides
+## 🚀 Quick Start (Local Development)
 
-Detailed architectural specifications, operator manuals, and disaster recovery procedures:
+### 1. Prerequisites
 
-- **[System Architecture Guide](docs/ARCHITECTURE.md)**: Network topology, serverless connection pooling, data model, and mutation lifecycles.
-- **[User Manual & Operator Guide](docs/USER_MANUAL.md)**: Complete guide to searching, tracking, decimal ratings, episode checklists, and library filters.
-- **[Production Provisioning Guide](docs/PRODUCTION_PROVISIONING.md)**: Clean seed routines, owner credential provisioning, and zero-pollution audit.
-- **[Backup & Disaster Recovery Procedures](docs/BACKUP_AND_RECOVERY.md)**: JSON snapshots, CSV exports, transactional restore, and database reset routines.
-- **[Production Deployment Guide](docs/DEPLOYMENT_GUIDE.md)**: Step-by-step Supabase connection pooling and Vercel production setup.
-- **[Custom Domain & SSL/TLS Guide](docs/DOMAIN_SSL_GUIDE.md)**: DNS setup, Let's Encrypt TLS 1.3 certificates, and CSP/HSTS headers.
-- **[Cross-Device Smoke Testing Report](docs/SMOKE_TESTING_REPORT.md)**: Responsive viewport audits across Desktop, iPhone 14, and Pixel 7.
-- **[Final Production Audit Report](docs/FINAL_AUDIT_REPORT.md)**: Full verification matrix, automated test passes, and production sign-off.
-- **[Project Retrospective & Future Roadmap](docs/PROJECT_RETROSPECTIVE.md)**: 8-week engineering analysis, architecture retrospective, and v1.1+ feature roadmap.
+- **Node.js**: v20 or higher (v24 LTS recommended)
+- **npm** or **pnpm**
+- A **PostgreSQL** database (local or cloud like [Supabase](https://supabase.com), [Neon](https://neon.tech), or [Railway](https://railway.com))
+- A free **TMDB API Key** (from [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api))
 
----
+### 2. Clone the Repository
 
-## 📋 8-Week Implementation Roadmap (100% Complete — v1.0.0 Production Launch)
+```bash
+git clone https://github.com/abdu2030/AkShelf.git
+cd AkShelf
+```
 
-- [x] **Week 1: Foundation, Planning & Project Setup**
-  - [x] **Day 1**: Define scope, acceptance criteria, 6 core user actions, git repo setup.
-  - [x] **Day 2**: Next.js + TypeScript + Tailwind stack installation, linting, Prettier, Husky, commitlint & CI.
-  - [x] **Day 3**: Supabase/PostgreSQL connection & Prisma setup.
-  - [x] **Day 4**: Relational schema design (`User`, `Title`, `Season`, `Episode`, `UserTitle`, `UserEpisode`, `WatchHistory`).
-  - [x] **Day 5**: Single-owner Auth.js integration & route protection.
-  - [x] **Day 6**: Base layout shell (navigation, responsive containers, core UI components).
-  - [x] **Day 7**: Week 1 review, checkpoint release `v0.1.0` ([Review Document](docs/WEEK_1_REVIEW.md)).
-- [x] **Week 2: UI Foundation & Personal Library (`v0.2.0`)**
-  - [x] **Day 8**: Media card component with 2:3 aspect ratio, status dot & badge.
-  - [x] **Day 9**: Responsive media grid & breakpoints with zero-blur performance.
-  - [x] **Day 10**: Library header & multi-dimensional filter controls.
-  - [x] **Day 11**: Deterministic library sorting engine (Date, Title, Rating, Year).
-  - [x] **Day 12**: Context-aware empty states & quick filter reset flows.
-  - [x] **Day 13**: Seed script expansion with 28 realistic titles and demo dataset.
-  - [x] **Day 14**: Week 2 review, accessibility audit & checkpoint release `v0.2.0` ([Review Document](docs/WEEK_2_REVIEW.md)).
-- [x] **Week 3: External Metadata, Detail Views & Episode Tracking (`v0.3.0`)**
-  - [x] **Day 15**: TMDB & AniList clients with token bucket rate-limiting.
-  - [x] **Day 16**: Normalized metadata translator & resilient cache layer.
-  - [x] **Day 17**: Global debounced search UI with keyboard navigation & instant badges.
-  - [x] **Day 18**: Title detail synopsis, cast preview, and metadata overview panel.
-  - [x] **Day 19**: Season selector and episode list breakdown with next-up indicator.
-  - [x] **Day 20**: Episode progress tracking mutations (one-click checkmark & batch season actions).
-- [x] **Week 4: Watch Tracking, Ratings & History (`v0.4.0`)**
-  - [x] **Day 22**: Title detail watch status mutation actions (`updateTitleStatusAction`) & schema validation.
-  - [x] **Day 23**: Watch status selector UI dropdown with optimistic transitions & responsive states.
-  - [x] **Day 24**: Personal 1–10 rating scale input (`RatingControl`), rating persistence & card badges.
-  - [x] **Day 25**: Date tracking engine (`startedAt`, `watchedAt`), date pickers & auto-timestamps.
-  - [x] **Day 26**: Watch history service, chronological audit logging & sentence formatting.
-  - [x] **Day 27**: Watch history feed UI (`HistoryList`, `HistoryRow`) & dedicated `/history` page.
-  - [x] **Day 28**: End-to-end core MVP verification, documentation review & checkpoint release `v0.4.0` ([Review Document](docs/WEEK_4_REVIEW.md)).
-- [x] **Week 5: TV / Anime Seasons & Episode Progress (`v0.5.0`)**
-  - [x] **Day 29**: Extend provider normalization for season and episode data (`EpisodeItem`, `SeasonItem`).
-  - [x] **Day 30**: On-demand persistence of season summaries (`persistTitleSeasons`).
-  - [x] **Day 31**: On-demand persistence of detailed season episodes (`persistSeasonEpisodes`).
-  - [x] **Day 32**: Season selector pills & episode browser UI (`SeasonSelector`, `EpisodeRow`).
-  - [x] **Day 33**: Episode tracking mutations, batch season actions & 6-second undo toasts.
-  - [x] **Day 34**: Series & season progress calculation ($\frac{\text{watched}}{\text{total}} \times 100\%$) and next-up continuation.
-  - [x] **Day 35**: Interrupted viewing, completed seasons, re-opening stability & checkpoint release `v0.5.0` ([Review Document](docs/WEEK_5_REVIEW.md)).
-- [x] **Week 6: Dashboard, Statistics & UX Polish (`v0.6.0`)**
-  - [x] **Day 36**: Connect dashboard cards to real database counts (`totalTracked`, `watching`, `watched`, `planToWatch`).
-  - [x] **Day 37**: Add Recently Watched section and Continue Watching shelf on the dashboard.
-  - [x] **Day 38**: Add simple statistics: title counts by type, average personal rating, total watched episodes.
-  - [x] **Day 39**: Improve search cards so `Watched`, `Watching`, and ratings are visible without opening the title.
-  - [x] **Day 40**: Library sorting enhancements (recently updated, rating, release year, title).
-  - [x] **Day 41**: Accessibility and keyboard pass: focus states, labels, contrast, semantic buttons, dialog behavior.
-  - [x] **Day 42**: Visual cleanup: spacing, typography, posters, responsive cards, loading states (`v0.6.0`) ([Review Document](docs/WEEK_6_REVIEW.md)).
-- [x] **Week 7: Testing, Security, Performance & Data Safety (`v1.0.0-rc.1`)**
-  - [x] **Day 43**: Write core unit tests for status transitions, rating validation, and provider normalization.
-  - [x] **Day 44**: Write Playwright end-to-end browser tests for login, search, mark watched, rating, watchlist, and library filters.
-  - [x] **Day 45**: Test permission boundaries and verify security on server actions against unauthorized access.
-  - [x] **Day 46**: Audit environment variables, secrets, API key exposure, error messages, and logging sanitization.
-  - [x] **Day 47**: Performance pass: image sizing, layout shifts (CLS), cache headers, bundle analysis, and inline float ratings.
-  - [x] **Day 48**: Data safety pass: SQLite / PostgreSQL export to JSON / CSV, verify restore and schema consistency.
-  - [x] **Day 49**: Week 7 review, security checklist, and release candidate `v1.0.0-rc.1` ([Review Document](docs/WEEK_7_REVIEW.md)).
-- [x] **Week 8: Deployment, Documentation & v1.0 Launch (`v1.0.0`)**
-  - [x] **Day 50**: Production Deployment Config & Supabase Connection Pooling ([Guide](docs/DEPLOYMENT_GUIDE.md)).
-  - [x] **Day 51**: Security Headers & Custom Domain Setup ([Guide](docs/DOMAIN_SSL_GUIDE.md)).
-  - [x] **Day 52**: Cross-Device & Multi-Viewport Smoke Testing ([Report](docs/SMOKE_TESTING_REPORT.md)).
-  - [x] **Day 53**: Production Documentation Pass (Architecture, User Manual, Recovery Manual).
-  - [x] **Day 54**: Clean Seed and Initial Owner Account Provisioning for Production ([Guide](docs/PRODUCTION_PROVISIONING.md)).
-  - [x] **Day 55**: Final end-to-end audit, changelog finalization, and tag `v1.0.0` ([Audit Report](docs/FINAL_AUDIT_REPORT.md)).
-  - [x] **Day 56**: Official v1.0 Launch, Tagging `v1.0.0`, and Project Retrospective ([Retrospective](docs/PROJECT_RETROSPECTIVE.md)).
+### 3. Install Dependencies
+
+```bash
+npm install
+```
+
+### 4. Configure Environment Variables
+
+Copy the template file to `.env.local`:
+
+```bash
+cp .env.example .env.local
+```
+
+Fill in your configuration values in `.env.local`:
+
+```env
+# Database
+DATABASE_URL="postgresql://user:password@host:port/database?pgbouncer=true"
+DIRECT_URL="postgresql://user:password@host:port/database"
+
+# Authentication
+AUTH_SECRET="your-generated-random-32-byte-hex-secret"
+OWNER_EMAIL="owner@example.com"
+OWNER_PASSWORD_HASH="$2b$10$YourBcryptPasswordHashHere"
+
+# Metadata Providers
+TMDB_API_KEY="your-tmdb-api-key-here"
+```
+
+> 💡 **Generating Credentials**:
+>
+> - **`AUTH_SECRET`**: Run `npx auth secret` or `openssl rand -hex 32` in your terminal.
+> - **`OWNER_PASSWORD_HASH`**: Run this command to hash your chosen password:
+>   ```bash
+>   node -e "console.log(require('bcryptjs').hashSync('your-password-here', 10))"
+>   ```
+
+### 5. Setup the Database
+
+Push the Prisma schema to your database:
+
+```bash
+npx prisma db push
+```
+
+_(Optional)_ Provision your initial owner account:
+
+```bash
+npm run db:provision
+```
+
+### 6. Start the Development Server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser. Log in with your configured `OWNER_EMAIL` and password.
 
 ---
 
-## 📚 Third-Party Attributions
+## 🚢 Deployment
 
-- This product uses the TMDB API but is not endorsed or certified by TMDB.
-- Anime data provided by the AniList GraphQL API.
+### Deploying to Railway (Recommended)
+
+1. Fork or clone this repository to your GitHub account.
+2. Log into [Railway](https://railway.com/) and click **New Project** > **Deploy from GitHub repo**.
+3. Add a **PostgreSQL** database service to your project on Railway (or connect your Supabase database).
+4. In your web service settings, add your Environment Variables:
+   - `DATABASE_URL`
+   - `DIRECT_URL`
+   - `AUTH_SECRET`
+   - `OWNER_EMAIL`
+   - `OWNER_PASSWORD_HASH`
+   - `TMDB_API_KEY`
+5. Railway will build and deploy the Next.js application automatically.
+6. Generate a public domain under **Networking** > **Generate Domain**.
+
+### Deploying to Vercel
+
+1. Push your code to GitHub.
+2. Import the project into [Vercel](https://vercel.com/).
+3. Add your environment variables in the Vercel dashboard under **Project Settings > Environment Variables**.
+4. Set the build command to `prisma generate && next build`.
+5. Deploy!
+
+---
+
+## 🔑 Environment Variables Reference
+
+| Variable                     | Required | Description                                                    | How to obtain                                                                  |
+| :--------------------------- | :------: | :------------------------------------------------------------- | :----------------------------------------------------------------------------- |
+| `DATABASE_URL`               | **Yes**  | PostgreSQL connection URL (pooler / transaction connection)    | Supabase, Railway, Neon, or local PostgreSQL                                   |
+| `DIRECT_URL`                 | **Yes**  | Direct PostgreSQL connection URL (session mode for migrations) | Database provider settings                                                     |
+| `AUTH_SECRET`                | **Yes**  | Secret used to encrypt Auth.js session cookies                 | Run `npx auth secret`                                                          |
+| `OWNER_EMAIL`                | **Yes**  | Email address allowed to sign into your personal shelf         | Choose your personal email                                                     |
+| `OWNER_PASSWORD_HASH`        | **Yes**  | Bcrypt hash of your login password                             | `node -e "console.log(require('bcryptjs').hashSync('pwd', 10))"`               |
+| `TMDB_API_KEY`               | **Yes**  | The Movie Database API Key or Read Access Token                | Free at [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api) |
+| `TMDB_API_READ_ACCESS_TOKEN` | Optional | TMDB v4 Bearer access token                                    | Alternative to `TMDB_API_KEY`                                                  |
+
+> 🔒 **Security Notice**: Never commit `.env` or `.env.local` to public repositories. Always keep your credentials in your deployment provider's secret manager.
+
+---
+
+## 💻 Available npm Scripts
+
+```bash
+# Development & Build
+npm run dev           # Start Next.js development server
+npm run build         # Build production bundle with TypeScript checking
+npm start             # Start production server locally
+
+# Code Quality & Testing
+npm run typecheck     # Typecheck entire codebase with TypeScript (tsc --noEmit)
+npm run lint          # Run ESLint across all components and actions
+npm run format        # Format codebase with Prettier
+npm test              # Run 590+ unit and integration tests via Vitest
+npm run test:e2e      # Run browser end-to-end test suite via Playwright
+npm run test:smoke    # Run responsive viewport smoke tests
+
+# Database & Utilities
+npm run db:migrate    # Run Prisma schema development migrations
+npm run db:push       # Synchronize schema directly to database
+npm run db:provision  # Verify and provision clean owner account
+npm run db:export     # Dump personal library data to JSON and CSV offline backups
+```
+
+---
+
+## 📁 Project Structure
+
+```
+AkShelf/
+├── src/
+│   ├── actions/          # Next.js Server Actions (tracking, ratings, seasons, dates)
+│   ├── app/              # Next.js App Router pages and API routes
+│   │   ├── (auth)/login  # Private authentication login page
+│   │   ├── api/          # Internal REST APIs (search, export, health)
+│   │   ├── history/      # Chronological audit trail page
+│   │   ├── library/      # Filterable personal media shelf
+│   │   ├── search/       # Global search interface with instant badges
+│   │   ├── settings/     # Owner preferences, backup, and data export
+│   │   ├── title/[id]/   # Deep title view (synopsis, cast, season/episode list)
+│   │   └── watchlist/    # Dedicated Plan to Watch queue
+│   ├── components/       # Modular UI components
+│   │   ├── dashboard/    # Shelves, stats tiles, continue watching cards
+│   │   ├── layout/       # App shell, navigation bar, footer
+│   │   ├── library/      # Filter bars, sorting dropdowns, view controls
+│   │   ├── search/       # Search inputs, result rows, filter chips
+│   │   ├── title/        # Title hero, season selector, episode rows, ratings
+│   │   └── ui/           # Core design system primitives (buttons, badges, dialogs)
+│   └── lib/              # Core business logic and service modules
+│       ├── auth/         # NextAuth configuration and password verification
+│       ├── dashboard/    # Metrics and shelf aggregation services
+│       ├── db/           # Prisma client instance and retry wrappers
+│       ├── history/      # Audit log formatter and query services
+│       ├── library/      # Library query filters and sorting engine
+│       ├── metadata/     # TMDB & AniList clients, translators, and rate limiters
+│       ├── progress/     # Episode progress calculations and series math
+│       └── validation/   # Zod schemas for all mutations and forms
+├── prisma/
+│   ├── schema.prisma     # Relational database schema
+│   └── migrations/       # Migration history
+├── docs/                 # Architectural specifications and operator manuals
+└── public/               # Static assets, logos, and icons
+```
+
+---
+
+## 📖 In-Depth Documentation
+
+For advanced operational guides and deep architectural documentation, check the [`docs/`](docs/) directory:
+
+- 📐 **[System Architecture Guide](docs/ARCHITECTURE.md)**: Network topology, serverless connection pooling, data model, and mutation lifecycles.
+- 📘 **[User Manual & Operator Guide](docs/USER_MANUAL.md)**: Complete guide to searching, tracking, decimal ratings, episode checklists, and library filters.
+- 🚀 **[Production Deployment Guide](docs/DEPLOYMENT_GUIDE.md)**: Step-by-step Supabase connection pooling and hosting setup.
+- 🔒 **[Domain & SSL/TLS Guide](docs/DOMAIN_SSL_GUIDE.md)**: DNS setup, custom domains, Let's Encrypt certificates, and security headers.
+- 💾 **[Backup & Disaster Recovery](docs/BACKUP_AND_RECOVERY.md)**: Offline JSON/CSV snapshots, transactional restores, and data safety.
+- 📱 **[Cross-Device Smoke Testing](docs/SMOKE_TESTING_REPORT.md)**: Viewport testing report across mobile, tablet, and desktop devices.
+- 🔍 **[Final Audit Report](docs/FINAL_AUDIT_REPORT.md)**: Full verification matrix and test passes.
+
+---
+
+## ⚖️ Third-Party Attributions
+
+- This product uses the [TMDB API](https://www.themoviedb.org/) for movie and television metadata, but is not endorsed or certified by TMDB.
+- Anime metadata and episode details are provided by the [AniList API](https://anilist.co/).
 
 ---
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is open-source software licensed under the [MIT License](LICENSE).
