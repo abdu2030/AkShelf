@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import bcrypt from "bcryptjs";
 import { changePasswordAction } from "./auth";
+import { auth } from "@/lib/auth";
 import type { Session } from "next-auth";
 import type { User } from "@prisma/client";
 
@@ -19,6 +20,10 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
+const mockAuth = auth as unknown as {
+  mockResolvedValueOnce: (value: unknown) => void;
+};
+
 describe("changePasswordAction", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -27,8 +32,7 @@ describe("changePasswordAction", () => {
   });
 
   it("returns error when unauthenticated", async () => {
-    const { auth } = await import("@/lib/auth");
-    vi.mocked(auth).mockResolvedValueOnce(null);
+    mockAuth.mockResolvedValueOnce(null);
 
     const formData = new FormData();
     formData.set("currentPassword", "EnvPassword123!");
@@ -41,8 +45,7 @@ describe("changePasswordAction", () => {
   });
 
   it("returns validation error for mismatched new password", async () => {
-    const { auth } = await import("@/lib/auth");
-    vi.mocked(auth).mockResolvedValueOnce({
+    mockAuth.mockResolvedValueOnce({
       user: { id: "u1", email: "owner@akshelf.local" },
     } as unknown as Session);
 
@@ -56,10 +59,9 @@ describe("changePasswordAction", () => {
   });
 
   it("returns error when current password does not match", async () => {
-    const { auth } = await import("@/lib/auth");
     const { prisma } = await import("@/lib/db");
 
-    vi.mocked(auth).mockResolvedValueOnce({
+    mockAuth.mockResolvedValueOnce({
       user: { id: "u1", email: "owner@akshelf.local" },
     } as unknown as Session);
 
@@ -79,10 +81,9 @@ describe("changePasswordAction", () => {
   });
 
   it("updates database and returns success on valid credentials", async () => {
-    const { auth } = await import("@/lib/auth");
     const { prisma } = await import("@/lib/db");
 
-    vi.mocked(auth).mockResolvedValueOnce({
+    mockAuth.mockResolvedValueOnce({
       user: { id: "u1", email: "owner@akshelf.local" },
     } as unknown as Session);
 
