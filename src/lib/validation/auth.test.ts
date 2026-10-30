@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loginSchema, validateCallbackUrl } from "./auth";
+import { loginSchema, validateCallbackUrl, changePasswordSchema } from "./auth";
 
 describe("loginSchema validation", () => {
   it("rejects invalid or empty email addresses", () => {
@@ -53,5 +53,52 @@ describe("validateCallbackUrl", () => {
   it("rejects /login redirect loops", () => {
     expect(validateCallbackUrl("/login")).toBe("/");
     expect(validateCallbackUrl("/login?callbackUrl=/library")).toBe("/");
+  });
+});
+
+describe("changePasswordSchema", () => {
+  it("rejects empty current password", () => {
+    const res = changePasswordSchema.safeParse({
+      currentPassword: "",
+      newPassword: "NewPassword123!",
+      confirmPassword: "NewPassword123!",
+    });
+    expect(res.success).toBe(false);
+  });
+
+  it("rejects new password shorter than 8 characters", () => {
+    const res = changePasswordSchema.safeParse({
+      currentPassword: "OldPassword123!",
+      newPassword: "short",
+      confirmPassword: "short",
+    });
+    expect(res.success).toBe(false);
+  });
+
+  it("rejects mismatched new and confirm passwords", () => {
+    const res = changePasswordSchema.safeParse({
+      currentPassword: "OldPassword123!",
+      newPassword: "NewPassword123!",
+      confirmPassword: "DifferentPassword123!",
+    });
+    expect(res.success).toBe(false);
+  });
+
+  it("rejects new password that is identical to current password", () => {
+    const res = changePasswordSchema.safeParse({
+      currentPassword: "SamePassword123!",
+      newPassword: "SamePassword123!",
+      confirmPassword: "SamePassword123!",
+    });
+    expect(res.success).toBe(false);
+  });
+
+  it("accepts valid inputs meeting all constraints", () => {
+    const res = changePasswordSchema.safeParse({
+      currentPassword: "OldPassword123!",
+      newPassword: "NewStrongPassword123!",
+      confirmPassword: "NewStrongPassword123!",
+    });
+    expect(res.success).toBe(true);
   });
 });
