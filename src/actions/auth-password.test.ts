@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import bcrypt from "bcryptjs";
 import { changePasswordAction } from "./auth";
+import type { Session } from "next-auth";
+import type { User } from "@prisma/client";
 
 vi.mock("@/lib/auth", () => ({
   auth: vi.fn(),
@@ -26,7 +28,7 @@ describe("changePasswordAction", () => {
 
   it("returns error when unauthenticated", async () => {
     const { auth } = await import("@/lib/auth");
-    vi.mocked(auth).mockResolvedValueOnce(null as any);
+    vi.mocked(auth).mockResolvedValueOnce(null);
 
     const formData = new FormData();
     formData.set("currentPassword", "EnvPassword123!");
@@ -42,7 +44,7 @@ describe("changePasswordAction", () => {
     const { auth } = await import("@/lib/auth");
     vi.mocked(auth).mockResolvedValueOnce({
       user: { id: "u1", email: "owner@akshelf.local" },
-    } as any);
+    } as unknown as Session);
 
     const formData = new FormData();
     formData.set("currentPassword", "EnvPassword123!");
@@ -59,13 +61,13 @@ describe("changePasswordAction", () => {
 
     vi.mocked(auth).mockResolvedValueOnce({
       user: { id: "u1", email: "owner@akshelf.local" },
-    } as any);
+    } as unknown as Session);
 
     vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
       id: "u1",
       email: "owner@akshelf.local",
       passwordHash: null,
-    } as any);
+    } as unknown as User);
 
     const formData = new FormData();
     formData.set("currentPassword", "WrongCurrentPassword123!");
@@ -82,19 +84,19 @@ describe("changePasswordAction", () => {
 
     vi.mocked(auth).mockResolvedValueOnce({
       user: { id: "u1", email: "owner@akshelf.local" },
-    } as any);
+    } as unknown as Session);
 
     vi.mocked(prisma.user.findUnique).mockResolvedValueOnce({
       id: "u1",
       email: "owner@akshelf.local",
       passwordHash: null,
-    } as any);
+    } as unknown as User);
 
     vi.mocked(prisma.user.update).mockResolvedValueOnce({
       id: "u1",
       email: "owner@akshelf.local",
       passwordHash: "newHash",
-    } as any);
+    } as unknown as User);
 
     const formData = new FormData();
     formData.set("currentPassword", "EnvPassword123!");

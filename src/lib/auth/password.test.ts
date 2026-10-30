@@ -1,6 +1,10 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import bcrypt from "bcryptjs";
-import { verifyPasswordHash, verifyOwnerCredentials } from "./password";
+import {
+  verifyPasswordHash,
+  verifyOwnerCredentials,
+  type VerifyOwnerCredentialsOptions,
+} from "./password";
 
 describe("Password verification", () => {
   const originalEnv = process.env;
@@ -87,12 +91,12 @@ describe("Password verification", () => {
       };
 
       const valid = await verifyOwnerCredentials("owner@test.com", dbPassword, {
-        prismaClient: mockPrisma as any,
+        prismaClient: mockPrisma as unknown as VerifyOwnerCredentialsOptions["prismaClient"],
       });
       expect(valid).toBe(true);
 
       const invalid = await verifyOwnerCredentials("owner@test.com", "wrongDbPassword", {
-        prismaClient: mockPrisma as any,
+        prismaClient: mockPrisma as unknown as VerifyOwnerCredentialsOptions["prismaClient"],
       });
       expect(invalid).toBe(false);
     });
@@ -111,7 +115,7 @@ describe("Password verification", () => {
       };
 
       const valid = await verifyOwnerCredentials("owner@test.com", testPassword, {
-        prismaClient: mockPrisma as any,
+        prismaClient: mockPrisma as unknown as VerifyOwnerCredentialsOptions["prismaClient"],
       });
       expect(valid).toBe(true);
     });
