@@ -6,6 +6,7 @@ import { useTheme } from "@/components/layout/theme-provider";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/actions/auth";
+import { ChangePasswordForm } from "@/components/settings/change-password-form";
 import { User, Palette, Database, Info } from "lucide-react";
 
 export default function SettingsPage() {
@@ -44,6 +45,8 @@ export default function SettingsPage() {
               </Button>
             </form>
           </div>
+
+          <ChangePasswordForm />
         </section>
 
         {/* Panel 2: Appearance */}
