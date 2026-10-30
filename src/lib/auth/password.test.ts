@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
+import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import bcrypt from "bcryptjs";
 import { verifyPasswordHash, verifyOwnerCredentials } from "./password";
 
@@ -68,6 +68,52 @@ describe("Password verification", () => {
       await expect(verifyOwnerCredentials("owner@test.com", testPassword)).rejects.toThrow(
         "Missing required environment variable: OWNER_PASSWORD_HASH",
       );
+    });
+  });
+
+  describe("verifyOwnerCredentials with database support", () => {
+    it("uses database passwordHash when present", async () => {
+      process.env.OWNER_EMAIL = "owner@test.com";
+      const dbPassword = "dbSecretPassword123";
+      const dbHash = bcrypt.hashSync(dbPassword, 10);
+      const mockPrisma = {
+        user: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: "u1",
+            email: "owner@test.com",
+            passwordHash: dbHash,
+          }),
+        },
+      };
+
+      const valid = await verifyOwnerCredentials("owner@test.com", dbPassword, {
+        prismaClient: mockPrisma as any,
+      });
+      expect(valid).toBe(true);
+
+      const invalid = await verifyOwnerCredentials("owner@test.com", "wrongDbPassword", {
+        prismaClient: mockPrisma as any,
+      });
+      expect(invalid).toBe(false);
+    });
+
+    it("falls back to process.env.OWNER_PASSWORD_HASH when database passwordHash is null", async () => {
+      process.env.OWNER_EMAIL = "owner@test.com";
+      process.env.OWNER_PASSWORD_HASH = testHash;
+      const mockPrisma = {
+        user: {
+          findUnique: vi.fn().mockResolvedValue({
+            id: "u1",
+            email: "owner@test.com",
+            passwordHash: null,
+          }),
+        },
+      };
+
+      const valid = await verifyOwnerCredentials("owner@test.com", testPassword, {
+        prismaClient: mockPrisma as any,
+      });
+      expect(valid).toBe(true);
     });
   });
 });

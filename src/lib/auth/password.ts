@@ -1,4 +1,15 @@
 import bcrypt from "bcryptjs";
+import { prisma as defaultPrisma } from "@/lib/db";
+
+export interface VerifyOwnerCredentialsOptions {
+  prismaClient?: {
+    user: {
+      findUnique: (args: {
+        where: { email: string };
+      }) => Promise<{ id: string; email: string; passwordHash: string | null } | null>;
+    };
+  };
+}
 
 /**
  * Verifies a plaintext password against a bcrypt hash.
@@ -21,15 +32,43 @@ export async function verifyPasswordHash(
 
 /**
  * Validates provided credentials against the single-owner configuration.
- * Fails fast if OWNER_PASSWORD_HASH is missing.
+ * Checks the database password_hash first if present; falls back to OWNER_PASSWORD_HASH.
+ * Fails fast if neither is configured.
  */
-export async function verifyOwnerCredentials(email: string, password: string): Promise<boolean> {
+export async function verifyOwnerCredentials(
+  email: string,
+  password: string,
+  options?: VerifyOwnerCredentialsOptions,
+): Promise<boolean> {
   const ownerEmail = process.env.OWNER_EMAIL || "owner@akshelf.local";
-  const ownerPasswordHash = process.env.OWNER_PASSWORD_HASH;
 
   if (email.toLowerCase().trim() !== ownerEmail.toLowerCase().trim()) {
     return false;
   }
 
-  return verifyPasswordHash(password, ownerPasswordHash);
+  const client = options?.prismaClient ?? defaultPrisma;
+
+  let dbUserPasswordHash: string | null = null;
+  try {
+    const user = await client.user.findUnique({
+      where: { email: email.toLowerCase().trim() },
+    });
+    if (
+      user &&
+      "passwordHash" in user &&
+      typeof user.passwordHash === "string" &&
+      user.passwordHash.trim() !== ""
+    ) {
+      dbUserPasswordHash = user.passwordHash;
+    }
+  } catch (error) {
+    // If DB is temporarily unavailable during initial connect, fall back to env hash
+    console.warn(
+      "[Auth] Failed to check database password_hash, falling back to env hash:",
+      error,
+    );
+  }
+
+  const activeHash = dbUserPasswordHash || process.env.OWNER_PASSWORD_HASH;
+  return verifyPasswordHash(password, activeHash);
 }
