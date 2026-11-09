@@ -63,10 +63,7 @@ export async function verifyOwnerCredentials(
     }
   } catch (error) {
     // If DB is temporarily unavailable during initial connect, fall back to env hash
-    console.warn(
-      "[Auth] Failed to check database password_hash, falling back to env hash:",
-      error,
-    );
+    console.warn("[Auth] Failed to check database password_hash, falling back to env hash:", error);
   }
 
   const activeHash = dbUserPasswordHash || process.env.OWNER_PASSWORD_HASH;
