@@ -58,7 +58,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="hidden lg:flex fixed inset-y-0 left-0 w-56 z-20 flex-col archive-rail p-5 select-none">
         {/* Brand Header */}
         <div className="px-2 pt-3 pb-8 mb-4">
-          <Logo size={30} showSubtitle={false} />
+          <Logo size={34} showSubtitle={false} />
           <p className="eyebrow mt-5">Your private archive</p>
         </div>
 
@@ -197,8 +197,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* 3. Mobile Header (below md: < 768px) with Settings Gear icon */}
       <header className="md:hidden relative z-20 w-full bg-surface border-b border-divider px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5">
-          <LogoMark size={28} />
-          <span className="font-display font-bold text-base text-ink">AkShelf</span>
+          <Logo size={30} showSubtitle={false} />
         </Link>
 
         <Link

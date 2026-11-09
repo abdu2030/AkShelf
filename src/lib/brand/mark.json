@@ -1,0 +1,9 @@
+{
+  "viewBox": "0 0 48 48",
+  "background": "#171B21",
+  "border": "#353B43",
+  "accent": "#DFA16F",
+  "shelf": "#F0EEE8",
+  "monogram": "M10 32L21 10H27L38 32H31L28.5 27H19.5L17 32H10ZM20 23H28L24 15L20 23Z",
+  "shelfPath": "M10 36H38V40H10V36Z"
+}

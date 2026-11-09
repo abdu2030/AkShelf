@@ -16,10 +16,10 @@ export const metadata: Metadata = {
   description: "Private, personal movie, TV show, and anime tracker. Did I watch this?",
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "48x48" },
-      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico?v=archive-a", sizes: "16x16 32x32 48x48" },
+      { url: "/icon.svg?v=archive-a", type: "image/svg+xml" },
     ],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    apple: [{ url: "/apple-touch-icon.png?v=archive-a", sizes: "180x180", type: "image/png" }],
   },
 };
 

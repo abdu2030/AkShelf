@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { loginAction } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
-import { LogoMark } from "@/components/ui/logo";
+import { Logo } from "@/components/ui/logo";
 
 function LoginForm() {
   const [state, formAction, isPending] = useActionState(loginAction, undefined);
@@ -18,7 +18,7 @@ function LoginForm() {
     <main id="main-content" className="w-full max-w-[380px] flex flex-col items-start">
       {/* AkShelf Mark */}
       <div className="mb-6">
-        <LogoMark size={52} />
+        <Logo size={44} showSubtitle={false} />
       </div>
 
       <p className="eyebrow mb-3">Your private archive</p>
@@ -106,7 +106,7 @@ export default function LoginPage() {
   return (
     <div className="login-layout">
       <aside className="login-art" aria-label="AkShelf private archive">
-        <p className="text-sm font-semibold tracking-[0.18em]">AK / SHELF</p>
+        <Logo size={36} showSubtitle={false} textClassName="text-[#f0eee8]" />
         <div>
           <p className="text-[11px] text-[#dfa16f] tracking-[0.18em] uppercase mb-6">
             A collection that is yours.
