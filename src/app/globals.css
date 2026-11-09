@@ -415,9 +415,12 @@ body {
   }
 }
 
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 4px;
+@layer base {
+  /* Let component focus rings override this accessible default. */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+  }
 }
 input,
 select,
