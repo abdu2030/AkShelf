@@ -1,5 +1,5 @@
 import React from "react";
-import Image from "next/image";
+import { ArchiveImage } from "@/components/ui/archive-image";
 import Link from "next/link";
 import { CheckCircle, Film, Sparkles, Star, Tv } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
@@ -37,21 +37,19 @@ export function RecentlyWatchedCard({ item, className }: RecentlyWatchedCardProp
       href={href}
       data-testid={`recently-watched-card-${externalId}`}
       className={cn(
-        "glass-1 rounded-2xl p-3 sm:p-3.5 border border-white/10 hover:border-white/20 transition-all duration-200 group flex flex-col justify-between block relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+        "rounded-lg transition-all duration-200 group flex flex-col justify-between block relative overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
         className,
       )}
     >
       <div className="space-y-3">
         {/* Poster Container */}
-        <div className="relative aspect-[2/3] w-full rounded-xl overflow-hidden bg-white/5 border border-white/5">
+        <div className="poster-object relative aspect-[2/3] w-full overflow-hidden">
           {posterUrl ? (
-            <Image
+            <ArchiveImage
               src={posterUrl}
               alt={title}
-              fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-              unoptimized
+              className="object-cover"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-ink-muted">
@@ -66,13 +64,13 @@ export function RecentlyWatchedCard({ item, className }: RecentlyWatchedCardProp
           )}
 
           {/* Type Pill */}
-          <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-black/60 backdrop-blur-md text-white border border-white/10">
+          <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-black/60 backdrop-blur-md text-white border border-divider">
             {type}
           </div>
 
           {/* Watched Status Indicator */}
-          <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-500/20 backdrop-blur-md text-emerald-300 border border-emerald-500/30 flex items-center gap-1 shadow-sm">
-            <CheckCircle className="w-3 h-3 fill-emerald-400/20 text-emerald-400" />
+          <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-status-watched-bg text-status-watched-text border border-status-watched-dot flex items-center gap-1 shadow-sm">
+            <CheckCircle className="w-3 h-3 fill-emerald-400/20 text-status-watched-text" />
             <span>Watched</span>
           </div>
 
@@ -87,7 +85,7 @@ export function RecentlyWatchedCard({ item, className }: RecentlyWatchedCardProp
 
         {/* Title & Metadata */}
         <div className="space-y-1">
-          <h3 className="font-bold text-sm font-display text-ink group-hover:text-white transition-colors truncate">
+          <h3 className="font-bold text-sm font-display text-ink group-hover:text-ink transition-colors line-clamp-2">
             {title}
           </h3>
           <div className="flex items-center justify-between text-xs text-ink-muted">
@@ -108,7 +106,7 @@ export function RecentlyWatchedCardSkeleton({ className }: { className?: string 
       aria-hidden="true"
       data-testid="recently-watched-card-skeleton"
       className={cn(
-        "glass-1 rounded-2xl p-3 sm:p-3.5 border border-white/5 flex flex-col justify-between",
+        "glass-1 rounded-2xl p-3 sm:p-3.5 border border-divider flex flex-col justify-between",
         className,
       )}
     >

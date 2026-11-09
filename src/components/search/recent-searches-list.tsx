@@ -43,7 +43,7 @@ export function RecentSearchesList({
             key={term}
             className={cn(
               "group inline-flex items-center h-8 pl-3 pr-1.5 rounded-full text-xs font-medium",
-              "glass-1 border border-white/10 text-ink-soft hover:text-ink hover:bg-white/10 transition-colors",
+              "glass-1 border border-divider text-ink-soft hover:text-ink hover:bg-white/10 transition-colors",
             )}
           >
             <button

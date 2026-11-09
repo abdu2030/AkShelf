@@ -24,12 +24,13 @@ export default function SettingsPage() {
     <AppShell>
       <PageHeader
         title="Settings"
+        eyebrow="06 / The control room"
         subtitle="Manage your personal preferences, appearance, and data."
       />
 
-      <div className="space-y-6 max-w-3xl">
+      <div className="settings-sections space-y-2 max-w-3xl">
         {/* Panel 1: Account */}
-        <section className="glass-1 p-6 rounded-[20px] space-y-4">
+        <section className="glass-1 p-6 rounded-[12px] space-y-4">
           <div className="flex items-center gap-2.5 text-accent">
             <User className="h-5 w-5" aria-hidden="true" />
             <h2 className="text-lg font-bold font-display text-ink">Account</h2>
@@ -50,7 +51,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Panel 2: Appearance */}
-        <section className="glass-1 p-6 rounded-[20px] space-y-6">
+        <section className="glass-1 p-6 rounded-[12px] space-y-6">
           <div className="flex items-center gap-2.5 text-accent">
             <Palette className="h-5 w-5" aria-hidden="true" />
             <h2 className="text-lg font-bold font-display text-ink">Appearance</h2>
@@ -63,6 +64,7 @@ export default function SettingsPage() {
               <Button
                 variant={mounted ? (theme === "system" ? "primary" : "secondary") : "primary"}
                 size="medium"
+                aria-pressed={mounted && theme === "system"}
                 onClick={() => setTheme("system")}
               >
                 System
@@ -70,6 +72,7 @@ export default function SettingsPage() {
               <Button
                 variant={mounted && theme === "dark" ? "primary" : "secondary"}
                 size="medium"
+                aria-pressed={mounted && theme === "dark"}
                 onClick={() => setTheme("dark")}
               >
                 Dark
@@ -77,6 +80,7 @@ export default function SettingsPage() {
               <Button
                 variant={mounted && theme === "light" ? "primary" : "secondary"}
                 size="medium"
+                aria-pressed={mounted && theme === "light"}
                 onClick={() => setTheme("light")}
               >
                 Light
@@ -84,12 +88,12 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="pt-2 border-t border-white/10 dark:border-white/12 space-y-4">
+          <div className="pt-2 border-t border-divider dark:border-divider space-y-4">
             <Switch
               checked={mounted ? reduceTransparency : false}
               onCheckedChange={setReduceTransparency}
               label="Reduce transparency"
-              description="Replace frosted glass with solid opaque surfaces"
+              description="Keep artwork stages and overlays fully opaque"
             />
 
             <Switch
@@ -102,7 +106,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Panel 3: Data Safety */}
-        <section className="glass-1 p-6 rounded-[20px] space-y-4">
+        <section className="glass-1 p-6 rounded-[12px] space-y-4">
           <div className="flex items-center gap-2.5 text-accent">
             <Database className="h-5 w-5" aria-hidden="true" />
             <h2 className="text-lg font-bold font-display text-ink">Your Data & Backups</h2>
@@ -116,7 +120,7 @@ export default function SettingsPage() {
             <a
               href="/api/export/json"
               download
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold glass-1 hover:glass-2 border border-white/12 text-ink-base transition-all hover:scale-[1.02] cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold glass-1 hover:glass-2 border border-divider text-ink transition-all hover:scale-[1.02] cursor-pointer"
             >
               <Database className="w-4 h-4 text-accent" aria-hidden="true" />
               <span>Export JSON (Full Backup)</span>
@@ -125,7 +129,7 @@ export default function SettingsPage() {
             <a
               href="/api/export/csv"
               download
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold glass-1 hover:glass-2 border border-white/12 text-ink-base transition-all hover:scale-[1.02] cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold glass-1 hover:glass-2 border border-divider text-ink transition-all hover:scale-[1.02] cursor-pointer"
             >
               <Info className="w-4 h-4 text-accent" aria-hidden="true" />
               <span>Export CSV (Spreadsheet)</span>
@@ -140,7 +144,7 @@ export default function SettingsPage() {
         </section>
 
         {/* Panel 4: About & Attributions */}
-        <section className="glass-1 p-6 rounded-[20px] space-y-4">
+        <section className="glass-1 p-6 rounded-[12px] space-y-4">
           <div className="flex items-center gap-2.5 text-accent">
             <Info className="h-5 w-5" aria-hidden="true" />
             <h2 className="text-lg font-bold font-display text-ink">About & Data Sources</h2>

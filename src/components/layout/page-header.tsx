@@ -4,33 +4,33 @@ import { cn } from "@/lib/utils/cn";
 export interface PageHeaderProps {
   title: string;
   subtitle?: string;
+  eyebrow?: string;
   actions?: React.ReactNode;
   className?: string;
 }
 
-export function PageHeader({ title, subtitle, actions, className }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  subtitle,
+  eyebrow = "Your private archive",
+  actions,
+  className,
+}: PageHeaderProps) {
   return (
     <header
       className={cn(
-        "w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 md:p-6 mb-6",
-        "glass-1 rounded-[20px] border border-white/10 dark:border-white/12 shadow-sm transition-all",
+        "archive-header flex flex-col sm:flex-row sm:items-end justify-between gap-5",
         className,
       )}
     >
-      <div className="flex flex-col">
-        <h1 className="text-2xl md:text-3xl font-bold font-display tracking-tight text-ink drop-shadow-sm">
-          {title}
-        </h1>
+      <div className="min-w-0">
+        <p className="eyebrow mb-3">{eyebrow}</p>
+        <h1 className="page-heading text-ink">{title}</h1>
         {subtitle && (
-          <p className="text-sm md:text-base text-ink-soft font-medium mt-1 leading-relaxed">
-            {subtitle}
-          </p>
+          <p className="text-sm text-ink-soft mt-3 max-w-2xl leading-relaxed">{subtitle}</p>
         )}
       </div>
-
-      {actions && (
-        <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-auto">{actions}</div>
-      )}
+      {actions && <div className="flex flex-wrap items-center gap-2 shrink-0">{actions}</div>}
     </header>
   );
 }

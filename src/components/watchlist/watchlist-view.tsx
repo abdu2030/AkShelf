@@ -52,15 +52,13 @@ export function WatchlistView({ initialItems = [] }: WatchlistViewProps) {
       {/* 1. Page Header */}
       <header
         className={cn(
-          "w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 md:p-6 mb-6",
-          "glass-1 rounded-[20px] border border-white/10 dark:border-white/12 shadow-sm transition-all",
+          "archive-header flex flex-col sm:flex-row sm:items-end justify-between gap-4",
         )}
       >
         <div className="flex flex-col">
+          <p className="eyebrow mb-3">04 / Waiting on the shelf</p>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl md:text-3xl font-bold font-display tracking-tight text-ink drop-shadow-sm">
-              Watchlist
-            </h1>
+            <h1 className="page-heading text-ink">Watchlist</h1>
             {displayTotal > 0 && (
               <span
                 data-testid="watchlist-total-count"
@@ -71,7 +69,7 @@ export function WatchlistView({ initialItems = [] }: WatchlistViewProps) {
             )}
           </div>
           <p className="text-sm md:text-base text-ink-soft font-medium mt-1 leading-relaxed">
-            Titles you plan to watch next.
+            Stories you have chosen. Ready when you are.
           </p>
         </div>
       </header>
@@ -88,10 +86,10 @@ export function WatchlistView({ initialItems = [] }: WatchlistViewProps) {
       ) : (
         <div className="space-y-6">
           {/* Controls bar: Type filter chips & Sorting dropdown */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-3 md:p-4 glass-1 rounded-2xl border border-white/10">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-3 md:p-4 glass-1 rounded-2xl border border-divider">
             {/* Type Filter Chips */}
             <div
-              className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none"
+              className="flex items-center gap-1.5 flex-wrap"
               role="group"
               aria-label="Filter watchlist by media type"
             >
@@ -107,11 +105,11 @@ export function WatchlistView({ initialItems = [] }: WatchlistViewProps) {
                     onClick={() => setSelectedType(opt.value)}
                     aria-pressed={isSelected}
                     className={cn(
-                      "inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap cursor-pointer shrink-0",
+                      "inline-flex items-center gap-2 min-h-11 px-3.5 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer shrink-0",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
                       isSelected
-                        ? "bg-accent text-white shadow-sm font-semibold"
-                        : "glass-2 text-ink-soft hover:text-ink hover:bg-white/10 border border-white/5",
+                        ? "bg-accent-fill text-accent-ink shadow-sm font-semibold"
+                        : "glass-2 text-ink-soft hover:text-ink hover:bg-white/10 border border-divider",
                     )}
                   >
                     <Icon className="w-3.5 h-3.5 shrink-0" />
@@ -119,7 +117,7 @@ export function WatchlistView({ initialItems = [] }: WatchlistViewProps) {
                     <span
                       className={cn(
                         "ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-bold",
-                        isSelected ? "bg-black/20 text-white" : "bg-white/10 text-ink-muted",
+                        isSelected ? "bg-black/10 text-accent-ink" : "bg-white/10 text-ink-muted",
                       )}
                     >
                       {count}
@@ -142,9 +140,9 @@ export function WatchlistView({ initialItems = [] }: WatchlistViewProps) {
 
           {/* Grid or Filter Empty State */}
           {sortedItems.length > 0 ? (
-            <MediaGrid items={sortedItems} />
+            <MediaGrid items={sortedItems} density="spacious" />
           ) : (
-            <div className="flex flex-col items-center justify-center p-12 text-center glass-1 rounded-[20px] border border-white/10 space-y-3">
+            <div className="flex flex-col items-center justify-center p-12 text-center glass-1 rounded-[12px] border border-divider space-y-3">
               <Bookmark className="w-8 h-8 text-ink-muted" aria-hidden="true" />
               <h3 className="text-base font-bold font-display text-ink">
                 No titles in this category

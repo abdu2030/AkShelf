@@ -128,14 +128,14 @@ export function DateTracker({
           {hasDates ? (
             <div className="flex flex-wrap items-center gap-2 tabular-nums">
               {startedAt && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-white/5 border border-white/10 text-ink-base">
-                  <CalendarClock className="w-3 h-3 text-sky-400" aria-hidden="true" />
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-white/5 border border-divider text-ink-base">
+                  <CalendarClock className="w-3 h-3 text-status-watching-text" aria-hidden="true" />
                   Started: {formatDate(startedAt)}
                 </span>
               )}
               {watchedAt && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-white/5 border border-white/10 text-ink-base">
-                  <CalendarCheck className="w-3 h-3 text-emerald-400" aria-hidden="true" />
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-white/5 border border-divider text-ink-base">
+                  <CalendarCheck className="w-3 h-3 text-status-watched-text" aria-hidden="true" />
                   Finished: {formatDate(watchedAt)}
                 </span>
               )}
@@ -169,7 +169,7 @@ export function DateTracker({
 
       {/* Expandable Date Inputs Panel */}
       {isEditing && (
-        <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 space-y-3 animate-in fade-in duration-150">
+        <div className="p-3.5 rounded-xl bg-white/[0.03] border border-divider space-y-3 animate-in fade-in duration-150">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             {/* Started At input */}
             <div className="space-y-1.5">
@@ -186,13 +186,13 @@ export function DateTracker({
                   value={startedAt ? toDateInputValue(startedAt) : ""}
                   onChange={(e) => handleSaveDates(e.target.value || null, watchedAt)}
                   disabled={isPending}
-                  className="w-full h-8 px-2.5 rounded-lg bg-surface border border-white/15 text-xs text-ink-base tabular-nums focus:outline-none focus:ring-1 focus:ring-accent"
+                  className="w-full h-8 px-2.5 rounded-lg bg-surface border border-divider text-xs text-ink-base tabular-nums focus:outline-none focus:ring-1 focus:ring-accent"
                 />
                 <button
                   type="button"
                   onClick={setStartedToday}
                   disabled={isPending}
-                  className="h-8 px-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-medium text-ink-base shrink-0 transition-colors cursor-pointer disabled:opacity-50"
+                  className="h-8 px-2 rounded-lg bg-white/5 hover:bg-white/10 border border-divider text-[11px] font-medium text-ink-base shrink-0 transition-colors cursor-pointer disabled:opacity-50"
                   aria-label="Set started date to today"
                 >
                   Today
@@ -227,13 +227,13 @@ export function DateTracker({
                   value={watchedAt ? toDateInputValue(watchedAt) : ""}
                   onChange={(e) => handleSaveDates(startedAt, e.target.value || null)}
                   disabled={isPending}
-                  className="w-full h-8 px-2.5 rounded-lg bg-surface border border-white/15 text-xs text-ink-base tabular-nums focus:outline-none focus:ring-1 focus:ring-accent"
+                  className="w-full h-8 px-2.5 rounded-lg bg-surface border border-divider text-xs text-ink-base tabular-nums focus:outline-none focus:ring-1 focus:ring-accent"
                 />
                 <button
                   type="button"
                   onClick={setWatchedToday}
                   disabled={isPending}
-                  className="h-8 px-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] font-medium text-ink-base shrink-0 transition-colors cursor-pointer disabled:opacity-50"
+                  className="h-8 px-2 rounded-lg bg-white/5 hover:bg-white/10 border border-divider text-[11px] font-medium text-ink-base shrink-0 transition-colors cursor-pointer disabled:opacity-50"
                   aria-label="Set finished date to today"
                 >
                   Today

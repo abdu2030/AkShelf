@@ -37,7 +37,7 @@ describe("MediaGrid", () => {
     expect(html).toContain("sm:grid-cols-3");
     expect(html).toContain("md:grid-cols-4");
     expect(html).toContain("lg:grid-cols-4");
-    expect(html).toContain("xl:grid-cols-5");
+    expect(html).toContain("xl:grid-cols-6");
     expect(html).toContain("2xl:grid-cols-6");
     expect(html).toContain('data-testid="child-1"');
   });

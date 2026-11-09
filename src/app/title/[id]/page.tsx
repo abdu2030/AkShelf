@@ -486,7 +486,7 @@ export default async function TitleDetailPage({ params, searchParams }: TitleDet
             </p>
             <Link
               href="/library"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent text-white font-medium text-sm hover:opacity-95 transition-opacity"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent-fill text-accent-ink font-medium text-sm hover:opacity-95 transition-opacity"
             >
               <ArrowLeft className="w-4 h-4" aria-hidden="true" />
               Back to Library
@@ -520,7 +520,7 @@ export default async function TitleDetailPage({ params, searchParams }: TitleDet
 
   return (
     <AppShell>
-      <div className="max-w-5xl mx-auto space-y-8 pb-16">
+      <div className="w-full space-y-6 pb-16">
         {/* Navigation back to library */}
         <div>
           <Link
@@ -550,10 +550,7 @@ export default async function TitleDetailPage({ params, searchParams }: TitleDet
         />
 
         {/* 2. Your Shelf Panel (Section 10.4 & Page 38) */}
-        <section
-          aria-labelledby="your-shelf-heading"
-          className="glass-1 rounded-[24px] p-5 sm:p-6 border border-white/10 shadow-lg space-y-4"
-        >
+        <section aria-labelledby="your-shelf-heading" className="surface-1 p-5 sm:p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h2
               id="your-shelf-heading"
@@ -598,7 +595,7 @@ export default async function TitleDetailPage({ params, searchParams }: TitleDet
               )}
 
               {titleData.userRating != null && titleData.userRating > 0 && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-500 dark:text-amber-400 border border-amber-500/20">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-accent border border-amber-500/20">
                   <Star className="w-3.5 h-3.5 fill-amber-500" aria-hidden="true" />
                   {formatRating(titleData.userRating)}
                 </span>
@@ -625,7 +622,7 @@ export default async function TitleDetailPage({ params, searchParams }: TitleDet
           </div>
 
           {/* Interactive Rating Control (Day 24, Spec Section 9.8) */}
-          <div className="pt-3 border-t border-white/5">
+          <div className="pt-3 border-t border-divider">
             <RatingControl
               currentRating={titleData.userRating}
               titleExternalSource={titleData.externalSource}
@@ -636,7 +633,7 @@ export default async function TitleDetailPage({ params, searchParams }: TitleDet
           </div>
 
           {/* Interactive Date Tracker (Day 25, Spec P14 & Roadmap) */}
-          <div className="pt-3 border-t border-white/5">
+          <div className="pt-3 border-t border-divider">
             <DateTracker
               startedAt={titleData.startedAt}
               watchedAt={titleData.watchedAt}
@@ -648,24 +645,6 @@ export default async function TitleDetailPage({ params, searchParams }: TitleDet
             />
           </div>
         </section>
-
-        {/* 3. Cast Preview Section (Section 10.4) */}
-        <CastPreview cast={titleData.cast} />
-
-        {/* 4. Metadata Overview Panel (Section 10.4 & 8.6) */}
-        <MetadataPanel
-          originalTitle={titleData.originalTitle}
-          director={titleData.director}
-          studios={titleData.studios}
-          releaseDate={titleData.releaseDate}
-          runtime={titleData.runtime}
-          status={titleData.statusText}
-          voteAverage={titleData.voteAverage}
-          voteCount={titleData.voteCount}
-          externalSource={titleData.externalSource}
-          externalId={titleData.externalId}
-          trailerUrl={titleData.trailerUrl}
-        />
 
         {/* 5. Watch Tracking Section: Seasons & Episodes (for TV/Series) or Dedicated Movie Watch Section (for Movies/Anime Movies) */}
         {isMovie ? (
@@ -696,6 +675,23 @@ export default async function TitleDetailPage({ params, searchParams }: TitleDet
             mediaType={titleData.type}
           />
         )}
+        {/* 3. Cast Preview Section (Section 10.4) */}
+        <CastPreview cast={titleData.cast} />
+
+        {/* 4. Metadata Overview Panel (Section 10.4 & 8.6) */}
+        <MetadataPanel
+          originalTitle={titleData.originalTitle}
+          director={titleData.director}
+          studios={titleData.studios}
+          releaseDate={titleData.releaseDate}
+          runtime={titleData.runtime}
+          status={titleData.statusText}
+          voteAverage={titleData.voteAverage}
+          voteCount={titleData.voteCount}
+          externalSource={titleData.externalSource}
+          externalId={titleData.externalId}
+          trailerUrl={titleData.trailerUrl}
+        />
       </div>
     </AppShell>
   );

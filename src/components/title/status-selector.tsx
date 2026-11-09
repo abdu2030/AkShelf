@@ -128,7 +128,7 @@ export function StatusSelector({
           aria-label={`Change watch status, currently ${statusConfig[status].label}`}
           className={cn(
             "group inline-flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full text-xs font-semibold",
-            "glass-1 hover:glass-2 border border-white/10 hover:border-white/20 transition-all cursor-pointer select-none",
+            "glass-1 hover:glass-2 border border-divider hover:border-divider transition-all cursor-pointer select-none",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
             "min-h-[36px]",
             isPending && "opacity-75 cursor-wait",
@@ -186,7 +186,7 @@ export function StatusSelector({
           aria-label="Select watch status"
           className={cn(
             "absolute left-0 mt-2 w-56 rounded-2xl glass-3 p-1.5 z-50 shadow-2xl",
-            "border border-white/20 backdrop-blur-2xl animate-in fade-in-0 zoom-in-95 duration-150",
+            "border border-divider backdrop-blur-2xl animate-in fade-in-0 zoom-in-95 duration-150",
           )}
         >
           <div className="px-2.5 py-1.5 text-[11px] font-semibold text-ink-muted uppercase tracking-wider">
@@ -228,7 +228,7 @@ export function StatusSelector({
           {/* Remove from shelf option if currently tracked */}
           {status && (
             <>
-              <div className="my-1.5 border-t border-white/10" />
+              <div className="my-1.5 border-t border-divider" />
               <button
                 type="button"
                 role="menuitem"

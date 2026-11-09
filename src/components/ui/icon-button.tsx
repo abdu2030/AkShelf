@@ -36,7 +36,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
           variant === "ghost" &&
             "bg-transparent text-ink-soft hover:text-ink hover:bg-white/8 dark:hover:bg-white/10",
           variant === "glass" &&
-            "glass-2 text-ink hover:bg-white/15 shadow-sm border border-white/16",
+            "glass-2 text-ink hover:bg-white/15 shadow-sm border border-divider",
           variant === "subtle" && "bg-white/6 text-ink-soft hover:text-ink hover:bg-white/12",
           className,
         )}

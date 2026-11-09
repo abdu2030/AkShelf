@@ -132,17 +132,14 @@ export function LibraryFilters({
   return (
     <div
       data-testid="library-filters"
-      className={cn(
-        "glass-1 p-4 md:p-5 rounded-[20px] border border-white/10 dark:border-white/12 space-y-3.5 mb-6 shadow-sm",
-        className,
-      )}
+      className={cn("border-b border-divider pb-6 space-y-3.5 mb-6", className)}
     >
       {/* Top Row: Media Type Filter Chips & Sorting Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div
           role="group"
           aria-label="Filter by media type"
-          className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none"
+          className="flex items-center gap-2 flex-wrap"
         >
           {mediaTypeOptions.map((opt) => {
             const isSelected = selectedType === opt.value;
@@ -156,12 +153,12 @@ export function LibraryFilters({
                 data-testid={`filter-type-${opt.value.toLowerCase()}`}
                 onClick={() => onTypeChange(opt.value)}
                 className={cn(
-                  "inline-flex items-center gap-2 h-9 px-3.5 rounded-full text-xs font-semibold transition-all select-none cursor-pointer whitespace-nowrap",
+                  "inline-flex items-center gap-2 min-h-11 px-3.5 rounded-lg text-xs font-semibold transition-all select-none cursor-pointer whitespace-nowrap",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
                   "active:scale-95",
                   isSelected
-                    ? "bg-accent-fill text-white shadow-sm border border-white/20"
-                    : "glass-1 text-ink-soft hover:text-ink hover:glass-2 border border-white/10 hover:border-white/16",
+                    ? "bg-accent-fill text-accent-ink shadow-sm border border-divider"
+                    : "glass-1 text-ink-soft hover:text-ink hover:glass-2 border border-divider hover:border-divider",
                 )}
               >
                 <MediaTypeFilterIcon type={opt.value} className="h-3.5 w-3.5 shrink-0" />
@@ -170,7 +167,7 @@ export function LibraryFilters({
                   <span
                     className={cn(
                       "text-[11px] font-mono px-1.5 py-0.2 rounded-full",
-                      isSelected ? "bg-white/20 text-white" : "bg-white/6 text-ink-muted",
+                      isSelected ? "bg-black/10 text-accent-ink" : "bg-white/6 text-ink-muted",
                     )}
                   >
                     {count}
@@ -212,7 +209,7 @@ export function LibraryFilters({
       <div
         role="group"
         aria-label="Filter by watch status"
-        className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none pt-1 border-t border-white/6"
+        className="flex items-center gap-2 flex-wrap pt-1 border-t border-divider"
       >
         {statusFilterOptions.map((opt) => {
           const isSelected = selectedStatus === opt.value;
@@ -228,16 +225,16 @@ export function LibraryFilters({
               data-testid={`filter-status-${opt.value.toLowerCase()}`}
               onClick={() => onStatusChange(opt.value)}
               className={cn(
-                "inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold transition-all select-none cursor-pointer whitespace-nowrap",
+                "inline-flex items-center gap-1.5 min-h-11 px-3 rounded-lg text-xs font-semibold transition-all select-none cursor-pointer whitespace-nowrap",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
                 "active:scale-95",
                 isAll
                   ? isSelected
-                    ? "bg-accent-fill text-white shadow-sm border border-white/20"
-                    : "bg-white/4 hover:bg-white/8 text-ink-muted hover:text-ink border border-white/8"
+                    ? "bg-accent-fill text-accent-ink shadow-sm border border-divider"
+                    : "bg-white/4 hover:bg-white/8 text-ink-muted hover:text-ink border border-divider"
                   : isSelected && config
                     ? cn(config.badgeClass, "shadow-sm")
-                    : "bg-white/4 hover:bg-white/8 text-ink-muted hover:text-ink border border-white/8",
+                    : "bg-white/4 hover:bg-white/8 text-ink-muted hover:text-ink border border-divider",
               )}
             >
               {!isAll && (

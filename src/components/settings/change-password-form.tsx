@@ -20,7 +20,7 @@ export function ChangePasswordForm() {
   }, [state?.success]);
 
   return (
-    <div className="pt-4 border-t border-white/10 dark:border-white/12 space-y-4">
+    <div className="pt-4 border-t border-divider dark:border-divider space-y-4">
       <div className="flex items-center gap-2 text-ink">
         <Lock className="h-4 w-4 text-accent" aria-hidden="true" />
         <h3 className="text-sm font-semibold">Change Password</h3>
@@ -47,7 +47,7 @@ export function ChangePasswordForm() {
               autoComplete="current-password"
               placeholder="Enter current password"
               aria-label="Current Password"
-              className="w-full h-10 rounded-[12px] px-3.5 pr-10 text-sm text-ink placeholder:text-ink-muted placeholder:font-normal bg-white/8 dark:bg-white/8 border border-white/15 dark:border-white/20 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+              className="w-full h-10 rounded-[12px] px-3.5 pr-10 text-sm text-ink placeholder:text-ink-muted placeholder:font-normal bg-white/8 dark:bg-white/8 border border-divider dark:border-divider focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
             />
             <button
               type="button"
@@ -82,7 +82,7 @@ export function ChangePasswordForm() {
               autoComplete="new-password"
               placeholder="Enter at least 8 characters"
               aria-label="New Password"
-              className="w-full h-10 rounded-[12px] px-3.5 pr-10 text-sm text-ink placeholder:text-ink-muted placeholder:font-normal bg-white/8 dark:bg-white/8 border border-white/15 dark:border-white/20 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+              className="w-full h-10 rounded-[12px] px-3.5 pr-10 text-sm text-ink placeholder:text-ink-muted placeholder:font-normal bg-white/8 dark:bg-white/8 border border-divider dark:border-divider focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
             />
             <button
               type="button"
@@ -118,7 +118,7 @@ export function ChangePasswordForm() {
               autoComplete="new-password"
               placeholder="Re-enter new password"
               aria-label="Confirm New Password"
-              className="w-full h-10 rounded-[12px] px-3.5 pr-10 text-sm text-ink placeholder:text-ink-muted placeholder:font-normal bg-white/8 dark:bg-white/8 border border-white/15 dark:border-white/20 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+              className="w-full h-10 rounded-[12px] px-3.5 pr-10 text-sm text-ink placeholder:text-ink-muted placeholder:font-normal bg-white/8 dark:bg-white/8 border border-divider dark:border-divider focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
             />
             <button
               type="button"
@@ -139,9 +139,9 @@ export function ChangePasswordForm() {
         {state?.error && (
           <div
             role="alert"
-            className="flex items-center gap-2 p-3 rounded-[12px] bg-red-500/15 border border-red-500/30 text-red-200 text-xs font-medium"
+            className="flex items-center gap-2 p-3 rounded-[12px] bg-red-500/15 border border-red-500/30 text-error text-xs font-medium"
           >
-            <AlertTriangle className="h-4 w-4 shrink-0 text-red-400" aria-hidden="true" />
+            <AlertTriangle className="h-4 w-4 shrink-0 text-error" aria-hidden="true" />
             <span>{state.error}</span>
           </div>
         )}
@@ -152,7 +152,10 @@ export function ChangePasswordForm() {
             role="status"
             className="flex items-center gap-2 p-3 rounded-[12px] bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 text-xs font-medium"
           >
-            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" aria-hidden="true" />
+            <CheckCircle2
+              className="h-4 w-4 shrink-0 text-status-watched-text"
+              aria-hidden="true"
+            />
             <span>{state.message || "Password updated successfully."}</span>
           </div>
         )}

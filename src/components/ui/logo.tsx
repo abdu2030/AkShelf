@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 import { cn } from "@/lib/utils/cn";
 
 export interface LogoMarkProps extends React.SVGProps<SVGSVGElement> {
@@ -12,6 +12,7 @@ export interface LogoMarkProps extends React.SVGProps<SVGSVGElement> {
  * Matte obsidian black rounded badge, smoked specular rim, stark white floating shelves, and cinema play caret.
  */
 export function LogoMark({ size = 32, className, bare = false, ...props }: LogoMarkProps) {
+  const gradientId = `akshelf-gate-bg-${useId().replace(/:/g, "")}`;
   if (bare) {
     return (
       <svg
@@ -47,7 +48,7 @@ export function LogoMark({ size = 32, className, bare = false, ...props }: LogoM
     >
       <defs>
         <linearGradient
-          id="akshelf-gate-bg"
+          id={gradientId}
           x1="0"
           y1="0"
           x2="32"
@@ -59,7 +60,7 @@ export function LogoMark({ size = 32, className, bare = false, ...props }: LogoM
         </linearGradient>
       </defs>
       {/* Matte obsidian black badge */}
-      <rect width="32" height="32" rx="8" fill="url(#akshelf-gate-bg)" />
+      <rect width="32" height="32" rx="8" fill={`url(#${gradientId})`} />
       {/* Smoked specular rim */}
       <rect x="0.5" y="0.5" width="31" height="31" rx="7.5" stroke="rgba(255,255,255,0.14)" />
       {/* Top shelf */}
@@ -91,11 +92,11 @@ export function Logo({ size = 36, showSubtitle = true, className, textClassName 
       <LogoMark size={size} />
       <div className={textClassName}>
         <span className="font-display font-bold text-lg text-ink tracking-tight block leading-tight">
-          AkShelf
+          AK / SHELF
         </span>
         {showSubtitle && (
           <span className="block text-[11px] text-ink-muted -mt-0.5 font-semibold tracking-wide">
-            Watch Tracker
+            Private archive
           </span>
         )}
       </div>

@@ -25,7 +25,7 @@ export function CastPreview({ cast = [], className }: CastPreviewProps) {
     return (
       <div
         className={cn(
-          "glass-2 rounded-2xl p-5 border border-white/10 text-center text-ink-muted text-xs sm:text-sm space-y-1.5",
+          "glass-2 rounded-2xl p-5 border border-divider text-center text-ink-muted text-xs sm:text-sm space-y-1.5",
           className,
         )}
       >
@@ -60,10 +60,10 @@ export function CastPreview({ cast = [], className }: CastPreviewProps) {
         {cast.map((member) => (
           <div
             key={member.id}
-            className="w-28 sm:w-32 shrink-0 snap-start flex flex-col items-center text-center p-2.5 rounded-2xl glass-1 border border-white/10 hover:border-white/20 transition-all hover:-translate-y-0.5 shadow-sm group select-none"
+            className="w-28 sm:w-32 shrink-0 snap-start flex flex-col items-center text-center p-2.5 rounded-2xl glass-1 border border-divider hover:border-divider transition-all hover:-translate-y-0.5 shadow-sm group select-none"
           >
             {/* Avatar image with fallback */}
-            <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden mb-2.5 bg-surface-elevated/80 border border-white/10 group-hover:border-accent/40 transition-colors shadow-inner flex items-center justify-center shrink-0">
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden mb-2.5 bg-surface-elevated/80 border border-divider group-hover:border-accent/40 transition-colors shadow-inner flex items-center justify-center shrink-0">
               {member.image ? (
                 <Image
                   src={member.image}

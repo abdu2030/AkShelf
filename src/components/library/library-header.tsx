@@ -34,7 +34,7 @@ export interface LibraryHeaderProps {
  */
 export function LibraryHeader({
   title = "My Library",
-  subtitle = "All tracked titles filtered by status and media type.",
+  subtitle = "Everything you have seen, started or saved.",
   totalCount,
   selectedType,
   onTypeChange,
@@ -56,15 +56,13 @@ export function LibraryHeader({
       {/* Top Banner / Heading */}
       <header
         className={cn(
-          "w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 md:p-6",
-          "glass-1 rounded-[20px] border border-white/10 dark:border-white/12 shadow-sm transition-all",
+          "archive-header flex flex-col sm:flex-row sm:items-end justify-between gap-4",
         )}
       >
         <div className="flex flex-col">
+          <p className="eyebrow mb-3">02 / The collection</p>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl md:text-3xl font-bold font-display tracking-tight text-ink drop-shadow-sm">
-              {title}
-            </h1>
+            <h1 className="page-heading text-ink">{title}</h1>
             {displayTotal !== undefined && (
               <span
                 data-testid="library-total-count"

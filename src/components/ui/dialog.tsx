@@ -202,7 +202,7 @@ export function DialogContent({
         tabIndex={-1}
         className={cn(
           "relative z-10 w-full max-w-lg rounded-2xl glass-3 p-6 shadow-2xl",
-          "border border-white/20 backdrop-blur-2xl animate-in fade-in-0 zoom-in-95 duration-200",
+          "border border-divider backdrop-blur-2xl animate-in fade-in-0 zoom-in-95 duration-200",
           "focus:outline-none",
           className,
         )}

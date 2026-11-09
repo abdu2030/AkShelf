@@ -73,7 +73,7 @@ export function SearchResultRow({
       aria-selected={isHighlighted}
       data-highlighted={isHighlighted}
       className={cn(
-        "relative flex items-center justify-between gap-3 p-3 sm:px-4 rounded-xl transition-all duration-150 select-none",
+        "relative flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 py-4 px-2 rounded-md transition-all duration-150 select-none",
         "border-l-[3px] group cursor-pointer",
         isHighlighted
           ? "border-accent bg-accent/8 dark:bg-accent/12 shadow-sm"
@@ -82,9 +82,12 @@ export function SearchResultRow({
       )}
     >
       {/* Clickable Card Content */}
-      <Link href={titleHref} className="flex items-center gap-3.5 flex-1 min-w-0">
+      <Link
+        href={titleHref}
+        className="flex items-center gap-3.5 flex-1 min-w-0 basis-full sm:basis-0"
+      >
         {/* Poster Thumbnail (64x96px) */}
-        <div className="relative w-16 h-24 min-w-[64px] min-h-[96px] rounded-md overflow-hidden bg-white/5 dark:bg-white/5 border border-white/10 shrink-0">
+        <div className="relative w-16 h-24 min-w-[64px] min-h-[96px] rounded-md overflow-hidden bg-white/5 dark:bg-white/5 border border-divider shrink-0">
           {item.posterUrl && !imageError ? (
             <Image
               src={item.posterUrl}
@@ -110,7 +113,7 @@ export function SearchResultRow({
                 status={item.status as WatchStatusType}
                 variant="dot"
                 detail={badgeDetail}
-                className="h-6 w-6 shadow-md border border-white/20 bg-[#0b0d1a]/85 backdrop-blur-sm [&>svg]:h-3.5 [&>svg]:w-3.5"
+                className="h-6 w-6 shadow-md border border-divider bg-surface [&>svg]:h-3.5 [&>svg]:w-3.5"
               />
             </div>
           )}
@@ -126,17 +129,18 @@ export function SearchResultRow({
           {/* Subtitle: Year, Media Type Icon + Label, Personal Rating / Score, Watching Progress, Genres */}
           <div className="flex items-center flex-wrap gap-2 text-xs text-ink-muted">
             {item.year && <span>{item.year}</span>}
-            {item.year && <span className="text-white/20 dark:text-white/20">•</span>}
+            {item.year && <span className="text-ink-muted">•</span>}
 
             <span className="inline-flex items-center gap-1 font-medium text-ink-soft">
               <MediaTypeIcon type={item.type} className="w-3.5 h-3.5 text-accent shrink-0" />
               <span>{typeLabel}</span>
+              <span className="text-ink-muted uppercase text-[10px]">{item.externalSource}</span>
             </span>
 
             {/* User Personal Rating (Gold Star + font-mono tabular-nums) */}
             {item.rating != null ? (
               <>
-                <span className="text-white/20 dark:text-white/20">•</span>
+                <span className="text-ink-muted">•</span>
                 <span
                   data-testid="search-personal-rating"
                   className="inline-flex items-center gap-1 font-semibold text-amber-400 font-mono tabular-nums"
@@ -152,7 +156,7 @@ export function SearchResultRow({
               </>
             ) : item.voteAverage != null && item.voteAverage > 0 ? (
               <>
-                <span className="text-white/20 dark:text-white/20">•</span>
+                <span className="text-ink-muted">•</span>
                 <span
                   data-testid="search-public-rating"
                   className="inline-flex items-center gap-1 text-ink-soft font-mono tabular-nums"
@@ -170,10 +174,10 @@ export function SearchResultRow({
             {/* Watching Progress in Subtitle */}
             {item.status === "WATCHING" && badgeDetail && (
               <>
-                <span className="text-white/20 dark:text-white/20">•</span>
+                <span className="text-ink-muted">•</span>
                 <span
                   data-testid="search-watching-progress"
-                  className="inline-flex items-center gap-1 font-semibold text-sky-400 text-xs"
+                  className="inline-flex items-center gap-1 font-semibold text-status-watching-text text-xs"
                 >
                   <span>{badgeDetail}</span>
                 </span>
@@ -182,7 +186,7 @@ export function SearchResultRow({
 
             {item.genres && item.genres.length > 0 && (
               <>
-                <span className="text-white/20 dark:text-white/20">•</span>
+                <span className="text-ink-muted">•</span>
                 <span className="truncate">{item.genres.slice(0, 2).join(", ")}</span>
               </>
             )}
@@ -198,7 +202,7 @@ export function SearchResultRow({
       </Link>
 
       {/* Right Side: Tracked Status Badge vs "+ Plan to Watch" Action */}
-      <div className="shrink-0 pl-2 flex items-center">
+      <div className="shrink-0 pl-[78px] sm:pl-2 flex items-center">
         {item.isOnShelf && item.status ? (
           <StatusBadge status={item.status as WatchStatusType} detail={badgeDetail} />
         ) : (
@@ -207,9 +211,9 @@ export function SearchResultRow({
             onClick={(e) => onQuickTrack?.(item, e)}
             aria-label={`Add ${item.title} to Plan to Watch`}
             className={cn(
-              "h-8 px-3 rounded-full text-xs font-semibold cursor-pointer transition-all",
+              "min-h-11 px-3 rounded-full text-xs font-semibold cursor-pointer transition-all",
               "flex items-center gap-1.5 shrink-0",
-              "glass-2 border border-white/12 text-ink-soft hover:text-ink hover:bg-white/12",
+              "glass-2 border border-divider text-ink-soft hover:text-ink hover:bg-white/12",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
             )}
           >

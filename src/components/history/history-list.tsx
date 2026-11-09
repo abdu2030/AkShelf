@@ -140,7 +140,7 @@ export function HistoryList({ initialItems, initialHasMore, className }: History
             type="button"
             onClick={() => setShowClearModal(true)}
             disabled={isPending || isClearing}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/20 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-error hover:text-red-300 hover:bg-red-500/10 border border-red-500/20 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 disabled:opacity-50"
             aria-label="Clear history"
           >
             <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
@@ -162,7 +162,7 @@ export function HistoryList({ initialItems, initialHasMore, className }: History
           <DialogFooter>
             <DialogClose
               disabled={isClearing}
-              className="px-4 py-2 rounded-xl text-xs font-semibold glass-1 hover:glass-2 border border-white/10 text-ink-muted hover:text-ink cursor-pointer disabled:opacity-50"
+              className="px-4 py-2 rounded-xl text-xs font-semibold glass-1 hover:glass-2 border border-divider text-ink-muted hover:text-ink cursor-pointer disabled:opacity-50"
             >
               Cancel
             </DialogClose>
@@ -191,11 +191,11 @@ export function HistoryList({ initialItems, initialHasMore, className }: History
       ) : (
         <div className="space-y-6">
           {/* Main List Panel: Level 1 Glass with Day Groups */}
-          <div className="glass-1 rounded-[24px] overflow-hidden border border-white/10 shadow-lg">
+          <div className="glass-1 rounded-[24px] overflow-hidden border border-divider shadow-lg">
             {dayGroups.map((group) => (
-              <div key={group.dateKey} className="divide-y divide-white/5">
+              <div key={group.dateKey} className="divide-y divide-divider">
                 {/* Sticky Day Heading */}
-                <div className="px-4 py-2.5 bg-surface/80 backdrop-blur-md text-[11px] font-bold uppercase tracking-wider text-accent border-b border-white/5 sticky top-0 z-10 flex items-center justify-between">
+                <div className="px-4 py-2.5 bg-surface/80 backdrop-blur-md text-[11px] font-bold uppercase tracking-wider text-accent border-b border-divider sticky top-0 z-10 flex items-center justify-between">
                   <span>{group.dayLabel}</span>
                   <span className="text-[10px] text-ink-muted font-mono font-medium">
                     {group.items.length} {group.items.length === 1 ? "event" : "events"}
@@ -203,7 +203,7 @@ export function HistoryList({ initialItems, initialHasMore, className }: History
                 </div>
 
                 {/* Day's Inset Rows */}
-                <div className="divide-y divide-white/5">
+                <div className="divide-y divide-divider">
                   {group.items.map((item) => (
                     <HistoryRow key={item.id} item={item} />
                   ))}
@@ -219,7 +219,7 @@ export function HistoryList({ initialItems, initialHasMore, className }: History
                 type="button"
                 onClick={handleLoadMore}
                 disabled={isPending}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold glass-1 hover:glass-2 border border-white/12 text-ink-base transition-all hover:scale-[1.02] cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold glass-1 hover:glass-2 border border-divider text-ink-base transition-all hover:scale-[1.02] cursor-pointer disabled:opacity-50"
               >
                 {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin text-accent" />}
                 Show earlier activity

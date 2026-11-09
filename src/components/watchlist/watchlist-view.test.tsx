@@ -44,7 +44,7 @@ describe("WatchlistView Component", () => {
     const html = renderToStaticMarkup(<WatchlistView initialItems={[]} />);
 
     expect(html).toContain("Watchlist");
-    expect(html).toContain("Titles you plan to watch next.");
+    expect(html).toContain("Stories you have chosen. Ready when you are.");
     expect(html).toContain("Your watchlist is empty");
     expect(html).toContain("Search titles");
     expect(html).toContain('href="/search"');

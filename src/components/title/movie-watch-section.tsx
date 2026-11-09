@@ -164,7 +164,7 @@ export function MovieWatchSection({
     <section
       aria-labelledby="movie-watch-heading"
       className={cn(
-        "glass-1 rounded-[24px] p-5 sm:p-6 border border-white/10 shadow-lg space-y-4",
+        "glass-1 rounded-[24px] p-5 sm:p-6 border border-divider shadow-lg space-y-4",
         className,
       )}
     >
@@ -179,7 +179,7 @@ export function MovieWatchSection({
         </h2>
         <span className="text-xs text-ink-muted font-medium">
           {isWatched ? (
-            <span className="inline-flex items-center gap-1 text-emerald-400 font-semibold">
+            <span className="inline-flex items-center gap-1 text-status-watched-text font-semibold">
               <Check className="w-3.5 h-3.5" aria-hidden="true" />
               Completed
             </span>
@@ -196,7 +196,7 @@ export function MovieWatchSection({
           "glass-2 border transition-all duration-200",
           isWatched
             ? "border-emerald-500/30 bg-emerald-500/5 shadow-inner"
-            : "border-white/10 hover:border-white/20 bg-white/5",
+            : "border-divider hover:border-divider bg-white/5",
         )}
       >
         {/* Left Side: Checkbox + Title + Metadata */}
@@ -216,7 +216,7 @@ export function MovieWatchSection({
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
               isWatched
                 ? "bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-500/30 hover:bg-emerald-600 hover:border-emerald-600 cursor-pointer"
-                : "border-white/30 hover:border-accent hover:bg-accent/10 text-transparent hover:text-accent/60 cursor-pointer",
+                : "border-divider hover:border-accent hover:bg-accent/10 text-transparent hover:text-accent/60 cursor-pointer",
               isPending && "opacity-60 cursor-wait",
             )}
           >
@@ -243,7 +243,7 @@ export function MovieWatchSection({
                 {titleName}
               </h3>
               {isWatched && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-status-watched-text border border-emerald-500/20">
                   <CheckCheck className="w-3 h-3" aria-hidden="true" />
                   Watched
                 </span>
@@ -284,7 +284,7 @@ export function MovieWatchSection({
             className={cn(
               "font-semibold text-xs transition-all",
               isWatched
-                ? "border-white/20 hover:border-red-500/40 hover:text-red-400 hover:bg-red-500/10"
+                ? "border-divider hover:border-red-500/40 hover:text-error hover:bg-red-500/10"
                 : "bg-accent hover:opacity-95 text-white shadow-sm",
             )}
           >
@@ -404,8 +404,8 @@ export function MovieQuickCheckButton({
       className={cn(
         "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all select-none cursor-pointer",
         isWatched
-          ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25"
-          : "glass-1 hover:glass-2 border border-white/10 hover:border-white/25 text-ink-soft hover:text-ink",
+          ? "bg-emerald-500/15 text-status-watched-text border border-emerald-500/30 hover:bg-emerald-500/25"
+          : "glass-1 hover:glass-2 border border-divider hover:border-divider text-ink-soft hover:text-ink",
         isPending && "opacity-70 cursor-wait",
         className,
       )}
@@ -414,7 +414,7 @@ export function MovieQuickCheckButton({
         <Loader2 className="w-3.5 h-3.5 animate-spin text-accent" aria-hidden="true" />
       ) : (
         <Check
-          className={cn("w-3.5 h-3.5", isWatched ? "text-emerald-400" : "text-ink-muted")}
+          className={cn("w-3.5 h-3.5", isWatched ? "text-status-watched-text" : "text-ink-muted")}
           strokeWidth={isWatched ? 3 : 2}
           aria-hidden="true"
         />

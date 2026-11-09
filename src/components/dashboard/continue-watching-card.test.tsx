@@ -5,6 +5,28 @@ import { ContinueWatchingCard } from "./continue-watching-card";
 import { ContinueWatchingItem } from "@/lib/dashboard";
 
 describe("ContinueWatchingCard Component", () => {
+  it("does not present fabricated next-up context when episode metadata is unknown", () => {
+    const html = renderToStaticMarkup(
+      <ContinueWatchingCard
+        item={{
+          id: "unknown",
+          externalSource: "anilist",
+          externalId: "1",
+          title: "Unknown series",
+          type: "ANIME",
+          totalEpisodes: 0,
+          watchedEpisodes: 0,
+          percentage: 0,
+          nextUp: { seasonNumber: 1, episodeNumber: 1, name: "Episode 1" },
+          isCompleted: false,
+        }}
+      />,
+    );
+    expect(html).toContain("Episode information unavailable");
+    expect(html).toContain("View progress");
+    expect(html).not.toContain("Continue S1 E1");
+    expect(html).not.toContain('role="progressbar"');
+  });
   const sampleItem: ContinueWatchingItem = {
     id: "cw-1",
     externalSource: "tmdb",

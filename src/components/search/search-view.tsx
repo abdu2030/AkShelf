@@ -44,6 +44,9 @@ export function SearchView({ initialQuery = "", className }: SearchViewProps) {
   const [results, setResults] = useState<SearchResultItem[]>([]);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const [hasSearched, setHasSearched] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const lastRequestKey = useRef("");
 
   // useSyncExternalStore guarantees 1:1 SSR hydration match while staying reactive to client localStorage updates
   const recentSearches = useSyncExternalStore(
@@ -68,8 +71,15 @@ export function SearchView({ initialQuery = "", className }: SearchViewProps) {
     }
 
     let isMounted = true;
+    const requestKey = `${selectedType}:${debouncedQuery}`;
     queueMicrotask(() => {
       if (isMounted) {
+        if (lastRequestKey.current !== requestKey) {
+          setOnShelf([]);
+          setResults([]);
+        }
+        lastRequestKey.current = requestKey;
+        setSearchError(null);
         setIsLoading(true);
         setHasSearched(true);
         setHighlightedIndex(-1);
@@ -78,7 +88,10 @@ export function SearchView({ initialQuery = "", className }: SearchViewProps) {
 
     const typeParam = selectedType !== "ALL" ? `&type=${selectedType}` : "";
     fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}${typeParam}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Search is unavailable. Please try again.");
+        return res.json();
+      })
       .then((data) => {
         if (!isMounted) return;
         setOnShelf(data.onShelf || []);
@@ -93,13 +106,14 @@ export function SearchView({ initialQuery = "", className }: SearchViewProps) {
       .catch((err) => {
         if (!isMounted) return;
         console.error("Search fetch error:", err);
+        setSearchError("Search is unavailable. Please try again.");
         setIsLoading(false);
       });
 
     return () => {
       isMounted = false;
     };
-  }, [debouncedQuery, selectedType]);
+  }, [debouncedQuery, selectedType, retryCount]);
 
   const isQueryActive = debouncedQuery.trim().length >= 2;
 
@@ -222,7 +236,7 @@ export function SearchView({ initialQuery = "", className }: SearchViewProps) {
   };
 
   return (
-    <div className={cn("space-y-6 max-w-4xl mx-auto pb-16", className)} onKeyDown={handleKeyDown}>
+    <div className={cn("space-y-8 w-full pb-12", className)} onKeyDown={handleKeyDown}>
       {/* Search Header Controls */}
       <div className="space-y-3">
         <SearchField
@@ -239,6 +253,21 @@ export function SearchView({ initialQuery = "", className }: SearchViewProps) {
 
       {/* Main Content Area */}
       <div className="space-y-6">
+        {searchError && isQueryActive && (
+          <div
+            role="alert"
+            className="surface-1 p-4 flex flex-wrap items-center justify-between gap-3"
+          >
+            <p className="text-sm text-error">{searchError}</p>
+            <button
+              type="button"
+              className="archive-action"
+              onClick={() => setRetryCount((count) => count + 1)}
+            >
+              Retry search
+            </button>
+          </div>
+        )}
         {/* State 1: Initial / Before typing */}
         {!debouncedQuery && (
           <div className="space-y-8 pt-4">
@@ -295,10 +324,10 @@ export function SearchView({ initialQuery = "", className }: SearchViewProps) {
                   </span>
                 </div>
 
-                <div className="glass-2 rounded-2xl p-1.5 border border-white/10 divide-y divide-white/5 shadow-sm">
+                <div className="border-t border-b border-divider divide-y divide-divider">
                   {onShelf.map((item, idx) => (
                     <SearchResultRow
-                      key={`shelf-${item.id}`}
+                      key={`shelf-${item.type}-${item.id}`}
                       item={item}
                       isHighlighted={highlightedIndex === idx}
                       onQuickTrack={handleQuickTrack}
@@ -323,12 +352,12 @@ export function SearchView({ initialQuery = "", className }: SearchViewProps) {
                   </span>
                 </div>
 
-                <div className="glass-2 rounded-2xl p-1.5 border border-white/10 divide-y divide-white/5 shadow-sm">
+                <div className="border-t border-b border-divider divide-y divide-divider">
                   {results.map((item, idx) => {
                     const overallIndex = onShelf.length + idx;
                     return (
                       <SearchResultRow
-                        key={`ext-${item.id}`}
+                        key={`ext-${item.type}-${item.id}`}
                         item={item}
                         isHighlighted={highlightedIndex === overallIndex}
                         onQuickTrack={handleQuickTrack}
@@ -342,7 +371,7 @@ export function SearchView({ initialQuery = "", className }: SearchViewProps) {
         )}
 
         {/* State 4: No Matches Found */}
-        {!isLoading && isQueryActive && hasSearched && flatResults.length === 0 && (
+        {!isLoading && !searchError && isQueryActive && hasSearched && flatResults.length === 0 && (
           <EmptyState
             icon={<Search className="w-8 h-8 text-ink-muted" />}
             headline="No matches found"

@@ -19,7 +19,7 @@ export default function HistoryLoading() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="glass-1 p-3.5 sm:p-4 rounded-xl border border-white/5 flex items-center gap-3.5"
+                className="glass-1 p-3.5 sm:p-4 rounded-xl border border-divider flex items-center gap-3.5"
               >
                 <Skeleton className="w-10 h-14 rounded-lg shrink-0" />
                 <div className="flex-1 space-y-2">
@@ -37,7 +37,7 @@ export default function HistoryLoading() {
             {[1, 2].map((i) => (
               <div
                 key={i}
-                className="glass-1 p-3.5 sm:p-4 rounded-xl border border-white/5 flex items-center gap-3.5"
+                className="glass-1 p-3.5 sm:p-4 rounded-xl border border-divider flex items-center gap-3.5"
               >
                 <Skeleton className="w-10 h-14 rounded-lg shrink-0" />
                 <div className="flex-1 space-y-2">

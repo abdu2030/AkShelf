@@ -79,7 +79,7 @@ export function EpisodeRow({
     <div
       className={cn(
         "group relative flex items-center justify-between gap-3 px-3.5 py-2.5 sm:py-3 rounded-xl transition-all select-none min-h-[64px] sm:min-h-[60px]",
-        "glass-1 border border-white/5 hover:border-white/15",
+        "glass-1 border border-divider hover:border-divider",
         // Next-up marker: 3px accent bar on left edge
         isNextUp && "border-l-[3px] border-l-accent bg-accent/5",
         isWatched && "opacity-90",
@@ -108,11 +108,11 @@ export function EpisodeRow({
         >
           <div
             className={cn(
-              "w-7 h-7 rounded-full flex items-center justify-center transition-all",
+              "w-6 h-6 rounded-md flex items-center justify-center transition-all",
               isWatched
-                ? "bg-emerald-500 text-white shadow-sm"
-                : "border-2 border-white/20 hover:border-accent text-transparent group-hover:border-white/40",
-              !isAired && "border-dashed border-white/20",
+                ? "bg-status-watched-bg text-status-watched-text border border-status-watched-dot shadow-sm"
+                : "border-2 border-divider hover:border-accent text-transparent group-hover:border-divider",
+              !isAired && "border-dashed border-divider",
             )}
           >
             {isWatched ? (
@@ -138,7 +138,7 @@ export function EpisodeRow({
           <div className="flex items-center gap-2">
             <span
               className={cn(
-                "text-xs sm:text-sm font-semibold truncate transition-colors",
+                "text-xs sm:text-sm font-semibold line-clamp-2 transition-colors",
                 isWatched ? "text-ink-soft line-through decoration-white/20" : "text-ink",
                 isNextUp && "text-ink font-bold",
               )}
@@ -176,7 +176,7 @@ export function EpisodeRow({
             setMenuOpen((prev) => !prev);
           }}
           className={cn(
-            "w-9 h-9 rounded-lg flex items-center justify-center transition-colors cursor-pointer",
+            "w-11 h-11 rounded-lg flex items-center justify-center transition-colors cursor-pointer",
             "text-ink-muted hover:text-ink hover:bg-white/10",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
             menuOpen && "bg-white/10 text-ink",
@@ -189,7 +189,7 @@ export function EpisodeRow({
           <div
             role="menu"
             aria-orientation="vertical"
-            className="absolute right-0 top-full mt-1.5 z-30 w-56 p-1.5 rounded-xl glass-3 border border-white/15 shadow-xl animate-in fade-in zoom-in-95 duration-150"
+            className="absolute right-0 top-full mt-1.5 z-30 w-56 p-1.5 rounded-xl glass-3 border border-divider shadow-xl animate-in fade-in zoom-in-95 duration-150"
           >
             {onMarkUpToWatched && (
               <button
@@ -222,7 +222,7 @@ export function EpisodeRow({
                 </>
               ) : (
                 <>
-                  <Check className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
+                  <Check className="w-3.5 h-3.5 text-status-watched-text" aria-hidden="true" />
                   <span>Mark as watched</span>
                 </>
               )}

@@ -44,3 +44,6 @@ Thumbs.db
 
 # superpowers scratch
 .superpowers/
+
+# Local design references and verification logs
+/tmp/

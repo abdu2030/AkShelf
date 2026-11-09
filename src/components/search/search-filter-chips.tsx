@@ -76,8 +76,8 @@ export function SearchFilterChips({ selected, onSelect, className }: SearchFilte
               "flex items-center gap-2 shrink-0 border",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
               isSelected
-                ? "bg-accent-fill text-white border-transparent shadow-sm"
-                : "glass-1 border-white/10 text-ink-muted hover:text-ink hover:bg-white/10 dark:hover:bg-white/8",
+                ? "bg-accent-fill text-accent-ink border-transparent shadow-sm"
+                : "glass-1 border-divider text-ink-muted hover:text-ink hover:bg-white/10 dark:hover:bg-white/8",
             )}
           >
             {isSelected ? (

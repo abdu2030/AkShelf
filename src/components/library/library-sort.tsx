@@ -59,18 +59,14 @@ export function LibrarySort({
           aria-label="Sort library titles by"
           data-testid="sort-field-select"
           className={cn(
-            "h-8 pl-3 pr-7 rounded-full text-xs font-semibold cursor-pointer appearance-none select-none",
-            "bg-white/6 hover:bg-white/10 text-ink border border-white/12 transition-all",
+            "h-11 pl-3 pr-7 rounded-lg text-xs font-semibold cursor-pointer appearance-none select-none",
+            "bg-white/6 hover:bg-white/10 text-ink border border-divider transition-all",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
             "dark:bg-white/6 dark:hover:bg-white/10",
           )}
         >
           {sortOptions.map((opt) => (
-            <option
-              key={opt.field}
-              value={opt.field}
-              className="bg-[#171a31] text-white dark:bg-[#171a31] dark:text-white"
-            >
+            <option key={opt.field} value={opt.field} className="bg-surface text-ink">
               {opt.label}
             </option>
           ))}
@@ -95,8 +91,8 @@ export function LibrarySort({
         }
         title={sortDirection === "asc" ? "Ascending order" : "Descending order"}
         className={cn(
-          "h-8 w-8 rounded-full flex items-center justify-center cursor-pointer select-none",
-          "bg-white/6 hover:bg-white/10 text-ink border border-white/12 transition-all active:scale-95",
+          "h-11 w-11 rounded-lg flex items-center justify-center cursor-pointer select-none",
+          "bg-white/6 hover:bg-white/10 text-ink border border-divider transition-all active:scale-95",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
         )}
       >

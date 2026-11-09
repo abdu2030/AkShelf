@@ -109,7 +109,7 @@ export function Toast({
       onFocus={handleFocus}
       onBlur={handleBlur}
       className={cn(
-        "glass-3 z-[60] flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl border border-white/20 shadow-xl",
+        "glass-3 z-[60] flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl border border-divider shadow-xl",
         "w-full max-w-[420px] transition-all duration-200 select-none",
         className,
       )}
@@ -117,12 +117,15 @@ export function Toast({
       <div className="flex items-start gap-2.5 min-w-0 flex-1">
         {type === "success" && (
           <CheckCircle2
-            className="w-4 h-4 shrink-0 text-emerald-400 stroke-[2.2] mt-0.5"
+            className="w-4 h-4 shrink-0 text-status-watched-text stroke-[2.2] mt-0.5"
             aria-hidden="true"
           />
         )}
         {type === "info" && (
-          <Info className="w-4 h-4 shrink-0 text-sky-400 stroke-[2.2] mt-0.5" aria-hidden="true" />
+          <Info
+            className="w-4 h-4 shrink-0 text-status-watching-text stroke-[2.2] mt-0.5"
+            aria-hidden="true"
+          />
         )}
         {type === "warning" && (
           <AlertTriangle
@@ -132,7 +135,7 @@ export function Toast({
         )}
         {type === "error" && (
           <AlertCircle
-            className="w-4 h-4 shrink-0 text-red-400 stroke-[2.2] mt-0.5"
+            className="w-4 h-4 shrink-0 text-error stroke-[2.2] mt-0.5"
             aria-hidden="true"
           />
         )}

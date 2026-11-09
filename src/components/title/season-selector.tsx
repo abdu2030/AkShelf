@@ -87,8 +87,8 @@ export function SeasonSelector({
               "snap-start shrink-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer select-none",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
               isSelected
-                ? "bg-accent text-white shadow-[0_2px_12px_rgba(99,102,241,0.35)] border border-accent/40 font-bold"
-                : "glass-2 text-ink-muted hover:text-ink hover:bg-white/10 border border-white/10",
+                ? "bg-accent-fill text-accent-ink shadow-[0_2px_12px_rgba(99,102,241,0.35)] border border-accent/40 font-bold"
+                : "glass-2 text-ink-muted hover:text-ink hover:bg-white/10 border border-divider",
             )}
           >
             <span>{seasonLabel}</span>

@@ -123,7 +123,7 @@ describe("LibraryHeader", () => {
 
     expect(html).toContain('data-testid="library-header"');
     expect(html).toContain("My Library");
-    expect(html).toContain("All tracked titles filtered by status and media type.");
+    expect(html).toContain("Everything you have seen, started or saved.");
     expect(html).toContain("42 titles");
   });
 

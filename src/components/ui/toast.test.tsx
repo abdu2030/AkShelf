@@ -11,7 +11,7 @@ describe("Toast Component (UI Spec 9.17 & 17.4)", () => {
     expect(html).toContain('role="status"');
     expect(html).toContain('aria-live="polite"');
     expect(html).toContain("glass-3");
-    expect(html).toContain("text-emerald-400");
+    expect(html).toContain("text-status-watched-text");
   });
 
   it("renders action button with accessible label and style", () => {
@@ -45,13 +45,13 @@ describe("Toast Component (UI Spec 9.17 & 17.4)", () => {
     expect(html).toContain("Try again");
     expect(html).toContain('role="alert"');
     expect(html).toContain('aria-live="assertive"');
-    expect(html).toContain("text-red-400");
+    expect(html).toContain("text-error");
   });
 
   it("renders info and warning toast variants with respective semantic styles", () => {
     const infoHtml = renderToStaticMarkup(<Toast type="info" message="Already on your shelf." />);
     expect(infoHtml).toContain("Already on your shelf.");
-    expect(infoHtml).toContain("text-sky-400");
+    expect(infoHtml).toContain("text-status-watching-text");
 
     const warnHtml = renderToStaticMarkup(
       <Toast type="warning" message="Search is slow right now." />,

@@ -45,13 +45,12 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
             aria-describedby={hasError ? errorId : helperText ? helperId : undefined}
             className={cn(
               "w-full h-12 md:h-11 rounded-[12px] px-4 text-base text-ink placeholder:text-ink-soft/70 transition-all",
-              "bg-white/8 dark:bg-white/8 border border-white/20 dark:border-white/25",
+              "bg-white/8 dark:bg-white/8 border border-divider dark:border-divider",
               "focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent",
               "disabled:opacity-50 disabled:pointer-events-none",
               startIcon && "pl-11",
               (endIcon || hasError) && "pr-11",
-              hasError &&
-                "border-red-500 focus:ring-red-500 text-red-100 placeholder:text-red-300/60",
+              hasError && "border-red-500 focus:ring-red-500 text-error placeholder:text-error",
               className,
             )}
             {...props}
@@ -59,7 +58,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
 
           {hasError && !endIcon && (
             <div
-              className="absolute right-3.5 flex items-center pointer-events-none text-red-400"
+              className="absolute right-3.5 flex items-center pointer-events-none text-error"
               aria-hidden="true"
             >
               <AlertTriangle className="h-4 w-4" />
@@ -73,7 +72,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
           <p
             id={errorId}
             role="alert"
-            className="mt-2 text-xs font-medium text-red-400 flex items-center gap-1.5"
+            className="mt-2 text-xs font-medium text-error flex items-center gap-1.5"
           >
             <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             <span>{errorMessage}</span>

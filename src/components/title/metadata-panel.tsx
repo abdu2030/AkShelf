@@ -97,7 +97,7 @@ export function MetadataPanel({
               href={trailerUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-600/15 text-red-600 dark:text-red-400 border border-red-600/20 hover:bg-red-600/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-600/15 text-red-600 dark:text-error border border-red-600/20 hover:bg-red-600/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               <Play className="w-3 h-3 fill-current" aria-hidden="true" />
               Trailer
@@ -108,7 +108,7 @@ export function MetadataPanel({
               href={externalLink.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium glass-2 text-ink-soft hover:text-ink border border-white/10 hover:border-white/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium glass-2 text-ink-soft hover:text-ink border border-divider hover:border-divider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               <ExternalLink className="w-3 h-3" aria-hidden="true" />
               {externalLink.label}
@@ -118,7 +118,7 @@ export function MetadataPanel({
       </div>
 
       {/* Structured Key-Value Grid */}
-      <div className="glass-2 rounded-2xl p-5 border border-white/10 shadow-sm">
+      <div className="glass-2 rounded-2xl p-5 border border-divider shadow-sm">
         <dl className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 text-left">
           {/* 1. Original / Native Title */}
           {originalTitle && (
@@ -209,13 +209,13 @@ export function MetadataPanel({
         </dl>
 
         {/* Quiet attribution footer per section 8.6 */}
-        <div className="mt-5 pt-3.5 border-t border-white/5 text-[11px] text-ink-muted/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+        <div className="mt-5 pt-3.5 border-t border-divider text-[11px] text-ink-muted flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <span>
             {externalSource === "anilist"
               ? "Metadata and anime details powered by AniList GraphQL API."
               : "This product uses the TMDB API but is not endorsed or certified by TMDB."}
           </span>
-          <span className="text-ink-muted/50">Personal Data &copy; AkShelf</span>
+          <span className="text-ink-muted">Personal Data &copy; AkShelf</span>
         </div>
       </div>
     </section>

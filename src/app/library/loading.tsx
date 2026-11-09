@@ -16,7 +16,7 @@ export default function LibraryLoading() {
         {/* Skeleton Filter Bar */}
         <div
           aria-hidden="true"
-          className="glass-1 p-4 md:p-5 rounded-[20px] border border-white/5 space-y-3.5 mb-6 shadow-sm"
+          className="glass-1 p-4 md:p-5 rounded-[12px] border border-divider space-y-3.5 mb-6 shadow-sm"
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -30,7 +30,7 @@ export default function LibraryLoading() {
               <Skeleton className="h-8 w-8 rounded-full" />
             </div>
           </div>
-          <div className="flex items-center gap-2 pt-1 border-t border-white/5">
+          <div className="flex items-center gap-2 pt-1 border-t border-divider">
             <Skeleton className="h-8 w-16 rounded-full" />
             <Skeleton className="h-8 w-24 rounded-full" />
             <Skeleton className="h-8 w-24 rounded-full" />

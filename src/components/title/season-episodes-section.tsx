@@ -811,7 +811,7 @@ export function SeasonEpisodesSection({
       <section
         aria-labelledby="episodes-section-heading"
         className={cn(
-          "glass-2 rounded-[24px] p-5 sm:p-7 border border-white/10 shadow-sm space-y-6",
+          "glass-2 rounded-[12px] p-5 sm:p-7 border border-divider shadow-sm space-y-6",
           className,
         )}
       >
@@ -828,7 +828,7 @@ export function SeasonEpisodesSection({
           </p>
         </div>
 
-        <div className="p-8 text-center glass-1 rounded-2xl border border-white/10 space-y-3">
+        <div className="p-8 text-center glass-1 rounded-2xl border border-divider space-y-3">
           <div className="w-12 h-12 mx-auto rounded-full glass-2 flex items-center justify-center text-ink-muted">
             <Tv className="w-6 h-6 text-accent/80" aria-hidden="true" />
           </div>
@@ -854,7 +854,7 @@ export function SeasonEpisodesSection({
     <section
       aria-labelledby="episodes-section-heading"
       className={cn(
-        "glass-2 rounded-[24px] p-5 sm:p-7 border border-white/10 shadow-sm space-y-6",
+        "glass-2 rounded-[12px] p-5 sm:p-7 border border-divider shadow-sm space-y-6",
         className,
       )}
     >
@@ -872,7 +872,7 @@ export function SeasonEpisodesSection({
 
             {/* Overall series completion badge (Day 34) */}
             {seriesProgress.totalEpisodes > 0 && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono font-medium glass-2 text-ink-muted border border-white/10">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono font-medium glass-2 text-ink-muted border border-divider">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                 {seriesProgress.watchedEpisodes} / {seriesProgress.totalEpisodes} (
                 {seriesProgress.percentage}%)
@@ -902,8 +902,8 @@ export function SeasonEpisodesSection({
             Continue S{seriesProgress.nextUp.seasonNumber} E{seriesProgress.nextUp.episodeNumber}
           </Button>
         ) : seriesProgress.isCompleted ? (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 text-xs font-bold font-mono self-start sm:self-auto">
-            <Check className="w-4 h-4 text-emerald-400 stroke-[2.5]" aria-hidden="true" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 text-status-watched-text border border-emerald-500/25 text-xs font-bold font-mono self-start sm:self-auto">
+            <Check className="w-4 h-4 text-status-watched-text stroke-[2.5]" aria-hidden="true" />
             All Episodes Watched
           </span>
         ) : null}
@@ -919,7 +919,7 @@ export function SeasonEpisodesSection({
       )}
 
       {/* 3. Progress Bar & Batch Controls (UI Spec 9.13 & 9.14) */}
-      <div className="glass-1 rounded-2xl p-4 border border-white/5 space-y-3">
+      <div className="glass-1 rounded-2xl p-4 border border-divider space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex-1 max-w-md">
             <ProgressBar
@@ -936,7 +936,7 @@ export function SeasonEpisodesSection({
               <button
                 type="button"
                 onClick={handleMarkSeasonWatched}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium glass-2 text-ink-soft hover:text-ink border border-white/10 hover:border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors cursor-pointer select-none"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium glass-2 text-ink-soft hover:text-ink border border-divider hover:border-divider focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors cursor-pointer select-none"
               >
                 <CheckCheck className="w-3.5 h-3.5 text-accent" aria-hidden="true" />
                 Mark Season Watched
@@ -945,7 +945,7 @@ export function SeasonEpisodesSection({
               <button
                 type="button"
                 onClick={handleMarkSeasonUnwatched}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium glass-2 text-ink-soft hover:text-ink border border-white/10 hover:border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors cursor-pointer select-none"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium glass-2 text-ink-soft hover:text-ink border border-divider hover:border-divider focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors cursor-pointer select-none"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-ink-muted" aria-hidden="true" />
                 Reset Season
@@ -956,7 +956,7 @@ export function SeasonEpisodesSection({
               <button
                 type="button"
                 onClick={handleMarkSeriesUnwatched}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium glass-2 text-ink-soft hover:text-ink border border-white/10 hover:border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors cursor-pointer select-none"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium glass-2 text-ink-soft hover:text-ink border border-divider hover:border-divider focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-colors cursor-pointer select-none"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />
                 Reset Series
@@ -982,7 +982,7 @@ export function SeasonEpisodesSection({
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="h-[64px] sm:h-[60px] rounded-xl glass-1 border border-white/5 animate-pulse flex items-center px-4 gap-3"
+                className="h-[64px] sm:h-[60px] rounded-xl glass-1 border border-divider animate-pulse flex items-center px-4 gap-3"
               >
                 <div className="w-7 h-7 rounded-full bg-white/10" />
                 <div className="w-6 h-4 rounded bg-white/10" />
@@ -1016,7 +1016,7 @@ export function SeasonEpisodesSection({
             );
           })
         ) : (
-          <div className="p-8 text-center glass-1 rounded-2xl border border-white/10 space-y-3">
+          <div className="p-8 text-center glass-1 rounded-2xl border border-divider space-y-3">
             <div className="w-12 h-12 mx-auto rounded-full glass-2 flex items-center justify-center text-ink-muted">
               <Tv className="w-6 h-6 text-accent/80" aria-hidden="true" />
             </div>

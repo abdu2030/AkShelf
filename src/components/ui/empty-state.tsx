@@ -1,5 +1,6 @@
 import React from "react";
 import { cn } from "@/lib/utils/cn";
+import Link from "next/link";
 import { Button } from "./button";
 
 export interface EmptyStateProps {
@@ -25,13 +26,13 @@ export function EmptyState({
     <div
       className={cn(
         "flex flex-col items-center justify-center text-center py-12 md:py-16 px-6 max-w-lg mx-auto select-none",
-        "glass-1 rounded-[24px] border border-white/10 dark:border-white/12 shadow-sm my-4 md:my-8 transition-all",
+        "border-y border-divider my-4 md:my-8",
         className,
       )}
     >
       <div className="relative mb-6 flex items-center justify-center">
         {/* 96px glass-2 circle with faint indigo glow */}
-        <div className="h-24 w-24 rounded-full glass-2 flex items-center justify-center shadow-[0_0_24px_rgba(99,102,241,0.22)] border border-white/16 text-accent">
+        <div className="h-24 w-20 rounded-lg bg-surface-elevated flex items-center justify-center border border-divider text-accent rotate-[-6deg]">
           <span className="[&_svg]:h-12 [&_svg]:w-12 text-accent" aria-hidden="true">
             {icon}
           </span>
@@ -51,11 +52,9 @@ export function EmptyState({
       {actionLabel && (
         <div>
           {actionHref ? (
-            <a href={actionHref}>
-              <Button variant="primary" size="large">
-                {actionLabel}
-              </Button>
-            </a>
+            <Link href={actionHref} className="archive-action archive-action-primary">
+              {actionLabel}
+            </Link>
           ) : (
             <Button variant="primary" size="large" onClick={onAction}>
               {actionLabel}

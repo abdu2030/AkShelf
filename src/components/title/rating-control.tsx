@@ -180,13 +180,9 @@ export function RatingControl({
         <div className="flex items-center gap-1.5 font-medium">
           {rating ? (
             <>
-              <Star
-                className="w-4 h-4 fill-amber-500 text-amber-500 dark:text-amber-400 shrink-0"
-                aria-hidden="true"
-              />
+              <Star className="w-4 h-4 fill-amber-500 text-accent shrink-0" aria-hidden="true" />
               <span className="font-bold text-ink-base">
-                Your rating:{" "}
-                <span className="text-amber-500 dark:text-amber-400 font-extrabold">{rating}</span>
+                Your rating: <span className="text-accent font-extrabold">{rating}</span>
                 /10
               </span>
             </>
@@ -245,12 +241,12 @@ export function RatingControl({
                   "h-10 sm:h-9 w-full sm:w-9 rounded-xl flex items-center justify-center text-xs font-semibold transition-all duration-150 cursor-pointer disabled:cursor-not-allowed",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
                   isSelected
-                    ? "bg-accent-fill text-white border border-accent-fill font-bold shadow-md ring-2 ring-accent/30 scale-105"
+                    ? "bg-accent-fill text-accent-ink border border-accent-fill font-bold shadow-md ring-2 ring-accent/30 scale-105"
                     : isBase
-                      ? "bg-amber-500/15 text-amber-500 dark:text-amber-300 border border-amber-500/30 font-bold"
+                      ? "bg-amber-500/15 text-accent border border-amber-500/30 font-bold"
                       : isHovered
-                        ? "bg-amber-500/20 text-amber-500 dark:text-amber-300 border border-amber-500/30 scale-105"
-                        : "glass-1 text-ink-muted hover:text-ink-base border border-white/10 hover:border-white/20",
+                        ? "bg-amber-500/20 text-accent border border-amber-500/30 scale-105"
+                        : "glass-1 text-ink-muted hover:text-ink-base border border-divider hover:border-divider",
                 )}
               >
                 {score}
@@ -279,10 +275,10 @@ export function RatingControl({
               readOnly={isPending}
               className={cn(
                 "w-20 sm:w-16 h-10 sm:h-9 text-center text-xs font-bold rounded-xl glass-1 border px-2 transition-all",
-                "text-ink placeholder:text-ink-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                "text-ink placeholder:text-ink-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
                 rating !== null && rating % 1 !== 0
-                  ? "border-amber-500/50 bg-amber-500/10 text-amber-500 dark:text-amber-300 font-extrabold ring-1 ring-amber-500/30"
-                  : "border-white/10 hover:border-white/20",
+                  ? "border-amber-500/50 bg-amber-500/10 text-accent font-extrabold ring-1 ring-amber-500/30"
+                  : "border-divider hover:border-divider",
               )}
             />
             <span className="text-[11px] font-semibold text-ink-muted ml-1.5 select-none">

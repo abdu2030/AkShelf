@@ -175,7 +175,7 @@ export function MediaCard({
       data-testid="media-card"
     >
       {/* 2:3 Poster Frame */}
-      <div className="relative aspect-[2/3] w-full overflow-hidden rounded-[16px] border border-white/12 bg-white/4 shadow-md transition-all duration-200 ease-out group-hover:-translate-y-1 group-hover:shadow-xl focus-within:ring-2 focus-within:ring-accent focus-within:ring-offset-2 focus-within:ring-offset-canvas">
+      <div className="poster-object relative aspect-[2/3] w-full overflow-hidden focus-within:ring-2 focus-within:ring-accent focus-within:ring-offset-2 focus-within:ring-offset-canvas">
         {/* Full frame clickable link to title */}
         <Link
           href={resolvedHref}
@@ -188,17 +188,14 @@ export function MediaCard({
               src={resolvedPoster as string}
               alt=""
               fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-              className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02]"
-              priority={priority}
+              sizes="(max-width: 479px) 46vw, (max-width: 767px) 30vw, (max-width: 1279px) 20vw, 16vw"
+              className="object-cover"
+              preload={priority}
               onError={() => setImageError(true)}
             />
           ) : (
             /* Spec 8.4 Missing image fallback */
-            <div
-              data-testid="poster-fallback"
-              className="flex h-full w-full flex-col items-center justify-center p-4 text-center glass-inset rounded-[16px] bg-white/6 border border-white/8"
-            >
+            <div data-testid="poster-fallback" className="archive-placeholder">
               <MediaTypeIcon type={resolvedType} className="h-12 w-12 text-ink-muted shrink-0" />
               <p className="mt-3 line-clamp-3 text-xs font-medium text-ink-soft">{title}</p>
             </div>
@@ -216,21 +213,32 @@ export function MediaCard({
         ) : null}
 
         {/* 2. Top-right: 44px hit-target glass-2 quick action icon button */}
-        <button
-          type="button"
-          onClick={handleQuickAction}
-          aria-label={`Change status for ${title}`}
-          data-testid="quick-action-button"
-          className="absolute top-2.5 right-2.5 z-20 flex h-9 w-9 items-center justify-center rounded-full glass-2 text-ink shadow-sm border border-white/16 transition-all duration-150 active:scale-95 hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
-        >
-          <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
-        </button>
+        {onQuickAction || onStatusClick || onMenuClick ? (
+          <button
+            type="button"
+            onClick={handleQuickAction}
+            aria-label={`Change status for ${title}`}
+            data-testid="quick-action-button"
+            className="absolute top-2.5 right-2.5 z-20 flex h-11 w-11 items-center justify-center rounded-full glass-2 text-ink shadow-sm border border-divider transition-all duration-150 active:scale-95 hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+          </button>
+        ) : (
+          <Link
+            href={`${resolvedHref}#your-shelf-heading`}
+            aria-label={`Change status for ${title}`}
+            data-testid="quick-action-button"
+            className="absolute top-2.5 right-2.5 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-surface border border-divider text-ink shadow-sm"
+          >
+            <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        )}
 
         {/* 3. Bottom-right: Solid 85% navy rating chip with gold star (rated only) */}
         {resolvedRating !== null && resolvedRating !== undefined ? (
           <div
             data-testid="rating-chip-overlay"
-            className="absolute bottom-2.5 right-2.5 z-10 inline-flex items-center gap-1 h-6 px-2 rounded-full bg-[#0b0d1a]/85 backdrop-blur-none text-white text-xs font-semibold shadow-md select-none border border-white/10 pointer-events-none"
+            className="absolute bottom-2.5 right-2.5 z-10 inline-flex items-center gap-1 h-6 px-2 rounded-full bg-[#171b21] backdrop-blur-none text-white text-xs font-semibold shadow-md select-none border border-divider pointer-events-none"
             aria-label={`Rated ${resolvedRating} out of 10`}
           >
             <Star className="h-3 w-3 fill-amber-400 text-amber-400 shrink-0" aria-hidden="true" />
@@ -250,7 +258,7 @@ export function MediaCard({
             className="absolute bottom-0 left-0 right-0 z-10 h-1 bg-black/40 overflow-hidden"
           >
             <div
-              className="h-full bg-gradient-to-r from-[#6366F1] to-[#A855F7] transition-all duration-300"
+              className="h-full bg-status-watched-dot transition-all duration-300"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -287,7 +295,10 @@ export function MediaCard({
         {resolvedStatus && statusCaption ? (
           <p
             data-testid="status-caption"
-            className={cn("text-xs font-semibold truncate", statusConfig[resolvedStatus].textClass)}
+            className={cn(
+              "text-xs font-semibold leading-relaxed",
+              statusConfig[resolvedStatus].textClass,
+            )}
           >
             {statusCaption}
           </p>

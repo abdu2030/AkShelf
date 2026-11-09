@@ -45,7 +45,7 @@ test.describe("Production Smoke Test Suite across Viewports & Devices (Day 52)",
     await page.waitForLoadState("domcontentloaded");
 
     // Search input
-    const searchInput = page.getByPlaceholder(/search movies, tv series/i);
+    const searchInput = page.getByRole("searchbox", { name: "Search titles" });
     await expect(searchInput).toBeVisible();
     await searchInput.fill("Inception");
     expect(await searchInput.inputValue()).toBe("Inception");
@@ -98,7 +98,7 @@ test.describe("Production Smoke Test Suite across Viewports & Devices (Day 52)",
     const darkBtn = page.getByRole("button", { name: /^dark$/i });
     if (await darkBtn.isVisible()) {
       await darkBtn.click();
-      await expect(page.locator("html")).toHaveClass(/dark/);
+      await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     }
 
     // Verify no horizontal overflow

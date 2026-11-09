@@ -32,7 +32,7 @@ export function ContinueWatchingShelf({ items, className }: ContinueWatchingShel
             <h2 className="text-xl font-bold font-display text-ink tracking-tight">
               Continue Watching
             </h2>
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-ink-muted">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/5 border border-divider text-ink-muted">
               {items.length} in progress
             </span>
           </div>
@@ -40,7 +40,7 @@ export function ContinueWatchingShelf({ items, className }: ContinueWatchingShel
 
         <Link
           href="/library?status=WATCHING"
-          className="text-xs font-semibold text-accent hover:text-white transition-colors inline-flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm"
+          className="text-xs font-semibold text-accent hover:text-ink transition-colors inline-flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm"
         >
           <span>View all</span>
           <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />

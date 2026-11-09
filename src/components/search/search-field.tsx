@@ -28,8 +28,8 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
     return (
       <div
         className={cn(
-          "relative flex items-center h-12 w-full rounded-full transition-all duration-200 select-none",
-          "glass-2 border border-white/12 dark:border-white/10 shadow-sm",
+          "relative flex items-center h-16 w-full rounded-lg transition-all duration-200 select-none",
+          "bg-surface border border-divider dark:border-divider shadow-sm",
           "focus-within:ring-2 focus-within:ring-accent focus-within:border-accent",
           className,
         )}
@@ -50,7 +50,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
           onChange={(e) => onValueChange(e.target.value)}
           placeholder={placeholder}
           className={cn(
-            "flex-1 h-full bg-transparent text-sm sm:text-base text-ink placeholder:text-ink-muted",
+            "flex-1 min-w-0 h-full bg-transparent text-sm sm:text-base text-ink placeholder:text-ink-muted",
             "outline-none border-none px-1",
           )}
           {...props}
@@ -72,7 +72,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
               onClick={onClear}
               aria-label="Clear search input"
               className={cn(
-                "w-7 h-7 rounded-full flex items-center justify-center transition-colors cursor-pointer",
+                "w-11 h-11 rounded-lg flex items-center justify-center transition-colors cursor-pointer",
                 "text-ink-muted hover:text-ink hover:bg-white/12 dark:hover:bg-white/10",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
               )}
@@ -81,7 +81,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
             </button>
           ) : (
             <div className="hidden sm:flex items-center gap-1 pointer-events-none">
-              <kbd className="px-2 py-0.5 text-[11px] font-mono font-medium rounded-md glass-1 border border-white/10 text-ink-muted shadow-sm">
+              <kbd className="px-2 py-0.5 text-[11px] font-mono font-medium rounded-md glass-1 border border-divider text-ink-muted shadow-sm">
                 /
               </kbd>
             </div>

@@ -29,19 +29,19 @@ const variantStyles: Record<
     numberHoverColor: "group-hover:text-accent",
   },
   watched: {
-    dotColor: "bg-emerald-400",
+    dotColor: "bg-status-watched-dot",
     glowColor: "group-hover:bg-emerald-500/10",
-    numberHoverColor: "group-hover:text-emerald-400",
+    numberHoverColor: "group-hover:text-status-watched-text",
   },
   watching: {
-    dotColor: "bg-amber-400",
+    dotColor: "bg-status-watching-dot",
     glowColor: "group-hover:bg-amber-500/10",
     numberHoverColor: "group-hover:text-amber-400",
   },
   plan_to_watch: {
-    dotColor: "bg-sky-400",
+    dotColor: "bg-status-plan-dot",
     glowColor: "group-hover:bg-sky-500/10",
-    numberHoverColor: "group-hover:text-sky-400",
+    numberHoverColor: "group-hover:text-status-watching-text",
   },
 };
 
@@ -61,8 +61,8 @@ export function StatTile({
       data-testid={testId}
       aria-label={`${label}: ${count} titles. Click to view in library.`}
       className={cn(
-        "group relative flex flex-col justify-between p-4 sm:p-5 rounded-2xl",
-        "glass-1 border border-white/10 hover:border-white/20 transition-all duration-200",
+        "group relative flex flex-col justify-between p-4 sm:p-5",
+        "transition-colors duration-160",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
         "active:scale-[0.98] select-none min-h-[96px]",
         className,
@@ -108,7 +108,7 @@ export function StatTileSkeleton({ className }: { className?: string }) {
       aria-hidden="true"
       data-testid="stat-tile-skeleton"
       className={cn(
-        "flex flex-col justify-between p-4 sm:p-5 rounded-2xl glass-1 border border-white/5 min-h-[96px]",
+        "flex flex-col justify-between p-4 sm:p-5 rounded-2xl glass-1 border border-divider min-h-[96px]",
         className,
       )}
     >

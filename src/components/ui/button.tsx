@@ -11,14 +11,14 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-accent-fill text-white shadow-[0_4px_14px_rgba(79,70,229,0.35)] hover:bg-accent-fill-hover border border-white/20",
-        secondary: "glass-1 text-ink hover:glass-2 border border-white/12 dark:border-white/16",
+          "bg-accent-fill text-accent-ink shadow-sm hover:bg-accent-fill-hover border border-divider",
+        secondary: "glass-1 text-ink hover:glass-2 border border-divider dark:border-divider",
         ghost: "bg-transparent text-ink-soft hover:text-ink hover:bg-white/6 dark:hover:bg-white/6",
         danger: "bg-danger-fill text-white hover:bg-red-700 shadow-sm border border-red-500/20",
       },
       size: {
         large: "h-12 px-5 text-base rounded-[12px] min-h-[48px]",
-        medium: "h-10 px-4 text-sm rounded-[12px] min-h-[40px]",
+        medium: "h-11 px-4 text-sm rounded-[8px] min-h-[44px]",
         small:
           "h-8 px-3 text-sm rounded-[8px] min-h-[32px] before:absolute before:inset-[-6px] before:content-['']",
       },

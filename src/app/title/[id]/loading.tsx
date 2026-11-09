@@ -14,7 +14,7 @@ export default function TitleDetailLoading() {
         {/* Hero Section Skeleton */}
         <div
           aria-hidden="true"
-          className="relative rounded-3xl overflow-hidden glass-1 border border-white/5 p-6 sm:p-8"
+          className="relative rounded-3xl overflow-hidden glass-1 border border-divider p-6 sm:p-8"
         >
           <div className="flex flex-col md:flex-row gap-6 sm:gap-8 items-start">
             {/* 2:3 Poster Frame Skeleton */}
@@ -35,7 +35,7 @@ export default function TitleDetailLoading() {
               <Skeleton className="h-20 w-full rounded-xl" />
 
               {/* Status & Rating Actions Skeleton */}
-              <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-white/5">
+              <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-divider">
                 <Skeleton className="h-10 w-36 rounded-full" />
                 <Skeleton className="h-10 w-48 rounded-xl" />
               </div>
@@ -47,7 +47,7 @@ export default function TitleDetailLoading() {
         <div aria-hidden="true" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
             <Skeleton className="h-6 w-40 rounded-md" />
-            <div className="glass-1 p-6 rounded-2xl border border-white/5 space-y-3">
+            <div className="glass-1 p-6 rounded-2xl border border-divider space-y-3">
               {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="h-16 rounded-xl bg-white/5 animate-pulse" />
               ))}
@@ -55,7 +55,7 @@ export default function TitleDetailLoading() {
           </div>
           <div className="space-y-4">
             <Skeleton className="h-6 w-32 rounded-md" />
-            <div className="glass-1 p-5 rounded-2xl border border-white/5 space-y-3">
+            <div className="glass-1 p-5 rounded-2xl border border-divider space-y-3">
               <Skeleton className="h-4 w-full rounded-md" />
               <Skeleton className="h-4 w-5/6 rounded-md" />
               <Skeleton className="h-4 w-2/3 rounded-md" />

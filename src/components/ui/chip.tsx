@@ -19,8 +19,8 @@ export const Chip = forwardRef<HTMLButtonElement, ChipProps>(
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-canvas",
           "disabled:opacity-50 disabled:pointer-events-none active:scale-95",
           selected
-            ? "bg-accent-fill text-white shadow-sm border border-white/20"
-            : "glass-1 text-ink-soft hover:text-ink hover:glass-2 border border-white/12",
+            ? "bg-accent-fill text-accent-ink shadow-sm border border-divider"
+            : "glass-1 text-ink-soft hover:text-ink hover:glass-2 border border-divider",
           className,
         )}
         {...props}

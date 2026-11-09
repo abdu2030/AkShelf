@@ -74,7 +74,7 @@ describe("Performance & Core Web Vitals Pass (Day 47)", () => {
       const content = fs.readFileSync(globalsCssPath, "utf-8");
 
       expect(content).toContain("--font-inter");
-      expect(content).toContain("--font-jakarta");
+      expect(content).not.toContain("--font-jakarta");
       expect(content).toContain("system-ui");
       expect(content).toContain("sans-serif");
     });
@@ -85,10 +85,10 @@ describe("Performance & Core Web Vitals Pass (Day 47)", () => {
 
       expect(content).toContain('from "next/font/google"');
       expect(content).toContain("Inter(");
-      expect(content).toContain("Plus_Jakarta_Sans(");
+      expect(content).not.toContain("Plus_Jakarta_Sans(");
       expect(content).toContain('display: "swap"');
       expect(content).toContain("--font-inter");
-      expect(content).toContain("--font-jakarta");
+      expect(content).not.toContain("--font-jakarta");
     });
   });
 

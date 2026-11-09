@@ -20,7 +20,9 @@ export function AnalyticsStats({ analytics, className }: AnalyticsStatsProps) {
       className={cn("space-y-4", className)}
     >
       <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
-        <h2 className="text-xl font-bold font-display text-ink tracking-tight">Shelf Analytics</h2>
+        <h2 className="text-xl font-bold font-display text-ink tracking-tight">
+          Collection DNA <span className="sr-only">Shelf Analytics</span>
+        </h2>
         <p className="text-xs text-ink-muted">
           Collection breakdown, personal rating average, and episode tracking count.
         </p>
@@ -28,7 +30,7 @@ export function AnalyticsStats({ analytics, className }: AnalyticsStatsProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
         {/* 1. Format Breakdown Card */}
-        <div className="glass-1 rounded-2xl p-5 border border-white/10 flex flex-col justify-between space-y-4">
+        <div className="border-t border-divider py-5 flex flex-col justify-between space-y-4">
           <div className="space-y-1">
             <h3 className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
               Collection by Format
@@ -43,12 +45,12 @@ export function AnalyticsStats({ analytics, className }: AnalyticsStatsProps) {
               aria-label={`View ${countsByType.movies} Movies in library`}
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-6 h-6 rounded-md bg-white/10 flex items-center justify-center text-ink-muted group-hover:text-white transition-colors">
+                <div className="w-6 h-6 rounded-md bg-white/10 flex items-center justify-center text-ink-muted group-hover:text-ink transition-colors">
                   <Clapperboard className="w-3.5 h-3.5" aria-hidden="true" />
                 </div>
                 <span>Movies</span>
               </div>
-              <span className="font-mono tabular-nums font-bold text-ink group-hover:text-white transition-colors">
+              <span className="font-mono tabular-nums font-bold text-ink group-hover:text-ink transition-colors">
                 {countsByType.movies}
               </span>
             </Link>
@@ -59,12 +61,12 @@ export function AnalyticsStats({ analytics, className }: AnalyticsStatsProps) {
               aria-label={`View ${countsByType.tv} TV Shows in library`}
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-6 h-6 rounded-md bg-white/10 flex items-center justify-center text-ink-muted group-hover:text-white transition-colors">
+                <div className="w-6 h-6 rounded-md bg-white/10 flex items-center justify-center text-ink-muted group-hover:text-ink transition-colors">
                   <Tv className="w-3.5 h-3.5" aria-hidden="true" />
                 </div>
                 <span>TV Shows</span>
               </div>
-              <span className="font-mono tabular-nums font-bold text-ink group-hover:text-white transition-colors">
+              <span className="font-mono tabular-nums font-bold text-ink group-hover:text-ink transition-colors">
                 {countsByType.tv}
               </span>
             </Link>
@@ -75,12 +77,12 @@ export function AnalyticsStats({ analytics, className }: AnalyticsStatsProps) {
               aria-label={`View ${countsByType.anime} Anime in library`}
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-6 h-6 rounded-md bg-white/10 flex items-center justify-center text-ink-muted group-hover:text-white transition-colors">
+                <div className="w-6 h-6 rounded-md bg-white/10 flex items-center justify-center text-ink-muted group-hover:text-ink transition-colors">
                   <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
                 </div>
                 <span>Anime</span>
               </div>
-              <span className="font-mono tabular-nums font-bold text-ink group-hover:text-white transition-colors">
+              <span className="font-mono tabular-nums font-bold text-ink group-hover:text-ink transition-colors">
                 {countsByType.anime}
               </span>
             </Link>
@@ -88,7 +90,7 @@ export function AnalyticsStats({ analytics, className }: AnalyticsStatsProps) {
         </div>
 
         {/* 2. Average Personal Rating Card */}
-        <div className="glass-1 rounded-2xl p-5 border border-white/10 flex flex-col justify-between space-y-4">
+        <div className="border-t border-divider py-5 flex flex-col justify-between space-y-4">
           <div className="space-y-1">
             <h3 className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
               Average Personal Rating
@@ -116,10 +118,10 @@ export function AnalyticsStats({ analytics, className }: AnalyticsStatsProps) {
             </p>
           </div>
 
-          <div className="pt-2 border-t border-white/5">
+          <div className="pt-2 border-t border-divider">
             <Link
               href="/library?sort=rating-desc"
-              className="text-xs font-semibold text-accent hover:text-white transition-colors inline-flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm"
+              className="text-xs font-semibold text-accent hover:text-ink transition-colors inline-flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm"
             >
               <span>View highest rated</span>
               <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
@@ -128,7 +130,7 @@ export function AnalyticsStats({ analytics, className }: AnalyticsStatsProps) {
         </div>
 
         {/* 3. Total Watched Episodes Card */}
-        <div className="glass-1 rounded-2xl p-5 border border-white/10 flex flex-col justify-between space-y-4">
+        <div className="border-t border-divider py-5 flex flex-col justify-between space-y-4">
           <div className="space-y-1">
             <h3 className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
               Total Watched Episodes
@@ -138,7 +140,10 @@ export function AnalyticsStats({ analytics, className }: AnalyticsStatsProps) {
 
           <div className="space-y-1">
             <div className="flex items-baseline gap-2">
-              <CheckCircle2 className="w-6 h-6 text-emerald-400 self-center" aria-hidden="true" />
+              <CheckCircle2
+                className="w-6 h-6 text-status-watched-text self-center"
+                aria-hidden="true"
+              />
               <span className="font-mono tabular-nums text-3xl sm:text-4xl font-bold text-ink">
                 {totalWatchedEpisodes}
               </span>
@@ -147,10 +152,10 @@ export function AnalyticsStats({ analytics, className }: AnalyticsStatsProps) {
             <p className="text-xs text-ink-muted font-medium">Recorded in your episode watch log</p>
           </div>
 
-          <div className="pt-2 border-t border-white/5">
+          <div className="pt-2 border-t border-divider">
             <Link
               href="/history"
-              className="text-xs font-semibold text-accent hover:text-white transition-colors inline-flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm"
+              className="text-xs font-semibold text-accent hover:text-ink transition-colors inline-flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm"
             >
               <span>View watch history</span>
               <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
@@ -175,10 +180,7 @@ export function AnalyticsStatsSkeleton({ className }: { className?: string }) {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
         {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="glass-1 rounded-2xl p-5 border border-white/5 space-y-4 min-h-[160px]"
-          >
+          <div key={i} className="border-t border-divider py-5 space-y-4 min-h-[160px]">
             <div className="space-y-1">
               <Skeleton className="w-28 h-3 rounded" />
               <Skeleton className="w-40 h-3 rounded" />

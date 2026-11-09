@@ -7,7 +7,8 @@ export default function SearchPage() {
     <AppShell>
       <PageHeader
         title="Search"
-        subtitle="Find movies, TV shows, and anime across TMDB and AniList."
+        eyebrow="Find a story"
+        subtitle="Search your universe. Find movies, TV shows, and anime across TMDB and AniList."
       />
       <div className="mt-4">
         <SearchView />

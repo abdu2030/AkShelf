@@ -26,14 +26,14 @@ describe("StatTile Component (Day 36)", () => {
     const watchedHtml = renderToStaticMarkup(
       <StatTile label="Watched" count={25} href="/library?status=WATCHED" variant="watched" />,
     );
-    expect(watchedHtml).toContain("bg-emerald-400");
+    expect(watchedHtml).toContain("bg-status-watched-dot");
     expect(watchedHtml).toContain("Watched");
     expect(watchedHtml).toContain("25");
 
     const watchingHtml = renderToStaticMarkup(
       <StatTile label="Watching" count={3} href="/library?status=WATCHING" variant="watching" />,
     );
-    expect(watchingHtml).toContain("bg-amber-400");
+    expect(watchingHtml).toContain("bg-status-watching-dot");
     expect(watchingHtml).toContain("Watching");
     expect(watchingHtml).toContain("3");
 
@@ -45,7 +45,7 @@ describe("StatTile Component (Day 36)", () => {
         variant="plan_to_watch"
       />,
     );
-    expect(planHtml).toContain("bg-sky-400");
+    expect(planHtml).toContain("bg-status-plan-dot");
     expect(planHtml).toContain("Plan to Watch");
     expect(planHtml).toContain("14");
   });

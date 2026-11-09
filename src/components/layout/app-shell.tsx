@@ -49,16 +49,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Skip to Main Content accessible link for keyboard users (WCAG 2.4.1) */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2.5 focus:rounded-xl focus:bg-accent-fill focus:text-white focus:font-semibold focus:shadow-xl focus:outline-none focus:ring-2 focus:ring-white"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2.5 focus:rounded-xl focus:bg-accent-fill focus:text-accent-ink focus:font-semibold focus:shadow-xl focus:outline-none focus:ring-2 focus:ring-white"
       >
         Skip to main content
       </a>
 
       {/* 1. Desktop Sidebar (lg and up: >= 1024px) */}
-      <aside className="hidden lg:flex fixed top-3 bottom-3 left-3 w-60 z-20 flex-col glass-2 rounded-[20px] p-4 select-none">
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-56 z-20 flex-col archive-rail p-5 select-none">
         {/* Brand Header */}
-        <div className="px-2 py-3 mb-4">
-          <Logo size={36} />
+        <div className="px-2 pt-3 pb-8 mb-4">
+          <Logo size={30} showSubtitle={false} />
+          <p className="eyebrow mt-5">Your private archive</p>
         </div>
 
         {/* Navigation List */}
@@ -72,10 +73,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-3.5 h-11 px-3.5 rounded-[12px] text-sm transition-all",
+                  "archive-nav-link flex items-center gap-3 h-11 px-3 text-sm transition-colors",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
                   active
-                    ? "bg-white/12 dark:bg-white/12 text-accent font-semibold border border-white/12 shadow-sm"
+                    ? "text-ink font-semibold"
                     : "text-ink-soft font-medium hover:text-ink hover:bg-white/8 dark:hover:bg-white/8",
                 )}
               >
@@ -93,14 +94,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* Bottom Bar: Theme toggle & Logout */}
-        <div className="pt-3 border-t border-white/10 dark:border-white/12 space-y-1">
+        <div className="pt-3 border-t border-divider dark:border-divider space-y-1">
           <button
             type="button"
             onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
             className="flex items-center gap-3.5 w-full h-10 px-3.5 rounded-[12px] text-xs font-semibold text-ink-soft hover:text-ink hover:bg-white/8 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             {mounted && resolvedTheme === "light" ? (
-              <Moon className="h-4 w-4 text-indigo-400" aria-hidden="true" />
+              <Moon className="h-4 w-4 text-accent" aria-hidden="true" />
             ) : (
               <Sun className="h-4 w-4 text-amber-400" aria-hidden="true" />
             )}
@@ -119,7 +120,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <form action={logoutAction} className="w-full">
             <button
               type="submit"
-              className="flex items-center gap-3.5 w-full h-10 px-3.5 rounded-[12px] text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+              className="flex items-center gap-3.5 w-full h-10 px-3.5 rounded-[12px] text-xs font-semibold text-error hover:text-red-300 hover:bg-red-500/10 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
             >
               <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span>Log out</span>
@@ -129,7 +130,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* 2. Tablet Rail (md: 768px - 1023px) */}
-      <aside className="hidden md:flex lg:hidden fixed top-3 bottom-3 left-3 w-[72px] z-20 flex-col items-center glass-2 rounded-[20px] py-4 select-none">
+      <aside className="hidden md:flex lg:hidden fixed inset-y-0 left-0 w-[76px] z-20 flex-col items-center archive-rail py-6 select-none">
         <div className="mb-6">
           <LogoMark size={38} />
         </div>
@@ -165,7 +166,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="pt-3 border-t border-white/8 flex flex-col items-center gap-2">
+        <div className="pt-3 border-t border-divider flex flex-col items-center gap-2">
           <button
             type="button"
             title="Toggle theme"
@@ -173,7 +174,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             className="h-10 w-10 rounded-[12px] flex items-center justify-center text-ink-soft hover:text-ink hover:bg-white/6 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             {mounted && resolvedTheme === "light" ? (
-              <Moon className="h-4 w-4 text-indigo-400" aria-hidden="true" />
+              <Moon className="h-4 w-4 text-accent" aria-hidden="true" />
             ) : (
               <Sun className="h-4 w-4 text-amber-400" aria-hidden="true" />
             )}
@@ -184,7 +185,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <button
               type="submit"
               title="Log out"
-              className="h-10 w-10 rounded-[12px] flex items-center justify-center text-red-400 hover:bg-red-500/10 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+              className="h-10 w-10 rounded-[12px] flex items-center justify-center text-error hover:bg-red-500/10 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
             >
               <LogOut className="h-4 w-4" aria-hidden="true" />
               <span className="sr-only">Log out</span>
@@ -194,7 +195,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* 3. Mobile Header (below md: < 768px) with Settings Gear icon */}
-      <header className="md:hidden sticky top-0 z-20 w-full glass-2 border-b border-white/10 dark:border-white/12 px-4 h-14 flex items-center justify-between">
+      <header className="md:hidden relative z-20 w-full bg-surface border-b border-divider px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5">
           <LogoMark size={28} />
           <span className="font-display font-bold text-base text-ink">AkShelf</span>
@@ -215,21 +216,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* 4. Main Viewport Content Area */}
-      <main
-        id="main-content"
-        className={cn(
-          "flex-1 w-full max-w-[1280px] mx-auto px-4 md:px-6 lg:px-8 py-6",
-          "md:pl-[96px] lg:pl-[272px]", // Offset for tablet rail (72px + gap) & desktop sidebar (240px + gap)
-          "pb-24 md:pb-12", // Safe padding on mobile so bottom navigation never overlaps content
-        )}
-      >
+      <main id="main-content" tabIndex={-1} className="archive-main">
         {children}
       </main>
 
       {/* 5. Mobile Bottom Bar (below md: < 768px) - 5 primary items */}
       <nav
         aria-label="Mobile Navigation"
-        className="md:hidden fixed bottom-0 left-0 right-0 z-20 h-16 glass-2 rounded-t-[16px] border-t border-white/12 dark:border-white/14 px-2 flex items-center justify-around select-none pb-[env(safe-area-inset-bottom)]"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-20 min-h-[calc(64px+env(safe-area-inset-bottom))] bg-surface border-t border-divider px-2 flex items-center justify-around select-none pb-[env(safe-area-inset-bottom)]"
       >
         {navItems.slice(0, 5).map((item) => {
           const active = isCurrent(item.href);
@@ -248,7 +242,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <div
                 className={cn(
                   "relative flex items-center justify-center h-7 w-10 rounded-full transition-all",
-                  active && "bg-white/14 dark:bg-white/14",
+                  active && "bg-surface-elevated border-b-2 border-accent",
                 )}
               >
                 <Icon

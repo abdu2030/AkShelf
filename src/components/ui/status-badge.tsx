@@ -69,7 +69,7 @@ export function StatusBadge({ status, variant = "full", detail, className }: Sta
     return (
       <div
         className={cn(
-          "h-7 w-7 rounded-full bg-[#0b0d1a]/85 backdrop-blur-none flex items-center justify-center shadow-md",
+          "h-7 w-7 rounded-full bg-surface backdrop-blur-none flex items-center justify-center shadow-md",
           className,
         )}
         aria-label={fullText}

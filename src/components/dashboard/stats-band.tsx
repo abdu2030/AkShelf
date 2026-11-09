@@ -12,7 +12,7 @@ export function StatsBand({ stats, className }: StatsBandProps) {
   return (
     <div
       data-testid="stats-band"
-      className={cn("grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4", className)}
+      className={cn("collection-metrics grid grid-cols-2 lg:grid-cols-4 gap-y-3", className)}
     >
       <StatTile
         label="Total tracked"
@@ -51,7 +51,7 @@ export function StatsBandSkeleton({ className }: { className?: string }) {
     <div
       aria-hidden="true"
       data-testid="stats-band-skeleton"
-      className={cn("grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4", className)}
+      className={cn("collection-metrics grid grid-cols-2 lg:grid-cols-4 gap-y-3", className)}
     >
       <StatTileSkeleton />
       <StatTileSkeleton />

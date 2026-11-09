@@ -60,7 +60,7 @@ export function ProgressBar({
       >
         {/* Animated fill */}
         <div
-          className="h-full rounded-full bg-gradient-to-r from-accent to-accent-hover transition-all duration-300 ease-out"
+          className="h-full rounded-full bg-status-watched-dot transition-all duration-300 ease-out"
           style={{ width: `${percent}%` }}
         />
       </div>

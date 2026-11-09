@@ -17,6 +17,7 @@ export default async function HistoryPage() {
       <div className="space-y-8 pb-12">
         <PageHeader
           title="History"
+          eyebrow="05 / The journal"
           subtitle="Chronological activity log of what you watched and rated."
         />
 
