@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { withDbRetry } from "@/lib/db/retry";
 import { ensureSeasonRecord, persistTitleSeasons } from "@/lib/season/storage";
 import { persistSeasonEpisodes } from "@/lib/episode/storage";
+import { loadCompletionSeasons, reconcileEpisodeStatus } from "@/lib/progress/tracking-status";
 import { metadataService } from "@/lib/metadata/service";
 import { safeLogger, sanitizeErrorMessage } from "@/lib/security/sanitizer";
 import {
@@ -59,7 +60,7 @@ export type TrackingActionResult = {
 /**
  * Server action to toggle progress for a single episode (Day 20)
  * Validates input, verifies authenticated user, updates UserEpisode,
- * updates UserTitle status to WATCHING if needed, and writes an audit log in WatchHistory.
+ * reconciles UserTitle completion status, and writes an audit log in WatchHistory.
  */
 export async function toggleEpisodeProgressAction(
   rawInput: ToggleEpisodeInput,
@@ -103,6 +104,10 @@ export async function toggleEpisodeProgressAction(
   }
 
   try {
+    const completionSeasons = watched
+      ? await loadCompletionSeasons(titleExternalSource, titleExternalId, mediaType)
+      : null;
+    let resolvedDbTitleId: string | null = null;
     let statusTransitioned = false;
     let previousStatus: string | null = null;
     let currentStatus: string | null = null;
@@ -125,6 +130,8 @@ export async function toggleEpisodeProgressAction(
         },
       });
 
+      resolvedDbTitleId = title.id;
+
       // 2. Ensure Season exists in database
       const season = await tx.season.upsert({
         where: {
@@ -138,6 +145,8 @@ export async function toggleEpisodeProgressAction(
           titleId: title.id,
           seasonNumber,
           name: `Season ${seasonNumber}`,
+          episodeCount:
+            completionSeasons?.find((s) => s.seasonNumber === seasonNumber)?.episodeCount ?? 0,
         },
       });
 
@@ -157,25 +166,6 @@ export async function toggleEpisodeProgressAction(
         },
       });
 
-      // Check existing user title status if supported by tx mock/client
-      let existingUserTitle: {
-        id: string;
-        status: "WATCHED" | "WATCHING" | "PLAN_TO_WATCH" | "ON_HOLD" | "DROPPED";
-      } | null = null;
-      if (typeof tx.userTitle?.findUnique === "function") {
-        existingUserTitle = (await tx.userTitle.findUnique({
-          where: {
-            userId_titleId: {
-              userId,
-              titleId: title.id,
-            },
-          },
-        })) as {
-          id: string;
-          status: "WATCHED" | "WATCHING" | "PLAN_TO_WATCH" | "ON_HOLD" | "DROPPED";
-        } | null;
-      }
-
       // 4. Update episode progress record
       if (watched) {
         await tx.userEpisode.upsert({
@@ -185,47 +175,11 @@ export async function toggleEpisodeProgressAction(
               episodeId: episode.id,
             },
           },
-          update: {
-            watchedAt: new Date(),
-          },
+          update: {},
           create: {
             userId,
             episodeId: episode.id,
             watchedAt: new Date(),
-          },
-        });
-
-        // 5. Update parent UserTitle relationship (move to WATCHING if untracked or PLAN_TO_WATCH)
-        if (!existingUserTitle) {
-          statusTransitioned = true;
-          previousStatus = null;
-        } else if (existingUserTitle.status === "PLAN_TO_WATCH") {
-          statusTransitioned = true;
-          previousStatus = "PLAN_TO_WATCH";
-        } else {
-          statusTransitioned = false;
-          previousStatus = existingUserTitle.status;
-        }
-
-        const targetStatus = revertStatus ?? "WATCHING";
-        currentStatus = targetStatus;
-
-        await tx.userTitle.upsert({
-          where: {
-            userId_titleId: {
-              userId,
-              titleId: title.id,
-            },
-          },
-          update: {
-            status: targetStatus,
-            updatedAt: new Date(),
-          },
-          create: {
-            userId,
-            titleId: title.id,
-            status: targetStatus,
-            startedAt: new Date(),
           },
         });
 
@@ -247,30 +201,6 @@ export async function toggleEpisodeProgressAction(
           },
         });
 
-        if (revertStatus) {
-          await tx.userTitle.upsert({
-            where: {
-              userId_titleId: {
-                userId,
-                titleId: title.id,
-              },
-            },
-            update: {
-              status: revertStatus,
-              updatedAt: new Date(),
-            },
-            create: {
-              userId,
-              titleId: title.id,
-              status: revertStatus,
-              startedAt: new Date(),
-            },
-          });
-          currentStatus = revertStatus;
-        } else if (existingUserTitle) {
-          currentStatus = existingUserTitle.status;
-        }
-
         await tx.watchHistory.create({
           data: {
             userId,
@@ -281,9 +211,26 @@ export async function toggleEpisodeProgressAction(
           },
         });
       }
+      const result = await reconcileEpisodeStatus(
+        tx,
+        userId,
+        title.id,
+        watched,
+        completionSeasons,
+        revertStatus,
+      );
+      currentStatus = result.status;
+      previousStatus = result.previousStatus;
+      statusTransitioned = result.statusTransitioned;
     });
 
-    // Revalidate affected routes
+    // Revalidate every supported title URL as well as library views.
+    if (resolvedDbTitleId) {
+      revalidatePath(`/title/db-${resolvedDbTitleId}`);
+      revalidatePath(`/title/${resolvedDbTitleId}`);
+    }
+    revalidatePath(`/title/${titleExternalSource}-${titleExternalId}`);
+    revalidatePath("/watchlist");
     revalidatePath(`/title/${titleExternalSource}:${titleExternalId}`);
     revalidatePath(`/title/demo-${titleExternalSource}-${titleExternalId}`);
     revalidatePath("/");
@@ -350,6 +297,9 @@ export async function batchSeasonProgressAction(
   }
 
   try {
+    const completionSeasons = watched
+      ? await loadCompletionSeasons(titleExternalSource, titleExternalId, mediaType)
+      : null;
     let resolvedDbTitleId: string | null = null;
     let resolvedStatus: string = watched ? "WATCHING" : "PLAN_TO_WATCH";
 
@@ -384,14 +334,14 @@ export async function batchSeasonProgressAction(
                   seasonNumber,
                 },
               },
-              update: {
-                episodeCount: Math.max(episodeNumbers.length, 1),
-              },
+              update: {},
               create: {
                 titleId: title.id,
                 seasonNumber,
                 name: `Season ${seasonNumber}`,
-                episodeCount: episodeNumbers.length,
+                episodeCount:
+                  completionSeasons?.find((s) => s.seasonNumber === seasonNumber)?.episodeCount ??
+                  0,
               },
             });
 
@@ -456,13 +406,6 @@ export async function batchSeasonProgressAction(
 
             if (watched) {
               if (typeof tx.userEpisode?.createMany === "function") {
-                await tx.userEpisode.deleteMany({
-                  where: {
-                    userId,
-                    episodeId: { in: episodeIds },
-                  },
-                });
-
                 await tx.userEpisode.createMany({
                   data: episodeIds.map((epId) => ({
                     userId,
@@ -480,9 +423,7 @@ export async function batchSeasonProgressAction(
                         episodeId: epId,
                       },
                     },
-                    update: {
-                      watchedAt: now,
-                    },
+                    update: {},
                     create: {
                       userId,
                       episodeId: epId,
@@ -491,71 +432,6 @@ export async function batchSeasonProgressAction(
                   });
                 }
               }
-
-              // Determine target UserTitle status (WATCHED if series completed or marked watched)
-              let targetStatus: "WATCHED" | "WATCHING" = "WATCHING";
-
-              if (allSeasonsWatched === true) {
-                targetStatus = "WATCHED";
-              } else if (
-                typeof tx.episode?.count === "function" &&
-                typeof tx.userEpisode?.count === "function"
-              ) {
-                try {
-                  const totalTitleEpisodes = await tx.episode.count({
-                    where: { season: { titleId: title.id } },
-                  });
-                  const watchedTitleEpisodes = await tx.userEpisode.count({
-                    where: {
-                      userId,
-                      episode: { season: { titleId: title.id } },
-                    },
-                  });
-                  if (totalTitleEpisodes > 0 && watchedTitleEpisodes >= totalTitleEpisodes) {
-                    targetStatus = "WATCHED";
-                  }
-                } catch {
-                  // Fallback
-                }
-              }
-
-              // Retain WATCHED if the title was already marked as WATCHED by user
-              if (typeof tx.userTitle?.findUnique === "function") {
-                try {
-                  const existingUt = await tx.userTitle.findUnique({
-                    where: { userId_titleId: { userId, titleId: title.id } },
-                    select: { status: true },
-                  });
-                  if (existingUt?.status === "WATCHED") {
-                    targetStatus = "WATCHED";
-                  }
-                } catch {
-                  // Ignore
-                }
-              }
-
-              resolvedStatus = targetStatus;
-
-              await tx.userTitle.upsert({
-                where: {
-                  userId_titleId: {
-                    userId,
-                    titleId: title.id,
-                  },
-                },
-                update: {
-                  status: targetStatus,
-                  ...(targetStatus === "WATCHED" ? { watchedAt: now } : {}),
-                  updatedAt: now,
-                },
-                create: {
-                  userId,
-                  titleId: title.id,
-                  status: targetStatus,
-                  startedAt: now,
-                  ...(targetStatus === "WATCHED" ? { watchedAt: now } : {}),
-                },
-              });
 
               await tx.watchHistory.create({
                 data: {
@@ -573,44 +449,6 @@ export async function batchSeasonProgressAction(
                 },
               });
 
-              let revertStatus: "PLAN_TO_WATCH" | "WATCHING" = "WATCHING";
-              if (typeof tx.userEpisode?.count === "function") {
-                try {
-                  const remainingCount = await tx.userEpisode.count({
-                    where: {
-                      userId,
-                      episode: { season: { titleId: title.id } },
-                    },
-                  });
-                  if (remainingCount === 0) {
-                    revertStatus = "PLAN_TO_WATCH";
-                  }
-                } catch {
-                  // Ignore
-                }
-              }
-
-              resolvedStatus = revertStatus;
-
-              await tx.userTitle.upsert({
-                where: {
-                  userId_titleId: {
-                    userId,
-                    titleId: title.id,
-                  },
-                },
-                update: {
-                  status: revertStatus,
-                  watchedAt: null,
-                  updatedAt: now,
-                },
-                create: {
-                  userId,
-                  titleId: title.id,
-                  status: revertStatus,
-                },
-              });
-
               await tx.watchHistory.create({
                 data: {
                   userId,
@@ -620,6 +458,15 @@ export async function batchSeasonProgressAction(
                 },
               });
             }
+
+            const result = await reconcileEpisodeStatus(
+              tx,
+              userId,
+              title.id,
+              watched,
+              completionSeasons,
+            );
+            resolvedStatus = result.status;
 
             return title;
           },

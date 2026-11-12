@@ -298,7 +298,9 @@ export function SeasonEpisodesSection({
           // Unmarked: "Unmarked S2 E4. Undo"
           let toastMsg = "";
           if (nextWatchedState) {
-            if (res.statusTransitioned && res.previousStatus === "PLAN_TO_WATCH") {
+            if (res.statusTransitioned && res.status === "WATCHED") {
+              toastMsg = `Completed. Watched S${seasonNum} E${epNumber}.`;
+            } else if (res.statusTransitioned && res.previousStatus === "PLAN_TO_WATCH") {
               toastMsg = `Moved to Watching. Watched S${seasonNum} E${epNumber}.`;
             } else {
               toastMsg = `Watched S${seasonNum} E${epNumber}.`;

@@ -14,6 +14,11 @@ import { GET as searchApiGet } from "@/app/api/search/route";
 import { NextRequest } from "next/server";
 import { metadataService } from "@/lib/metadata";
 
+vi.mock("@/lib/progress/tracking-status", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/progress/tracking-status")>();
+  return { ...actual, loadCompletionSeasons: vi.fn().mockResolvedValue([]) };
+});
+
 // Mock NextAuth
 vi.mock("@/lib/auth", () => ({
   auth: vi.fn(),
@@ -39,6 +44,7 @@ vi.mock("@/lib/db", () => {
       upsert: vi.fn(),
     },
     userEpisode: {
+      findMany: vi.fn().mockResolvedValue([]),
       upsert: vi.fn(),
       deleteMany: vi.fn(),
     },
@@ -70,6 +76,7 @@ describe("Core MVP End-to-End Workflow Verification", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(prisma.userEpisode.findMany).mockResolvedValue([]);
 
     // Default mock transaction to immediately execute the callback with mock prisma
     vi.mocked(prisma.$transaction).mockImplementation(async (cb: unknown) => {

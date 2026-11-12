@@ -1,0 +1,74 @@
+import type { Prisma, WatchStatus } from "@prisma/client";
+import { metadataService } from "@/lib/metadata/service";
+import type { ExternalSource, MediaType, NormalizedSeason } from "@/lib/metadata/types";
+
+export async function loadCompletionSeasons(
+  source: ExternalSource,
+  id: string,
+  type?: MediaType,
+): Promise<NormalizedSeason[] | null> {
+  try {
+    return await metadataService.getTitleSeasons(source, id, type);
+  } catch {
+    // Recording progress must still work during a provider outage. Unknown
+    // season totals cannot establish that a whole series is complete.
+    return null;
+  }
+}
+
+/** Reconcile the parent status after writing this user's episode progress. */
+export async function reconcileEpisodeStatus(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  titleId: string,
+  watched: boolean,
+  seasons: NormalizedSeason[] | null,
+  revertStatus?: WatchStatus | null,
+) {
+  const previous = await tx.userTitle.findUnique({
+    where: { userId_titleId: { userId, titleId } },
+  });
+  const progress = await tx.userEpisode.findMany({
+    where: { userId, episode: { season: { titleId } } },
+    select: {
+      episode: { select: { episodeNumber: true, season: { select: { seasonNumber: true } } } },
+    },
+  });
+  const watchedKeys = new Set(
+    progress.map(({ episode }) => `${episode.season.seasonNumber}:${episode.episodeNumber}`),
+  );
+  const regularSeasons = seasons?.filter((season) => season.seasonNumber > 0);
+  const completed = Boolean(
+    regularSeasons?.length &&
+    regularSeasons.every((season) => {
+      const count = Math.max(season.episodeCount, season.episodes?.length ?? 0);
+      return (
+        count > 0 &&
+        Array.from({ length: count }, (_, index) => index + 1).every((number) =>
+          watchedKeys.has(`${season.seasonNumber}:${number}`),
+        )
+      );
+    }),
+  );
+  const status: WatchStatus =
+    revertStatus ??
+    (watched
+      ? previous?.status === "WATCHED" || completed
+        ? "WATCHED"
+        : "WATCHING"
+      : progress.length > 0
+        ? "WATCHING"
+        : "PLAN_TO_WATCH");
+  const now = new Date();
+  const watchedAt = status === "WATCHED" ? (previous?.watchedAt ?? now) : null;
+  await tx.userTitle.upsert({
+    where: { userId_titleId: { userId, titleId } },
+    update: { status, watchedAt },
+    create: { userId, titleId, status, watchedAt, startedAt: watched ? now : null },
+  });
+  return {
+    status,
+    previousStatus: previous?.status ?? null,
+    statusTransitioned: previous?.status !== status,
+  };
+}

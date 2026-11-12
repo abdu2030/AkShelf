@@ -7,6 +7,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { SeasonEpisodesSection } from "@/components/title/season-episodes-section";
 import React from "react";
 
+vi.mock("@/lib/metadata/service", () => ({
+  metadataService: { getTitleSeasons: vi.fn().mockResolvedValue([]) },
+}));
+
 // Mock NextAuth
 vi.mock("@/lib/auth", () => ({
   auth: vi.fn(),
@@ -34,7 +38,7 @@ vi.mock("@/lib/db", () => {
     userEpisode: {
       upsert: vi.fn(),
       deleteMany: vi.fn(),
-      findMany: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([]),
     },
     userTitle: {
       upsert: vi.fn(),
@@ -108,6 +112,7 @@ describe("Week 5 Day 35: TV & Anime Progress Stability & End-to-End Workflows", 
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(prisma.userEpisode.findMany).mockResolvedValue([]);
 
     vi.mocked(prisma.$transaction).mockImplementation(async (cb: unknown) => {
       if (typeof cb === "function") {

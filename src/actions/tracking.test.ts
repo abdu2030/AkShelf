@@ -20,6 +20,7 @@ vi.mock("@/lib/auth", () => ({
 
 vi.mock("@/lib/metadata/service", () => ({
   metadataService: {
+    getTitleSeasons: vi.fn().mockResolvedValue([]),
     getTvSeason: vi.fn(),
     getAnimeDetails: vi.fn(),
   },
@@ -31,8 +32,8 @@ vi.mock("@/lib/db", () => ({
     title: { upsert: vi.fn() },
     season: { upsert: vi.fn() },
     episode: { upsert: vi.fn() },
-    userEpisode: { upsert: vi.fn(), deleteMany: vi.fn() },
-    userTitle: { upsert: vi.fn() },
+    userEpisode: { findMany: vi.fn().mockResolvedValue([]), upsert: vi.fn(), deleteMany: vi.fn() },
+    userTitle: { findUnique: vi.fn().mockResolvedValue(null), upsert: vi.fn() },
     watchHistory: { create: vi.fn() },
   },
 }));
@@ -98,8 +99,15 @@ describe("Tracking Server Actions", () => {
           title: { upsert: vi.fn().mockResolvedValue(mockTitle) },
           season: { upsert: vi.fn().mockResolvedValue(mockSeason) },
           episode: { upsert: vi.fn().mockResolvedValue(mockEpisode) },
-          userEpisode: { upsert: vi.fn().mockResolvedValue({ id: "ue-1" }), deleteMany: vi.fn() },
-          userTitle: { upsert: vi.fn().mockResolvedValue({ id: "ut-1" }) },
+          userEpisode: {
+            findMany: vi.fn().mockResolvedValue([]),
+            upsert: vi.fn().mockResolvedValue({ id: "ue-1" }),
+            deleteMany: vi.fn(),
+          },
+          userTitle: {
+            findUnique: vi.fn().mockResolvedValue(null),
+            upsert: vi.fn().mockResolvedValue({ id: "ut-1" }),
+          },
           watchHistory: { create: vi.fn().mockResolvedValue({ id: "wh-1" }) },
         };
         return callback(tx as unknown as Parameters<Parameters<typeof prisma.$transaction>[0]>[0]);
@@ -139,8 +147,12 @@ describe("Tracking Server Actions", () => {
           title: { upsert: vi.fn().mockResolvedValue({ id: "title-1" }) },
           season: { upsert: vi.fn().mockResolvedValue({ id: "season-1" }) },
           episode: { upsert: vi.fn().mockResolvedValue({ id: "ep-1" }) },
-          userEpisode: { upsert: vi.fn(), deleteMany: deleteManyMock },
-          userTitle: { upsert: vi.fn() },
+          userEpisode: {
+            findMany: vi.fn().mockResolvedValue([]),
+            upsert: vi.fn(),
+            deleteMany: deleteManyMock,
+          },
+          userTitle: { findUnique: vi.fn().mockResolvedValue(null), upsert: vi.fn() },
           watchHistory: { create: watchHistoryMock },
         };
         return callback(tx as unknown as Parameters<Parameters<typeof prisma.$transaction>[0]>[0]);
@@ -179,7 +191,11 @@ describe("Tracking Server Actions", () => {
           title: { upsert: vi.fn().mockResolvedValue({ id: "title-1" }) },
           season: { upsert: vi.fn().mockResolvedValue({ id: "season-1" }) },
           episode: { upsert: vi.fn().mockResolvedValue({ id: "ep-1" }) },
-          userEpisode: { upsert: vi.fn().mockResolvedValue({ id: "ue-1" }), deleteMany: vi.fn() },
+          userEpisode: {
+            findMany: vi.fn().mockResolvedValue([]),
+            upsert: vi.fn().mockResolvedValue({ id: "ue-1" }),
+            deleteMany: vi.fn(),
+          },
           userTitle: {
             findUnique: vi.fn().mockResolvedValue({ id: "ut-ptw", status: "PLAN_TO_WATCH" }),
             upsert: upsertUserTitleMock,
@@ -225,7 +241,11 @@ describe("Tracking Server Actions", () => {
           title: { upsert: vi.fn().mockResolvedValue({ id: "title-1" }) },
           season: { upsert: vi.fn().mockResolvedValue({ id: "season-1" }) },
           episode: { upsert: vi.fn().mockResolvedValue({ id: "ep-1" }) },
-          userEpisode: { upsert: vi.fn(), deleteMany: vi.fn().mockResolvedValue({ count: 1 }) },
+          userEpisode: {
+            findMany: vi.fn().mockResolvedValue([]),
+            upsert: vi.fn(),
+            deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
+          },
           userTitle: {
             findUnique: vi.fn().mockResolvedValue({ id: "ut-ptw", status: "WATCHING" }),
             upsert: upsertUserTitleMock,
@@ -284,8 +304,15 @@ describe("Tracking Server Actions", () => {
               id: `ep-${where.seasonId_episodeNumber.episodeNumber}`,
             })),
           },
-          userEpisode: { upsert: vi.fn().mockResolvedValue({ id: "ue" }), deleteMany: vi.fn() },
-          userTitle: { upsert: vi.fn().mockResolvedValue({ id: "ut" }) },
+          userEpisode: {
+            findMany: vi.fn().mockResolvedValue([]),
+            upsert: vi.fn().mockResolvedValue({ id: "ue" }),
+            deleteMany: vi.fn(),
+          },
+          userTitle: {
+            findUnique: vi.fn().mockResolvedValue(null),
+            upsert: vi.fn().mockResolvedValue({ id: "ut" }),
+          },
           watchHistory: { create: vi.fn().mockResolvedValue({ id: "wh" }) },
         };
         return callback(tx as unknown as Parameters<Parameters<typeof prisma.$transaction>[0]>[0]);
@@ -306,7 +333,7 @@ describe("Tracking Server Actions", () => {
       expect(revalidatePath).toHaveBeenCalled();
     });
 
-    it("marks title status as WATCHED when allSeasonsWatched is true", async () => {
+    it("does not trust the client completion hint without verified progress", async () => {
       mockAuth.mockResolvedValueOnce({
         user: { id: "user-123" },
         expires: "2099-01-01",
@@ -323,8 +350,12 @@ describe("Tracking Server Actions", () => {
               id: `ep-${where.seasonId_episodeNumber.episodeNumber}`,
             })),
           },
-          userEpisode: { upsert: vi.fn().mockResolvedValue({ id: "ue" }), deleteMany: vi.fn() },
-          userTitle: { upsert: userTitleUpsertMock },
+          userEpisode: {
+            findMany: vi.fn().mockResolvedValue([]),
+            upsert: vi.fn().mockResolvedValue({ id: "ue" }),
+            deleteMany: vi.fn(),
+          },
+          userTitle: { findUnique: vi.fn().mockResolvedValue(null), upsert: userTitleUpsertMock },
           watchHistory: { create: vi.fn().mockResolvedValue({ id: "wh" }) },
         };
         return callback(tx as unknown as Parameters<Parameters<typeof prisma.$transaction>[0]>[0]);
@@ -341,10 +372,10 @@ describe("Tracking Server Actions", () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.status).toBe("WATCHED");
+      expect(result.status).toBe("WATCHING");
       expect(userTitleUpsertMock).toHaveBeenCalledWith(
         expect.objectContaining({
-          update: expect.objectContaining({ status: "WATCHED" }),
+          update: expect.objectContaining({ status: "WATCHING" }),
         }),
       );
     });
@@ -680,7 +711,7 @@ describe("Tracking Server Actions", () => {
       vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => {
         const tx = {
           title: { upsert: vi.fn().mockResolvedValue({ id: "title-1" }) },
-          userTitle: { upsert: upsertUserTitleMock },
+          userTitle: { findUnique: vi.fn().mockResolvedValue(null), upsert: upsertUserTitleMock },
           watchHistory: { create: watchHistoryMock },
         };
         return callback(tx as unknown as Parameters<Parameters<typeof prisma.$transaction>[0]>[0]);
@@ -724,7 +755,7 @@ describe("Tracking Server Actions", () => {
       vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => {
         const tx = {
           title: { upsert: vi.fn().mockResolvedValue({ id: "title-1" }) },
-          userTitle: { upsert: upsertUserTitleMock },
+          userTitle: { findUnique: vi.fn().mockResolvedValue(null), upsert: upsertUserTitleMock },
           watchHistory: { create: watchHistoryMock },
         };
         return callback(tx as unknown as Parameters<Parameters<typeof prisma.$transaction>[0]>[0]);
