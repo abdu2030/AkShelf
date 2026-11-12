@@ -1,6 +1,7 @@
 import type { Prisma, WatchStatus } from "@prisma/client";
 import { metadataService } from "@/lib/metadata/service";
 import type { ExternalSource, MediaType, NormalizedSeason } from "@/lib/metadata/types";
+import { computeSeriesProgress } from "./service";
 
 export async function loadCompletionSeasons(
   source: ExternalSource,
@@ -34,22 +35,16 @@ export async function reconcileEpisodeStatus(
       episode: { select: { episodeNumber: true, season: { select: { seasonNumber: true } } } },
     },
   });
-  const watchedKeys = new Set(
-    progress.map(({ episode }) => `${episode.season.seasonNumber}:${episode.episodeNumber}`),
+  const watchedMap = Object.fromEntries(
+    progress.map(({ episode }) => [
+      `${episode.season.seasonNumber}:${episode.episodeNumber}`,
+      true,
+    ]),
   );
-  const regularSeasons = seasons?.filter((season) => season.seasonNumber > 0);
-  const completed = Boolean(
-    regularSeasons?.length &&
-    regularSeasons.every((season) => {
-      const count = Math.max(season.episodeCount, season.episodes?.length ?? 0);
-      return (
-        count > 0 &&
-        Array.from({ length: count }, (_, index) => index + 1).every((number) =>
-          watchedKeys.has(`${season.seasonNumber}:${number}`),
-        )
-      );
-    }),
-  );
+  const completed = computeSeriesProgress(
+    seasons?.filter((season) => season.seasonNumber > 0) ?? [],
+    watchedMap,
+  ).isCompleted;
   const status: WatchStatus =
     revertStatus ??
     (watched

@@ -65,6 +65,7 @@ export function aniListMediaToNormalizedSeasons(media: AniListMedia): Normalized
       seasonNumber: 1,
       name: "Season 1",
       episodeCount: episodes.length,
+      episodeCountKnown: Boolean(media.episodes && media.episodes > 0),
       overview: cleanAniListDescription(media.description),
       posterUrl:
         media.coverImage?.extraLarge || media.coverImage?.large || media.coverImage?.medium || null,
@@ -215,7 +216,7 @@ export function aniListMediaToMediaResult(
     voteAverage,
     voteCount: null,
     popularity: media.popularity ?? null,
-    totalEpisodes: media.episodes ?? (seasons.length > 0 ? seasons[0].episodeCount : null),
+    totalEpisodes: media.episodes ?? null,
     totalSeasons: seasons.length > 0 ? seasons.length : 1,
     studios: studios.length > 0 ? studios : undefined,
     trailerUrl,

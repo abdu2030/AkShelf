@@ -33,6 +33,7 @@ export interface ProgressSeasonItem {
   seasonNumber: number;
   name?: string | null;
   episodeCount?: number;
+  episodeCountKnown?: boolean;
   episodes?: Array<{
     episodeNumber: number;
     name?: string | null;
@@ -63,8 +64,21 @@ export function computeSeriesProgress(
 
   for (const season of sortedSeasons) {
     const seasonNum = season.seasonNumber;
-    const episodes = season.episodes || [];
-    const totalSeasonEpisodes = Math.max(season.episodeCount ?? 0, episodes.length);
+    const loadedEpisodes = season.episodes || [];
+    const episodesByNumber = new Map(
+      loadedEpisodes.map((episode) => [episode.episodeNumber, episode]),
+    );
+    const totalSeasonEpisodes = Math.max(season.episodeCount ?? 0, loadedEpisodes.length);
+    // A partially loaded episode list must not hide missing episodes or later seasons.
+    const episodes = Array.from({ length: totalSeasonEpisodes }, (_, index) => {
+      const number = index + 1;
+      return (
+        episodesByNumber.get(number) ?? {
+          episodeNumber: number,
+          name: `Episode ${number}`,
+        }
+      );
+    });
 
     let seasonWatchedCount = 0;
 
@@ -109,7 +123,10 @@ export function computeSeriesProgress(
     }
 
     const seasonPercent = calculateProgressPercentage(seasonWatchedCount, totalSeasonEpisodes);
-    const isSeasonCompleted = totalSeasonEpisodes > 0 && seasonWatchedCount >= totalSeasonEpisodes;
+    const isSeasonCompleted =
+      season.episodeCountKnown !== false &&
+      totalSeasonEpisodes > 0 &&
+      seasonWatchedCount === totalSeasonEpisodes;
 
     seasonProgress.push({
       seasonNumber: seasonNum,
@@ -129,7 +146,7 @@ export function computeSeriesProgress(
     totalEpisodesAcrossSeries,
   );
   const isSeriesCompleted =
-    totalEpisodesAcrossSeries > 0 && totalWatchedEpisodesAcrossSeries >= totalEpisodesAcrossSeries;
+    seasonProgress.length > 0 && seasonProgress.every((season) => season.isCompleted);
 
   // If nextUp exists, default to its season; otherwise default to first season
   const defaultSeasonNumber = detectedNextUp

@@ -22,9 +22,86 @@ vi.mock("@/lib/db", () => ({
 }));
 
 import { prisma } from "@/lib/db";
+import { auth } from "@/lib/auth";
+import { metadataService } from "@/lib/metadata/service";
 import TitleDetailPage from "./page";
 
 describe("TitleDetailPage Component", () => {
+  it("keeps a partially watched series Watching and exposes every season, including an unloaded next season", async () => {
+    const counts = [23, 22, 23, 22, 13];
+    const seasons = counts.map((episodeCount, index) => ({
+      seasonNumber: index + 1,
+      name: `Season ${index + 1}`,
+      episodeCount,
+    }));
+    const storedSeasons = seasons.slice(0, 2).map((s) => ({
+      ...s,
+      episodes: Array.from({ length: s.episodeCount }, (_, i) => ({
+        id: `${s.seasonNumber}:${i + 1}`,
+        episodeNumber: i + 1,
+        name: `Episode ${i + 1}`,
+      })),
+    }));
+    const record = {
+      id: "series",
+      externalSource: "tmdb",
+      externalId: "1411",
+      title: "Person of Interest",
+      type: "TV",
+      year: 2011,
+      posterUrl: "/poster.jpg",
+      backdropUrl: "/backdrop.jpg",
+      overview: "A series",
+      genres: [],
+      seasons: storedSeasons,
+      userTitles: [
+        { id: "entry", status: "WATCHING", rating: 9, watchedAt: null, startedAt: null },
+      ],
+    };
+    const authMock = auth as unknown as { mockResolvedValue: (value: unknown) => void };
+    authMock.mockResolvedValue({ user: { id: "owner" } });
+    vi.mocked(prisma.title.findUnique).mockResolvedValue(record as never);
+    // Supply the episode read required by the real progress service.
+    Object.assign(prisma, {
+      userEpisode: {
+        findMany: vi
+          .fn()
+          .mockResolvedValue(
+            storedSeasons.flatMap((s) => s.episodes.map((ep) => ({ episodeId: ep.id }))),
+          ),
+      },
+      season: { upsert: vi.fn() },
+    });
+    const details = vi
+      .spyOn(metadataService, "getTitleDetails")
+      .mockResolvedValue({ ...record, id: "tmdb:1411", totalEpisodes: 103, seasons } as never);
+    const episodeDetails = vi
+      .spyOn(metadataService, "getTvSeason")
+      .mockImplementation(async (_id, number) => ({
+        ...seasons[number - 1],
+        episodes: Array.from({ length: counts[number - 1] }, (_, i) => ({
+          seasonNumber: number,
+          episodeNumber: i + 1,
+          name: `S${number} Episode ${i + 1}`,
+        })),
+      }));
+    try {
+      const html = renderToStaticMarkup(
+        await TitleDetailPage({ params: Promise.resolve({ id: "db-series" }) }),
+      );
+      expect(html).toContain("currently Watching");
+      expect(html).not.toContain("currently Watched");
+      expect(html).toContain("45 / 103");
+      for (let n = 1; n <= 5; n++) expect(html).toContain(`S${n}`);
+      expect(html).toContain("S3 Episode 1");
+      expect(episodeDetails).toHaveBeenCalledWith("1411", 3);
+    } finally {
+      details.mockRestore();
+      episodeDetails.mockRestore();
+      authMock.mockResolvedValue(null);
+      vi.mocked(prisma.title.findUnique).mockResolvedValue(null);
+    }
+  });
   it("renders movie detail view with synopsis, cast preview, and metadata panel", async () => {
     const page = await TitleDetailPage({
       params: Promise.resolve({ id: "demo-tmdb-27205" }),

@@ -45,6 +45,7 @@ export interface MediaCardProps {
   season?: number | null;
   episode?: number | null;
   progress?: MediaProgress | null;
+  completedSeasons?: number[];
   href?: string;
   priority?: boolean;
   className?: string;
@@ -97,6 +98,7 @@ export function MediaCard({
   season,
   episode,
   progress,
+  completedSeasons,
   href,
   priority = false,
   className,
@@ -301,6 +303,11 @@ export function MediaCard({
             )}
           >
             {statusCaption}
+          </p>
+        ) : null}
+        {completedSeasons && completedSeasons.length > 0 ? (
+          <p className="text-xs text-status-watched-text" data-testid="completed-seasons">
+            {completedSeasons.map((number) => `S${number}`).join(", ")} Watched
           </p>
         ) : null}
       </div>

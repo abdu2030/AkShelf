@@ -96,6 +96,18 @@ function setup(counts = [25], initialStatus: WatchStatus = "WATCHING") {
 }
 
 describe("episode and season completion persistence", () => {
+  it("keeps a combined ongoing anime Watching when only a partial streaming list is known", async () => {
+    setup([2]);
+    vi.mocked(metadataService.getTitleSeasons).mockResolvedValue([
+      { seasonNumber: 1, name: "Season 1", episodeCount: 2, episodeCountKnown: false },
+    ]);
+    const result = await batchSeasonProgressAction({
+      ...input,
+      episodeNumbers: [1, 2],
+      allSeasonsWatched: true,
+    });
+    expect(result).toMatchObject({ success: true, status: "WATCHING" });
+  });
   beforeEach(() => {
     vi.resetAllMocks();
     (auth as unknown as { mockResolvedValue: (value: unknown) => void }).mockResolvedValue({

@@ -61,10 +61,7 @@ export function SeasonSelector({
     <div
       role="tablist"
       aria-label="Season selection"
-      className={cn(
-        "flex items-center gap-2 overflow-x-auto pb-2 pt-1 -mx-1 px-1 snap-x scrollbar-none",
-        className,
-      )}
+      className={cn("flex flex-wrap items-center gap-2 pb-2 pt-1", className)}
     >
       {seasons.map((season, index) => {
         const isSelected = season.seasonNumber === selectedSeason;

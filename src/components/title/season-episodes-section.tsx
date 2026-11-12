@@ -30,6 +30,7 @@ export interface SeasonItem {
   seasonNumber: number;
   name?: string;
   episodeCount: number;
+  episodeCountKnown?: boolean;
   episodes?: EpisodeItem[];
 }
 
@@ -84,7 +85,7 @@ export function SeasonEpisodesSection({
   const seasonsState = useMemo(() => {
     return seasons.map((season) => {
       const dynamicEpisodes = dynamicEpisodesBySeason[season.seasonNumber];
-      if (dynamicEpisodes && (!season.episodes || season.episodes.length === 0)) {
+      if (dynamicEpisodes && dynamicEpisodes.length >= (season.episodes?.length ?? 0)) {
         return {
           ...season,
           episodes: dynamicEpisodes,
@@ -209,7 +210,7 @@ export function SeasonEpisodesSection({
 
     // If target season has no episodes and external provider info is present, fetch dynamically
     if (
-      (!targetSeason?.episodes || targetSeason.episodes.length === 0) &&
+      (!targetSeason?.episodes || targetSeason.episodes.length < targetSeason.episodeCount) &&
       titleExternalSource &&
       titleExternalId
     ) {
@@ -850,7 +851,11 @@ export function SeasonEpisodesSection({
     );
   }
 
-  const progressLabel = `${activeSeasonWatchedCount} / ${activeSeasonTotalEpisodes} episodes - ${activeSeasonPercentage}%`;
+  const knownTotal = seasonsState.every((season) => season.episodeCountKnown !== false);
+  const progressLabel =
+    activeSeason?.episodeCountKnown === false
+      ? `${activeSeasonWatchedCount} episodes watched · total unconfirmed`
+      : `${activeSeasonWatchedCount} / ${activeSeasonTotalEpisodes} episodes - ${activeSeasonPercentage}%`;
 
   return (
     <section
@@ -876,8 +881,9 @@ export function SeasonEpisodesSection({
             {seriesProgress.totalEpisodes > 0 && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono font-medium glass-2 text-ink-muted border border-divider">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-                {seriesProgress.watchedEpisodes} / {seriesProgress.totalEpisodes} (
-                {seriesProgress.percentage}%)
+                {knownTotal
+                  ? `${seriesProgress.watchedEpisodes} / ${seriesProgress.totalEpisodes} (${seriesProgress.percentage}%)`
+                  : `${seriesProgress.watchedEpisodes} episodes watched`}
               </span>
             )}
           </div>
@@ -924,12 +930,20 @@ export function SeasonEpisodesSection({
       <div className="glass-1 rounded-2xl p-4 border border-divider space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex-1 max-w-md">
-            <ProgressBar
-              value={activeSeasonWatchedCount}
-              max={activeSeasonTotalEpisodes || 1}
-              showPercent
-              label={progressLabel}
-            />
+            <p className="text-xs font-semibold text-ink-soft mb-2">
+              Season {activeSeason?.seasonNumber}
+              {activeSeasonProgress.isCompleted ? " · Watched" : ""}
+            </p>
+            {activeSeason?.episodeCountKnown === false ? (
+              <p className="text-xs text-ink-muted">{progressLabel}</p>
+            ) : (
+              <ProgressBar
+                value={activeSeasonWatchedCount}
+                max={activeSeasonTotalEpisodes || 1}
+                showPercent
+                label={progressLabel}
+              />
+            )}
           </div>
 
           {/* Batch overflow buttons (section 9.15) */}

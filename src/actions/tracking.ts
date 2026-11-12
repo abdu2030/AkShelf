@@ -1304,31 +1304,34 @@ export async function fetchSeasonEpisodesAction(
 
     if (userId && episodes.length > 0) {
       try {
-        await prisma.$transaction(async (tx) => {
-          const title = await tx.title.upsert({
-            where: {
-              externalSource_externalId: {
+        await prisma.$transaction(
+          async (tx) => {
+            const title = await tx.title.upsert({
+              where: {
+                externalSource_externalId: {
+                  externalSource: titleExternalSource,
+                  externalId: titleExternalId,
+                },
+              },
+              update: {},
+              create: {
                 externalSource: titleExternalSource,
                 externalId: titleExternalId,
+                title: titleName || `${titleExternalSource}:${titleExternalId}`,
+                type: mediaType || "TV",
               },
-            },
-            update: {},
-            create: {
-              externalSource: titleExternalSource,
-              externalId: titleExternalId,
-              title: titleName || `${titleExternalSource}:${titleExternalId}`,
-              type: mediaType || "TV",
-            },
-          });
+            });
 
-          const season = await ensureSeasonRecord(tx, title.id, seasonNumber, {
-            episodeCount: episodes.length,
-          });
+            const season = await ensureSeasonRecord(tx, title.id, seasonNumber, {
+              episodeCount: episodes.length,
+            });
 
-          await persistSeasonEpisodes(tx, season.id, episodes, {
-            updateSeasonCount: true,
-          });
-        });
+            await persistSeasonEpisodes(tx, season.id, episodes, {
+              updateSeasonCount: true,
+            });
+          },
+          { maxWait: 10000, timeout: 30000 },
+        );
       } catch (dbErr) {
         console.warn("[TrackingAction] Failed to lazily persist fetched episodes:", dbErr);
       }

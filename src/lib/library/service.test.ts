@@ -1,11 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getLibraryItems } from "./service";
 import { prisma } from "@/lib/db";
+import { metadataService } from "@/lib/metadata/service";
 import { demoLibraryItems } from "@/lib/data/demo-titles";
+
+vi.mock("@/lib/metadata/service", () => ({
+  metadataService: { getTitleSeasons: vi.fn(), getTitleDetails: vi.fn() },
+}));
 
 vi.mock("@/lib/db", () => ({
   prisma: {
-    userTitle: { findMany: vi.fn() },
+    userTitle: { findMany: vi.fn(), findUnique: vi.fn(), updateMany: vi.fn() },
     userEpisode: { findMany: vi.fn() },
   },
 }));
@@ -13,6 +18,9 @@ vi.mock("@/lib/db", () => ({
 describe("Library Service (getLibraryItems)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(metadataService.getTitleSeasons).mockResolvedValue([
+      { seasonNumber: 1, name: "Season 1", episodeCount: 2 },
+    ]);
   });
 
   it("returns demo titles when userId is not provided", async () => {
@@ -134,5 +142,82 @@ describe("Library Service (getLibraryItems)", () => {
 
     const items = await getLibraryItems({ userId: "user-123" });
     expect(items).toEqual([]);
+  });
+});
+
+describe("consistent library completion", () => {
+  const date = new Date("2026-10-20T10:00:00Z");
+  const row = () => ({
+    id: "entry",
+    userId: "owner",
+    titleId: "series",
+    status: "WATCHING",
+    rating: 8,
+    watchedAt: null,
+    createdAt: date,
+    updatedAt: date,
+    title: {
+      id: "series",
+      type: "TV",
+      title: "A tracked series",
+      externalSource: "tmdb",
+      externalId: "123",
+      posterUrl: "https://image.tmdb.org/poster.jpg",
+      seasons: [
+        {
+          seasonNumber: 1,
+          episodeCount: 2,
+          episodes: [
+            { id: "e1", episodeNumber: 1 },
+            { id: "e2", episodeNumber: 2 },
+          ],
+        },
+      ],
+    },
+  });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(prisma.userTitle.findMany).mockResolvedValue([row()] as never);
+    vi.mocked(prisma.userEpisode.findMany).mockResolvedValue(
+      [1, 2].map((episodeNumber) => ({
+        episodeId: `e${episodeNumber}`,
+        watchedAt: date,
+        episode: { episodeNumber, season: { seasonNumber: 1 } },
+      })) as never,
+    );
+    vi.mocked(prisma.userTitle.findUnique).mockResolvedValue(row() as never);
+    vi.mocked(prisma.userTitle.updateMany).mockResolvedValue({ count: 1 });
+  });
+  it("repairs an existing fully watched entry and returns the saved Watched status", async () => {
+    vi.mocked(metadataService.getTitleSeasons).mockResolvedValue([
+      { seasonNumber: 1, name: "Season 1", episodeCount: 2 },
+    ]);
+    const [item] = await getLibraryItems({ userId: "owner" });
+    expect(item).toMatchObject({ status: "WATCHED", watchedAt: date.toISOString(), rating: 8 });
+    expect(prisma.userTitle.updateMany).toHaveBeenCalledTimes(1);
+  });
+  it("includes unloaded seasons in totals and shows completed seasons without completing the whole show", async () => {
+    vi.mocked(metadataService.getTitleSeasons).mockResolvedValue([
+      { seasonNumber: 1, name: "Season 1", episodeCount: 2 },
+      { seasonNumber: 2, name: "Season 2", episodeCount: 3 },
+    ]);
+    const [item] = await getLibraryItems({ userId: "owner" });
+    expect(item).toMatchObject({
+      status: "WATCHING",
+      currentEpisode: 2,
+      totalEpisodes: 5,
+      season: 2,
+      episode: 1,
+      completedSeasons: [1],
+    });
+    expect(prisma.userTitle.updateMany).not.toHaveBeenCalled();
+  });
+  it("keeps an ongoing combined anime Watching when its full total is unknown", async () => {
+    vi.mocked(metadataService.getTitleSeasons).mockResolvedValue([
+      { seasonNumber: 1, name: "Season 1", episodeCount: 2, episodeCountKnown: false },
+    ]);
+    const [item] = await getLibraryItems({ userId: "owner" });
+    expect(item).toMatchObject({ status: "WATCHING", currentEpisode: 2, totalEpisodes: null });
+    expect(prisma.userTitle.updateMany).not.toHaveBeenCalled();
   });
 });

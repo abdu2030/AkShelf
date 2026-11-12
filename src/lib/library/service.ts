@@ -5,6 +5,9 @@ import { MediaCardProps } from "@/components/title/media-card";
 import { WatchStatusType } from "@/components/ui/status-badge";
 import { MediaType } from "@/lib/metadata/types";
 import { metadataService } from "@/lib/metadata";
+import { loadCompletionSeasons } from "@/lib/progress/tracking-status";
+import { computeSeriesProgress } from "@/lib/progress/service";
+import { repairCompletedTitle } from "@/lib/progress/repair-completion";
 
 export interface GetLibraryItemsOptions {
   userId?: string | null;
@@ -101,47 +104,65 @@ export async function getLibraryItems(
     );
     const watchedEpisodeSet = new Set(userEpisodes.map((ue) => ue.episodeId));
 
-    return userTitles.map((ut) => {
-      const title = ut.title;
-      const isMovie = title.type === "MOVIE";
-      let watchedCount = 0;
-      let nextUpSeason: number | null = null;
-      let nextUpEpisode: number | null = null;
-
-      if (!isMovie) {
+    return await Promise.all(
+      userTitles.map(async (ut) => {
+        const title = ut.title;
+        const isMovie = title.type === "MOVIE";
+        const watchedMap: Record<string, boolean> = {};
         for (const season of title.seasons) {
-          for (const ep of season.episodes) {
-            if (watchedEpisodeSet.has(ep.id)) {
-              watchedCount++;
-            } else if (nextUpSeason === null) {
-              nextUpSeason = season.seasonNumber;
-              nextUpEpisode = ep.episodeNumber;
-            }
+          for (const episode of season.episodes) {
+            watchedMap[`${season.seasonNumber}:${episode.episodeNumber}`] = watchedEpisodeSet.has(
+              episode.id,
+            );
           }
         }
-      }
-
-      const totalEpisodes = !isMovie
-        ? title.seasons.reduce((acc, s) => acc + s.episodeCount, 0) || null
-        : null;
-
-      return {
-        id: `db-${title.id}`,
-        title: title.title,
-        mediaType: title.type as MediaType,
-        year: title.year,
-        posterUrl: title.posterUrl,
-        status: ut.status as WatchStatusType,
-        rating: ut.rating,
-        season: isMovie ? null : nextUpSeason,
-        episode: isMovie ? null : nextUpEpisode,
-        currentEpisode: isMovie ? null : watchedCount,
-        totalEpisodes: isMovie ? null : totalEpisodes,
-        addedAt: ut.createdAt.toISOString(),
-        watchedAt: ut.watchedAt?.toISOString() ?? null,
-        updatedAt: ut.updatedAt.toISOString(),
-      };
-    });
+        const catalog =
+          !isMovie && ut.status === "WATCHING"
+            ? await loadCompletionSeasons(
+                title.externalSource as "tmdb" | "anilist",
+                title.externalId,
+                title.type,
+              )
+            : null;
+        const seasons = catalog ?? title.seasons;
+        const progress = computeSeriesProgress(seasons, watchedMap);
+        const knownTotal =
+          catalog &&
+          catalog.length > 0 &&
+          catalog.every((s) => s.episodeCountKnown !== false && s.episodeCount > 0);
+        if (ut.status === "WATCHING" && catalog) {
+          try {
+            const repaired = await repairCompletedTitle(userId, title.id, catalog, watchedMap);
+            if (repaired) {
+              ut.status = repaired.status;
+              ut.watchedAt = repaired.watchedAt;
+            }
+          } catch {
+            // A read must remain available during a failed repair; retain the saved status.
+          }
+        }
+        return {
+          id: `db-${title.id}`,
+          title: title.title,
+          mediaType: title.type as MediaType,
+          year: title.year,
+          posterUrl: title.posterUrl,
+          status: ut.status as WatchStatusType,
+          rating: ut.rating,
+          season: isMovie ? null : (progress.nextUp?.seasonNumber ?? null),
+          episode: isMovie ? null : (progress.nextUp?.episodeNumber ?? null),
+          currentEpisode: isMovie ? null : progress.watchedEpisodes,
+          totalEpisodes: isMovie || !knownTotal ? null : progress.totalEpisodes,
+          completedSeasons:
+            catalog && catalog.length > 1
+              ? progress.seasonProgress.filter((s) => s.isCompleted).map((s) => s.seasonNumber)
+              : undefined,
+          addedAt: ut.createdAt.toISOString(),
+          watchedAt: ut.watchedAt?.toISOString() ?? null,
+          updatedAt: ut.updatedAt.toISOString(),
+        };
+      }),
+    );
   } catch (error) {
     console.warn(
       "[LibraryService] Failed to fetch user library from DB, falling back to demo library:",

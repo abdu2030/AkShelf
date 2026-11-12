@@ -18,7 +18,9 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { withDbRetry } from "@/lib/db/retry";
 import type { Prisma } from "@prisma/client";
-import { getTitleProgressFromDb } from "@/lib/progress";
+import { computeSeriesProgress, getTitleProgressFromDb } from "@/lib/progress";
+import { repairCompletedTitle } from "@/lib/progress/repair-completion";
+import { persistTitleSeasons } from "@/lib/season/storage";
 import { MovieWatchSection, MovieQuickCheckButton } from "@/components/title/movie-watch-section";
 
 type DbTitleRecord = Prisma.TitleGetPayload<{
@@ -59,6 +61,7 @@ interface ResolvedTitleData {
   trailerUrl?: string | null;
   cast?: CastMemberItem[];
   totalEpisodes?: number | null;
+  catalogVerified?: boolean;
   userStatus?: WatchStatusType | null;
   userRating?: number | null;
   startedAt?: string | null;
@@ -70,6 +73,7 @@ interface ResolvedTitleData {
     seasonNumber: number;
     name: string;
     episodeCount: number;
+    episodeCountKnown?: boolean;
     episodes?: Array<{
       episodeNumber: number;
       name: string;
@@ -270,6 +274,17 @@ async function resolveTitleDetails(
     try {
       const mediaResult = await metadataService.getTitleDetails(source, externalId, effectiveType);
       if (mediaResult) {
+        if (dbTitle && mediaResult.seasons) {
+          const missingOrChanged = mediaResult.seasons.filter((season) => {
+            const stored = dbTitle.seasons.find((s) => s.seasonNumber === season.seasonNumber);
+            return !stored || stored.episodeCount !== season.episodeCount;
+          });
+          try {
+            await persistTitleSeasons(prisma, dbTitle.id, missingOrChanged);
+          } catch {
+            // Fresh catalog data can still render when metadata persistence is unavailable.
+          }
+        }
         // Auto-heal missing DB poster/metadata if DB title exists and types match
         if (
           dbTitle &&
@@ -321,6 +336,7 @@ async function resolveTitleDetails(
           trailerUrl: mediaResult.trailerUrl || null,
           cast: mediaResult.cast || [],
           totalEpisodes: mediaResult.totalEpisodes || null,
+          catalogVerified: true,
           userStatus: userStatus || shelfMatch?.status || null,
           userRating: userRating != null ? userRating : shelfMatch?.rating || null,
           startedAt: startedAt || shelfMatch?.startedAt || null,
@@ -502,7 +518,9 @@ export default async function TitleDetailPage({ params, searchParams }: TitleDet
     (titleData.type === "ANIME" &&
       (!titleData.seasons ||
         titleData.seasons.length === 0 ||
-        (titleData.seasons.length === 1 && titleData.seasons[0].episodeCount <= 1)));
+        (titleData.seasons.length === 1 &&
+          titleData.seasons[0].episodeCountKnown !== false &&
+          titleData.seasons[0].episodeCount <= 1)));
 
   const dbProgress = userId
     ? await getTitleProgressFromDb({
@@ -513,9 +531,50 @@ export default async function TitleDetailPage({ params, searchParams }: TitleDet
       })
     : null;
 
-  // If all episodes across series are watched, ensure userStatus displays as WATCHED
-  if (dbProgress?.isCompleted && titleData.userStatus !== "WATCHED") {
-    titleData.userStatus = "WATCHED";
+  const seriesProgress = dbProgress
+    ? computeSeriesProgress(titleData.seasons ?? [], dbProgress.watchedMap)
+    : null;
+  const knownTotal =
+    titleData.catalogVerified &&
+    titleData.seasons?.every((s) => s.episodeCountKnown !== false && s.episodeCount > 0);
+  if (
+    userId &&
+    titleData.id.startsWith("db-") &&
+    titleData.userStatus === "WATCHING" &&
+    titleData.catalogVerified &&
+    dbProgress
+  ) {
+    const repaired = await repairCompletedTitle(
+      userId,
+      titleData.id.slice(3),
+      titleData.seasons ?? [],
+      dbProgress.watchedMap,
+    ).catch(() => null);
+    if (repaired) {
+      titleData.userStatus = repaired.status;
+      titleData.watchedAt = repaired.watchedAt?.toISOString() ?? null;
+    }
+  }
+  // Load the selected/next season on the first render, even if only Season 1 was saved before.
+  const selectedSeason = hintSeason ?? seriesProgress?.defaultSeasonNumber ?? titleData.season;
+  const targetSeason = titleData.seasons?.find((s) => s.seasonNumber === selectedSeason);
+  if (
+    !isMovie &&
+    titleData.externalSource === "tmdb" &&
+    targetSeason &&
+    (targetSeason.episodes?.length ?? 0) < targetSeason.episodeCount
+  ) {
+    try {
+      const loaded = await metadataService.getTvSeason(
+        titleData.externalId,
+        targetSeason.seasonNumber,
+      );
+      titleData.seasons = titleData.seasons?.map((s) =>
+        s.seasonNumber === loaded.seasonNumber ? loaded : s,
+      );
+    } catch {
+      /* Season tabs and batch tracking remain available if episode names cannot load. */
+    }
   }
 
   return (
@@ -604,8 +663,9 @@ export default async function TitleDetailPage({ params, searchParams }: TitleDet
               {!isMovie &&
                 (dbProgress ? (
                   <span className="text-xs text-ink-muted font-mono font-medium">
-                    Progress: {dbProgress.watchedEpisodes} / {dbProgress.totalEpisodes} eps (
-                    {dbProgress.percentage}%)
+                    {knownTotal
+                      ? `Progress: ${seriesProgress!.watchedEpisodes} / ${seriesProgress!.totalEpisodes} eps (${seriesProgress!.percentage}%)`
+                      : `${seriesProgress!.watchedEpisodes} episodes watched · total unconfirmed`}
                   </span>
                 ) : titleData.currentEpisode != null && titleData.currentEpisode > 0 ? (
                   <span className="text-xs text-ink-muted font-mono font-medium">
@@ -665,9 +725,9 @@ export default async function TitleDetailPage({ params, searchParams }: TitleDet
           <SeasonEpisodesSection
             seasons={titleData.seasons || []}
             initialWatchedMap={dbProgress?.watchedMap}
-            userCurrentSeason={hintSeason ?? dbProgress?.defaultSeasonNumber ?? titleData.season}
+            userCurrentSeason={selectedSeason}
             userCurrentEpisode={
-              dbProgress?.nextUp?.episodeNumber ?? titleData.currentEpisode ?? titleData.episode
+              seriesProgress?.nextUp?.episodeNumber ?? titleData.currentEpisode ?? titleData.episode
             }
             titleExternalSource={titleData.externalSource}
             titleExternalId={titleData.externalId}

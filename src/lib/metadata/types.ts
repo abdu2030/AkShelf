@@ -65,6 +65,8 @@ export const NormalizedSeasonSchema = z.object({
   seasonNumber: z.number().int().nonnegative(),
   name: z.string(),
   episodeCount: z.number().int().nonnegative(),
+  /** False when only a partial streaming list is available, not the full episode total. */
+  episodeCountKnown: z.boolean().optional(),
   overview: z.string().nullable().optional(),
   posterUrl: z.string().nullable().optional(),
   airDate: z.string().nullable().optional(),

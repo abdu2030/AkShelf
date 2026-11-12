@@ -15,6 +15,28 @@ vi.mock("@/lib/db", () => ({
 }));
 
 describe("Progress Service - computeSeriesProgress (Day 34)", () => {
+  it("counts missing episode details and finds the next episode even with a partial list", () => {
+    const result = computeSeriesProgress(
+      [{ seasonNumber: 1, episodeCount: 3, episodes: [{ episodeNumber: 1 }] }],
+      { "1:1": true },
+    );
+    expect(result).toMatchObject({
+      watchedEpisodes: 1,
+      totalEpisodes: 3,
+      isCompleted: false,
+      nextUp: { episodeNumber: 2 },
+    });
+  });
+
+  it("does not call a partial streaming catalog completed", () => {
+    const result = computeSeriesProgress(
+      [{ seasonNumber: 1, episodeCount: 2, episodeCountKnown: false }],
+      { "1:1": true, "1:2": true },
+    );
+    expect(result.isCompleted).toBe(false);
+    expect(result.seasonProgress[0].isCompleted).toBe(false);
+  });
+
   const sampleSeasons = [
     {
       seasonNumber: 1,

@@ -3,6 +3,28 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { SeasonEpisodesSection } from "./season-episodes-section";
 
+it("does not display All Episodes Watched for an ongoing anime with an unknown total", () => {
+  const html = renderToStaticMarkup(
+    <SeasonEpisodesSection
+      seasons={[
+        {
+          seasonNumber: 1,
+          episodeCount: 2,
+          episodeCountKnown: false,
+          episodes: [
+            { episodeNumber: 1, name: "Episode 1" },
+            { episodeNumber: 2, name: "Episode 2" },
+          ],
+        },
+      ]}
+      initialWatchedMap={{ "1:1": true, "1:2": true }}
+    />,
+  );
+  expect(html).not.toContain("All Episodes Watched");
+  expect(html).not.toContain("100%");
+  expect(html).toContain("total unconfirmed");
+});
+
 describe("SeasonEpisodesSection Component", () => {
   const mockSeasons = [
     {

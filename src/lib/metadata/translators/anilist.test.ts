@@ -201,6 +201,20 @@ describe("AniList Metadata Translators", () => {
   });
 
   describe("aniListMediaToNormalizedSeasons", () => {
+    it("does not treat an ongoing anime's streaming list as its full episode count", () => {
+      const media: AniListMedia = {
+        id: 21,
+        title: { english: "ONE PIECE" },
+        format: "TV",
+        status: "RELEASING",
+        episodes: null,
+        genres: [],
+        streamingEpisodes: [{ title: "Episode 1", url: "https://example.com/1" }],
+      };
+      const result = aniListMediaToMediaResult(media);
+      expect(result.totalEpisodes).toBeNull();
+      expect(result.seasons?.[0]).toMatchObject({ episodeCount: 1, episodeCountKnown: false });
+    });
     it("returns empty array for movies", () => {
       const movieMedia: AniListMedia = {
         id: 99,

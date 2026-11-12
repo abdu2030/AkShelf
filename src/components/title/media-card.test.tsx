@@ -12,6 +12,25 @@ describe("getMediaTypeIcon", () => {
 });
 
 describe("MediaCard", () => {
+  it("distinguishes completed seasons from an unfinished series", () => {
+    const html = renderToStaticMarkup(
+      <MediaCard
+        id="poi"
+        title="Person of Interest"
+        mediaType="TV"
+        status="WATCHING"
+        currentEpisode={45}
+        totalEpisodes={103}
+        season={3}
+        episode={1}
+        completedSeasons={[1, 2]}
+      />,
+    );
+    expect(html).toContain("Watching • S3 E1");
+    expect(html).toContain("S1, S2");
+    expect(html).toContain("Watched");
+    expect(html).not.toContain('aria-valuenow="100"');
+  });
   it("renders poster image when posterUrl is provided", () => {
     const html = renderToStaticMarkup(
       <MediaCard
